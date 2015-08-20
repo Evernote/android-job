@@ -1,0 +1,45 @@
+apply plugin: 'com.android.application'
+apply from: '../build-config/gradle-quality.gradle'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "com.evernote.android.job.demo"
+
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+
+        versionName project.VERSION_NAME
+        versionCode Integer.parseInt(project.VERSION_CODE)
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    lintOptions {
+        abortOnError true
+
+        htmlOutput file("$project.buildDir/reports/lint/lint.html")
+        xmlOutput file("$project.buildDir/reports/lint/lint.xml")
+    }
+}
+
+dependencies {
+    compile project(':library')
+    compile 'com.android.support:appcompat-v7:23.0.0'
+}
+
+// allows to run MNC preview build on SDK_INT < MNC device
+android.applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+        output.processManifest.doLast {
+            def manifestOutFile = output.processManifest.manifestOutputFile
+            def newFileContents = manifestOutFile.getText('UTF-8').replace("minSdkVersion=\"MNC\"", "minSdkVersion=\"14\"").replace("targetSdkVersion=\"MNC\"", "targetSdkVersion=\"21\"")
+            manifestOutFile.write(newFileContents, 'UTF-8')
+        }
+    }
+}

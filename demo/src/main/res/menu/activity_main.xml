@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:ignore="HardcodedText">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/action_force_21"
+            android:title="v21"
+            app:showAsAction="never"/>
+        <item
+            android:id="@+id/action_force_14"
+            android:title="v14"
+            app:showAsAction="never"/>
+        <item
+            android:id="@+id/action_force_gcm"
+            android:title="GCM"
+            app:showAsAction="never"/>
+    </group>
+</menu>
