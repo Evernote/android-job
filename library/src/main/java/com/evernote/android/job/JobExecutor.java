@@ -55,10 +55,8 @@ import java.util.concurrent.TimeUnit;
 
     public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request) {
         try {
-            Job job = request.getJobClass()
-                    .newInstance()
-                    .setContext(context)
-                    .setRequest(request);
+            Job.Action action = request.getJobClass().newInstance();
+            Job job = new Job(action, context, request);
 
             Cat.i("Executing request %d, context %s", request.getJobId(), context.getClass().getSimpleName());
 
@@ -129,10 +127,8 @@ import java.util.concurrent.TimeUnit;
         }
 
         private void handleResult(Job.Result result) {
-            JobRequest request = mJob.getParams().getRequest();
-            if (!request.isPeriodic() && Job.Result.RESCHEDULE.equals(result)) {
-                int newJobId = request.reschedule(true);
-                mJob.onReschedule(newJobId);
+            if(result == Job.Result.RESCHEDULE) {
+                mJob.reschedule();
             }
         }
 

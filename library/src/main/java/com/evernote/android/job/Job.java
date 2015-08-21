@@ -41,63 +41,76 @@ import net.vrallev.android.cat.Cat;
  *
  * @author rwondratschek
  */
-public abstract class Job {
+public final class Job {
 
     public enum Result {
         /**
-         * Indicates that {@link #onRunJob(Params)} was successful.
+         * Indicates that {@link Action#onRunJob(Params)} was successful.
          */
         SUCCESS,
         /**
-         * Indicates that {@link #onRunJob(Params)} failed, but the {@link Job} shouldn't be rescheduled.
+         * Indicates that {@link Action#onRunJob(Params)} failed, but the {@link Job} shouldn't be rescheduled.
          */
         FAILURE,
         /**
-         * Indicates that {@link #onRunJob(Params)} failed and the {@link Job} should be rescheduled
+         * Indicates that {@link Action#onRunJob(Params)} failed and the {@link Job} should be rescheduled
          * with the defined back-off criteria. Not that returning {@code RESCHEDULE} for a periodic
          * {@link Job} is invalid and ignored.
          */
         RESCHEDULE
     }
 
-    private Params mParams;
-    private Context mContext;
+    private final Action action;
+
+    private final Params mParams;
+    private final Context mContext;
 
     private boolean mCanceled;
     private long mFinishedTimeStamp = -1;
 
     private Result mResult = Result.FAILURE;
 
-    /**
-     * This method is invoked from a background thread. You should run your desired task here.
-     * This method is thread safe. Each time a job starts executing a new instance of your {@link Job}
-     * is instantiated. You can identify your {@link Job} with the passed {@code params}.
-     *
-     * <br>
-     * <br>
-     *
-     * You should call {@link #isCanceled()} frequently for long running jobs and stop your
-     * task if necessary.
-     *
-     * <br>
-     * <br>
-     *
-     * A {@link WakeLock} is acquired for 3 minutes for each {@link Job}. If your task
-     * needs more time, then you need to create an extra {@link WakeLock}.
-     *
-     * @param params The parameters for this concrete job.
-     * @return The result of this {@link Job}. Note that returning {@link Result#RESCHEDULE} for a periodic
-     * {@link Job} is invalid and ignored.
-     */
-    @NonNull
-    protected abstract Result onRunJob(Params params);
+    public Job(Action action, Context context, JobRequest jobRequest) {
+        this.action = action;
+        this.mContext = context.getApplicationContext();
+        this.mParams = new Params(jobRequest);
+    }
+
+    public interface Action {
+        /**
+         * This method is invoked from a background thread. You should run your desired task here. This
+         * method is thread safe. Each time a job starts executing a new instance of your {@link Job} is
+         * instantiated. You can identify your {@link Job} with the passed {@code params}.
+         * <p/>
+         * You should call {@link Params#isCanceled()} frequently for long running jobs and stop your
+         * task if necessary.
+         * <p/>
+         * A {@link WakeLock} is acquired for 3 minutes for each {@link Job}. If your task needs more
+         * time, then you need to create an extra {@link WakeLock}.
+         *
+         * @param params The parameters for this concrete job.
+         * @return The result of this {@link Job}. Note that returning {@link Result#RESCHEDULE} for a
+         * periodic {@link Job} is invalid and ignored.
+         */
+        @NonNull
+        Result onRunJob(Params params);
+
+        /**
+         * This method is called if you returned {@link Result#RESCHEDULE} in {@link #onRunJob(Params)}
+         * and the {@link Job} was successfully rescheduled. The new rescheduled {@link JobRequest} has
+         * a new ID. Override this method if you want to be notified about the change.
+         *
+         * @param newJobId The new ID of the rescheduled {@link JobRequest}.
+         */
+        void onReschedule(int newJobId);
+    }
 
     /*package*/ final Result runJob() {
         try {
             if (meetsRequirements()) {
-                mResult = onRunJob(getParams());
+                mResult = action.onRunJob(mParams);
             } else {
-                mResult = getParams().isPeriodic() ? Result.FAILURE : Result.RESCHEDULE;
+                mResult = mParams.isPeriodic() ? Result.FAILURE : Result.RESCHEDULE;
             }
 
             return mResult;
@@ -107,20 +120,15 @@ public abstract class Job {
         }
     }
 
-    /**
-     * This method is called if you returned {@link Result#RESCHEDULE} in {@link #onRunJob(Params)}
-     * and the {@link Job} was successfully rescheduled. The new rescheduled {@link JobRequest} has
-     * a new ID. Override this method if you want to be notified about the change.
-     *
-     * @param newJobId The new ID of the rescheduled {@link JobRequest}.
-     */
-    @SuppressWarnings("UnusedParameters")
-    protected void onReschedule(int newJobId) {
-        // override me
+    public void reschedule() {
+        JobRequest request = mParams.getRequest();
+        if (!request.isPeriodic()) {
+            action.onReschedule(request.reschedule(true));
+        }
     }
 
     private boolean meetsRequirements() {
-        if (!getParams().getRequest().requirementsEnforced()) {
+        if (!mParams.getRequest().requirementsEnforced()) {
             return true;
         }
 
@@ -133,7 +141,7 @@ public abstract class Job {
             return false;
         }
         if (!isRequirementNetworkTypeMet()) {
-            Cat.w("Job requires network to be %s, but was %s", getParams().getRequest().requiredNetworkType(),
+            Cat.w("Job requires network to be %s, but was %s", mParams.getRequest().requiredNetworkType(),
                     Device.getNetworkType(getContext()));
             return false;
         }
@@ -145,24 +153,24 @@ public abstract class Job {
      * @return {@code false} if the {@link Job} requires the device to be charging and it isn't charging.
      * Otherwise always returns {@code true}.
      */
-    protected boolean isRequirementChargingMet() {
-        return !(getParams().getRequest().requiresCharging() && !Device.isCharging(getContext()));
+    private boolean isRequirementChargingMet() {
+        return !(mParams.getRequest().requiresCharging() && !Device.isCharging(getContext()));
     }
 
     /**
      * @return {@code false} if the {@link Job} requires the device to be idle and it isn't idle. Otherwise
      * always returns {@code true}.
      */
-    protected boolean isRequirementDeviceIdleMet() {
-        return !(getParams().getRequest().requiresDeviceIdle() && !Device.isIdle(getContext()));
+    private boolean isRequirementDeviceIdleMet() {
+        return !(mParams.getRequest().requiresDeviceIdle() && !Device.isIdle(getContext()));
     }
 
     /**
      * @return {@code false} if the {@link Job} requires the device to be in a specific network state and it
      * isn't in this state. Otherwise always returns {@code true}.
      */
-    protected boolean isRequirementNetworkTypeMet() {
-        JobRequest.NetworkType requirement = getParams().getRequest().requiredNetworkType();
+    private boolean isRequirementNetworkTypeMet() {
+        JobRequest.NetworkType requirement = mParams.getRequest().requiredNetworkType();
         switch (requirement) {
             case ANY:
                 return true;
@@ -175,24 +183,6 @@ public abstract class Job {
             default:
                 throw new IllegalStateException("not implemented");
         }
-    }
-
-    /*package*/ final Job setRequest(JobRequest request) {
-        mParams = new Params(request);
-        return this;
-    }
-
-    /**
-     * @return The same parameters like passed to {@link #onRunJob(Params)}.
-     */
-    @NonNull
-    protected final Params getParams() {
-        return mParams;
-    }
-
-    /*package*/ final Job setContext(Context context) {
-        mContext = context.getApplicationContext();
-        return this;
     }
 
     /**
@@ -210,13 +200,6 @@ public abstract class Job {
         if (!isFinished()) {
             mCanceled = true;
         }
-    }
-
-    /**
-     * @return {@code true} if this {@link Job} was canceled.
-     */
-    protected final boolean isCanceled() {
-        return mCanceled;
     }
 
     /**
@@ -263,7 +246,7 @@ public abstract class Job {
     /**
      * Holds several parameters for the executing {@link Job}.
      */
-    protected static final class Params {
+    public final class Params {
 
         private final JobRequest mRequest;
         private PersistableBundleCompat mExtras;
@@ -301,6 +284,15 @@ public abstract class Job {
 
         /*package*/ JobRequest getRequest() {
             return mRequest;
+        }
+
+        public Context getContext() {
+            return Job.this.getContext();
+        }
+
+        /** @return {@code true} if this {@link Job} was canceled. */
+        public boolean isCanceled() {
+            return Job.this.mCanceled;
         }
 
         @Override
