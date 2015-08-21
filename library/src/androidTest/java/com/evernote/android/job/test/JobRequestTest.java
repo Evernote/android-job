@@ -188,11 +188,15 @@ public class JobRequestTest {
         return new JobRequest.Builder(InstrumentationRegistry.getContext(), TestJob.class);
     }
 
-    private static final class TestJob extends Job {
+    private static final class TestJob implements Job.Action {
+
         @NonNull
         @Override
-        protected Result onRunJob(@NonNull Params params) {
-            return Result.FAILURE;
+        public Job.Result onRunJob(@NonNull Job.Params params) {
+            return Job.Result.FAILURE;
         }
+
+        @Override
+        public void onReschedule(int newJobId) {}
     }
 }

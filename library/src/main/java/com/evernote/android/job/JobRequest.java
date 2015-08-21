@@ -85,7 +85,7 @@ public final class JobRequest {
     /**
      * @return The {@link Job} class which will run in the future.
      */
-    public Class<? extends Job> getJobClass() {
+    public Class<? extends Job.Action> getJobClass() {
         return mBuilder.mJobClass;
     }
 
@@ -303,7 +303,7 @@ public final class JobRequest {
     public static final class Builder {
 
         private final int mId;
-        private final Class<? extends Job> mJobClass;
+        private final Class<? extends Job.Action> mJobClass;
 
         private long mStartMs;
         private long mEndMs;
@@ -327,7 +327,7 @@ public final class JobRequest {
          *                it hasn't been done.
          * @param jobClass The endpoint that you implement that will receive the callback.
          */
-        public Builder(@NonNull Context context, @NonNull Class<? extends Job> jobClass) {
+        public Builder(@NonNull Context context, @NonNull Class<? extends Job.Action> jobClass) {
             mJobClass = JobPreconditions.checkNotNull(jobClass);
             mId = JobManager.instance(context).getJobStorage().nextJobId();
 
@@ -365,7 +365,7 @@ public final class JobRequest {
         @SuppressWarnings("unchecked")
         private Builder(PersistableBundleCompat bundle) throws Exception {
             mId = bundle.getInt("id", -1);
-            mJobClass = (Class<? extends Job>) Class.forName(bundle.getString("jobClass", null));
+            mJobClass = (Class<? extends Job.Action>) Class.forName(bundle.getString("jobClass", null));
 
             mStartMs = bundle.getLong("startMs", -1);
             mEndMs = bundle.getLong("endMs", -1);
@@ -584,7 +584,7 @@ public final class JobRequest {
          * @param backoffMs The initial interval to wait when the job has been rescheduled.
          * @param backoffPolicy Is either {@link BackoffPolicy#LINEAR} or {@link BackoffPolicy#EXPONENTIAL}.
          * @see Job.Result#RESCHEDULE
-         * @see Job#onReschedule(int)
+         * @see Job#reschedule()
          */
         public Builder setBackoffCriteria(long backoffMs, @NonNull BackoffPolicy backoffPolicy) {
             mBackoffMs = JobPreconditions.checkArgumentPositive(backoffMs, "backoffMs must be > 0");

@@ -8,6 +8,8 @@ import android.support.annotation.NonNull;
 import android.widget.Toast;
 
 import com.evernote.android.job.Job;
+import com.evernote.android.job.Job.Params;
+import com.evernote.android.job.Job.Result;
 
 import net.vrallev.android.cat.Cat;
 
@@ -23,7 +25,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * @author rwondratschek
  */
-public class TestJob extends Job {
+public class TestJob implements Job.Action {
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault());
 
@@ -33,13 +35,12 @@ public class TestJob extends Job {
 
     @Override
     @NonNull
-    protected Result onRunJob(final Params params) {
+    public Result onRunJob(final Params params) {
         SystemClock.sleep(3000);
 
 
-
-        if (!isCanceled()) {
-            writeIntoFile();
+        if (!params.isCanceled()) {
+            writeIntoFile(params);
         }
 
         final CountDownLatch latch = new CountDownLatch(1);
@@ -47,13 +48,13 @@ public class TestJob extends Job {
             @Override
             public void run() {
                 StringBuilder message = new StringBuilder()
-                        .append(isCanceled() ? "Canceled" : "Success")
+                        .append(params.isCanceled() ? "Canceled" : "Success")
                         .append(' ')
                         .append(params.getId())
                         .append(' ')
                         .append(params.getExtras().getString("key", "NOT_FOUND"));
 
-                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                Toast.makeText(params.getContext(), message, Toast.LENGTH_SHORT).show();
                 latch.countDown();
             }
         });
@@ -64,20 +65,20 @@ public class TestJob extends Job {
             Cat.e(e);
         }
 
-        if (isCanceled()) {
+        if (params.isCanceled()) {
             return params.isPeriodic() ? Result.FAILURE : Result.RESCHEDULE;
         } else {
             return Result.SUCCESS;
         }
     }
 
-    private void writeIntoFile() {
-        String text = DATE_FORMAT.format(new Date()) + "\t\t" + getParams().getId() + "\t\t";
+    private void writeIntoFile(Params params) {
+        String text = DATE_FORMAT.format(new Date()) + "\t\t" + params.getId() + "\t\t";
         text += (hasInternetAccess() ? "has internet" : "no internet");
         text += '\n';
 
         try {
-            FileUtils.writeFile(getTestFile(getContext()), text, true);
+            FileUtils.writeFile(getTestFile(params.getContext()), text, true);
 
         } catch (IOException e) {
             Cat.e(e);
@@ -106,7 +107,5 @@ public class TestJob extends Job {
     }
 
     @Override
-    protected void onReschedule(int newJobId) {
-        super.onReschedule(newJobId);
-    }
+    public void onReschedule(int newJobId) {}
 }
