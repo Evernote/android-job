@@ -76,7 +76,7 @@ public class JobProxy14 implements JobProxy {
         Intent intent = PlatformAlarmReceiver.createIntent(request);
 
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (repeating) {
+        if (!repeating) {
             flags |= PendingIntent.FLAG_ONE_SHOT;
         }
 

@@ -105,7 +105,7 @@ public class ExampleJob extends Job {
 }
 ```
 
-*Warning:* With Android Marshmallow Google introduced the auto backup feature. All job information are stored in shared preference file called `jobs.xml`. You should exclude this file so that it isn't backed up.
+**Warning:** With Android Marshmallow Google introduced the auto backup feature. All job information are stored in a shared preference file called `jobs.xml`. You should exclude this file so that it isn't backed up.
 
 License
 -------

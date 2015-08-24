@@ -31,9 +31,11 @@ import android.support.annotation.NonNull;
 
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobCat;
+import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
 
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -102,7 +104,16 @@ public interface JobProxy {
 
         @NonNull
         public Job.Result executeJobRequest(@NonNull JobRequest request) {
-            mCat.d("Run job %d", mJobId);
+            long waited = System.currentTimeMillis() - request.getScheduledAt();
+            String timeWindow;
+            if (JobApi.V_14.equals(request.getJobApi())) {
+                timeWindow = "delay " + JobUtil.timeToString(getAverageDelayMs(request));
+            } else {
+                timeWindow = String.format(Locale.US, "start %s, end %s", JobUtil.timeToString(getStartMs(request)),
+                        JobUtil.timeToString(getEndMs(request)));
+            }
+
+            mCat.d("Run job %d, waited %s, %s", mJobId, JobUtil.timeToString(waited), timeWindow);
             JobExecutor jobExecutor = JobManager.instance(mContext).getJobExecutor();
 
             try {
@@ -123,7 +134,7 @@ public interface JobProxy {
                 Job job = jobExecutor.getJob(mJobId);
                 if (job != null) {
                     job.cancel();
-                    mCat.e("Cancelled %d", mJobId);
+                    mCat.e("Canceled %d", mJobId);
                 }
 
                 return Job.Result.FAILURE;

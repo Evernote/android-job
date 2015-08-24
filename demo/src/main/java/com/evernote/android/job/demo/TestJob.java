@@ -104,9 +104,4 @@ public class TestJob extends Job {
             }
         }
     }
-
-    @Override
-    protected void onReschedule(int newJobId) {
-        super.onReschedule(newJobId);
-    }
 }

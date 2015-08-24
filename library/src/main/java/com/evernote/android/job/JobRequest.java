@@ -222,6 +222,10 @@ public final class JobRequest {
         mScheduledAt = timeStamp;
     }
 
+    /*package*/ long getScheduledAt() {
+        return mScheduledAt;
+    }
+
     /**
      * Convenience method. Internally it calls {@link JobManager#schedule(JobRequest)}
      * and {@link #getJobId()} for this request.

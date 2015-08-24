@@ -52,6 +52,17 @@ public class JobManagerTest {
         assertThat(getManager().getAllJobs()).isEmpty();
     }
 
+    @Test
+    public void testSameIdAfterCancel() {
+        JobRequest request = getJobRequest();
+        int jobId = request.getJobId();
+
+        getManager().schedule(request);
+
+        int newId = getManager().getJobRequest(jobId).cancelAndEdit().build().schedule();
+        assertThat(jobId).isEqualTo(newId);
+    }
+
     @After
     public void tearDown() {
         getManager().cancelAll();
