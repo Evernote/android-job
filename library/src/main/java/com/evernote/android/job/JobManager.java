@@ -31,6 +31,7 @@ import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobCat;
@@ -119,6 +120,15 @@ public final class JobManager {
      * @param request The {@link JobRequest} which will be run in the future.
      */
     public void schedule(JobRequest request) {
+        if (request.isSingle()) {
+            Set<JobRequest> requests = getAllJobRequestsForClass(request.getJobClass());
+            if (!requests.isEmpty()) {
+                Cat.i("Tried scheduling job request %d, but request %d for class %s was already scheduled",
+                        request.getJobId(), requests.iterator().next().getJobId(), request.getJobClass());
+                return;
+            }
+        }
+
         mJobStorage.put(request);
         request.setScheduledAt(System.currentTimeMillis());
 
@@ -144,7 +154,17 @@ public final class JobManager {
      */
     @NonNull
     public Set<JobRequest> getAllJobRequests() {
-        return mJobStorage.getAllJobs();
+        return mJobStorage.getAllJobs(null);
+    }
+
+    /**
+     * @param clazz The desired class which works as filter.
+     * @return All pending JobRequests which would run the job {@code clazz} or an empty set.
+     * Never returns {@code null}.
+     */
+    @NonNull
+    public Set<JobRequest> getAllJobRequestsForClass(@NonNull Class<? extends Job> clazz) {
+        return mJobStorage.getAllJobs(JobPreconditions.checkNotNull(clazz));
     }
 
     /**
@@ -167,7 +187,19 @@ public final class JobManager {
      */
     @NonNull
     public Set<Job> getAllJobs() {
-        return mJobExecutor.getAllJobs();
+        return mJobExecutor.getAllJobs(null);
+    }
+
+    /**
+     * Jobs are cached in memory even if they already have finished. But finished jobs are never
+     * restored after the app has launched.
+     *
+     * @param clazz The desired class which works as filter.
+     * @return All running and cached finished jobs which are instance of {@code clazz} or an empty
+     * set. Never return {@code null}.
+     */
+    public Set<Job> getAllJobsForClass(Class<? extends Job> clazz) {
+        return mJobExecutor.getAllJobs(JobPreconditions.checkNotNull(clazz));
     }
 
     /**
@@ -224,13 +256,32 @@ public final class JobManager {
      * @return The count of canceled requests and running jobs.
      */
     public int cancelAll() {
+        return cancelAllInner(null);
+    }
+
+    /**
+     * Cancel all pending JobRequests and running jobs for this {@code clazz}.
+     *
+     * @param clazz The desired class which works as filter.
+     * @return The count of canceled requests and running jobs.
+     * @see #getAllJobRequestsForClass(Class)
+     * @see #getAllJobsForClass(Class)
+     */
+    public int cancelAllForClass(Class<? extends Job> clazz) {
+        return cancelAllInner(JobPreconditions.checkNotNull(clazz));
+    }
+
+    private int cancelAllInner(@Nullable Class<? extends Job> clazz) {
         int canceled = 0;
 
-        for (JobRequest request : getAllJobRequests()) {
+        Set<JobRequest> requests = clazz == null ? getAllJobRequests() : getAllJobRequestsForClass(clazz);
+        for (JobRequest request : requests) {
             if (cancel(request.getJobId())) {
                 canceled++;
             }
         }
+
+        Set<Job> jobs = clazz == null ? getAllJobs() : getAllJobsForClass(clazz);
         for (Job job : getAllJobs()) {
             if (!job.isFinished() && !job.isCanceled()) {
                 Cat.i("Cancel running %s", job);

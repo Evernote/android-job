@@ -63,6 +63,19 @@ public class JobManagerTest {
         assertThat(jobId).isEqualTo(newId);
     }
 
+    @Test
+    public void testCancelClass() {
+        JobRequest request = getJobRequest();
+
+        int id = request.schedule();
+
+        assertThat(getManager().getJobRequest(id)).isNotNull();
+        assertThat(getManager().getAllJobRequestsForClass(TestJob.class)).isNotEmpty().hasSize(1);
+
+        int canceled = getManager().cancelAllForClass(TestJob.class);
+        assertThat(canceled).isEqualTo(1);
+    }
+
     @After
     public void tearDown() {
         getManager().cancelAll();

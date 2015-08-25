@@ -76,7 +76,7 @@ import java.util.concurrent.atomic.AtomicInteger;
         return mCache.get(id);
     }
 
-    public synchronized Set<JobRequest> getAllJobs() {
+    public synchronized Set<JobRequest> getAllJobs(Class<? extends Job> clazz) {
         Set<JobRequest> result = new HashSet<>();
 
         Set<String> keys = mPreferences.getAll().keySet();
@@ -84,9 +84,9 @@ import java.util.concurrent.atomic.AtomicInteger;
             if (isJobId(key)) {
                 int id = getIdFromKey(key);
                 if (id > 0) {
-                    JobRequest jobRequest = mCache.get(id);
-                    if (jobRequest != null) {
-                        result.add(jobRequest);
+                    JobRequest request = mCache.get(id);
+                    if (request != null && (clazz == null || clazz.equals(request.getJobClass()))) {
+                        result.add(request);
                     }
                 }
             }

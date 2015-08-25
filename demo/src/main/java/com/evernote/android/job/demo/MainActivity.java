@@ -27,6 +27,7 @@ public class MainActivity extends Activity {
 
     private CompoundButton mRequiresCharging;
     private CompoundButton mRequiresDeviceIdle;
+    private CompoundButton mSingle;
     private Spinner mNetworkTypeSpinner;
 
     private JobManager mJobManager;
@@ -44,6 +45,7 @@ public class MainActivity extends Activity {
 
         mRequiresCharging = (CompoundButton) findViewById(R.id.check_requires_charging);
         mRequiresDeviceIdle = (CompoundButton) findViewById(R.id.check_requires_device_idle);
+        mSingle = (CompoundButton) findViewById(R.id.check_single);
         mNetworkTypeSpinner = (Spinner) findViewById(R.id.spinner_network_type);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getNetworkTypesAsString());
@@ -150,6 +152,7 @@ public class MainActivity extends Activity {
                 .setExtras(extras)
                 .setRequirementsEnforced(true)
                 .setPersisted(true)
+                .setSingle(mSingle.isChecked())
                 .build()
                 .schedule();
     }
@@ -168,6 +171,10 @@ public class MainActivity extends Activity {
     private void testPeriodic() {
         mLastJobId = new JobRequest.Builder(this, TestJob.class)
                 .setPeriodic(60_000L)
+                .setSingle(mSingle.isChecked())
+                .setRequiresCharging(mRequiresCharging.isChecked())
+                .setRequiresDeviceIdle(mRequiresDeviceIdle.isChecked())
+                .setRequiredNetworkType(JobRequest.NetworkType.values()[mNetworkTypeSpinner.getSelectedItemPosition()])
                 .setPersisted(true)
                 .build()
                 .schedule();

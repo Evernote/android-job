@@ -186,6 +186,15 @@ public final class JobRequest {
     }
 
     /**
+     * @return If {@code true}, then there is no or only one scheduled request for this job class.
+     * @see #getJobClass()
+     * @see Builder#setSingle(boolean)
+     */
+    public boolean isSingle() {
+        return mBuilder.mSingle;
+    }
+
+    /**
      * @return If {@code true}, then the job will run at exact time ignoring the device state.
      */
     public boolean isExact() {
@@ -325,6 +334,7 @@ public final class JobRequest {
 
         private PersistableBundleCompat mExtras;
         private boolean mPersisted;
+        private boolean mSingle;
 
         /**
          * @param context A {@link Context} which is used for initializing the {@link JobManager} if
@@ -364,6 +374,7 @@ public final class JobRequest {
 
             mExtras = request.getExtras();
             mPersisted = request.isPersisted();
+            mSingle = request.isSingle();
         }
 
         @SuppressWarnings("unchecked")
@@ -387,6 +398,7 @@ public final class JobRequest {
 
             mExtras = bundle.getPersistableBundleCompat("extras");
             mPersisted = bundle.getBoolean("persisted", false);
+            mSingle = bundle.getBoolean("single", false);
         }
 
         private PersistableBundleCompat asBundle() {
@@ -410,6 +422,7 @@ public final class JobRequest {
 
             bundle.putPersistableBundleCompat("extras", mExtras);
             bundle.putBoolean("persisted", mPersisted);
+            bundle.putBoolean("single", mSingle);
 
             return bundle;
         }
@@ -609,6 +622,18 @@ public final class JobRequest {
                 throw new IllegalStateException("Does not have RECEIVE_BOOT_COMPLETED permission, which is mandatory for this feature");
             }
             mPersisted = persisted;
+            return this;
+        }
+
+        /**
+         * Set whether there should be only a single scheduled job request for the set job class. If
+         * you schedule another request with the same job class before canceling the old scheduled
+         * request, then the new schedule call is ignored and the new request skipped.
+         *
+         * @param single Whether there should be only one scheduled request for the set job class.
+         */
+        public Builder setSingle(boolean single) {
+            mSingle = single;
             return this;
         }
 
