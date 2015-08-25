@@ -56,4 +56,17 @@ public class PersistableBundleCompatTest {
         assertThat(inflatedInner).isNotNull();
         assertThat(inflatedInner.getString("string2", null)).isEqualTo("world");
     }
+
+    @Test
+    public void testNullInStringArray() {
+        PersistableBundleCompat bundle = new PersistableBundleCompat();
+
+        String[] array = {"111", null, "333"};
+        bundle.putStringArray("array", array);
+
+        bundle = PersistableBundleCompat.fromXml(bundle.saveToXml());
+
+        String[] inflated = bundle.getStringArray("array");
+        assertThat(inflated).isNotNull().hasSize(3).containsExactly("111", null, "333");
+    }
 }

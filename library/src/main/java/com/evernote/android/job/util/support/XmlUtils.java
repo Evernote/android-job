@@ -544,9 +544,14 @@ import java.util.Set;
         out.attribute(null, "num", Integer.toString(n));
 
         for (int i=0; i<n; i++) {
-            out.startTag(null, "item");
-            out.attribute(null, "value", val[i]);
-            out.endTag(null, "item");
+            if (val[i] == null) {
+                out.startTag(null, "null");
+                out.endTag(null, "null");
+            } else {
+                out.startTag(null, "item");
+                out.attribute(null, "value", val[i]);
+                out.endTag(null, "item");
+            }
         }
 
         out.endTag(null, "string-array");
@@ -1141,13 +1146,15 @@ import java.util.Set;
                     } catch (NumberFormatException e) {
                         throw new XmlPullParserException("Not a number in value attribute in item");
                     }
+                } else if (parser.getName().equals("null")) {
+                    array[i] = null;
                 } else {
                     throw new XmlPullParserException("Expected item tag at: " + parser.getName());
                 }
             } else if (eventType == parser.END_TAG) {
                 if (parser.getName().equals(endTag)) {
                     return array;
-                } else if (parser.getName().equals("item")) {
+                } else if (parser.getName().equals("item") || parser.getName().equals("null")) {
                     i++;
                 } else {
                     throw new XmlPullParserException("Expected " + endTag + " end tag at: " + parser.getName());
