@@ -53,7 +53,7 @@ public class JobProxy14 implements JobProxy {
     @Override
     public void plantOneOff(JobRequest request) {
         PendingIntent pendingIntent = getPendingIntent(request, false);
-        setAlarm(request, AlarmManager.RTC, System.currentTimeMillis() + Common.getAverageDelayMs(request), pendingIntent);
+        setAlarm(request, System.currentTimeMillis() + Common.getAverageDelayMs(request), pendingIntent);
 
         Cat.d("Scheduled alarm, %s, delay %s, exact %b", request,
                 JobUtil.timeToString(Common.getAverageDelayMs(request)), request.isExact());
@@ -62,7 +62,7 @@ public class JobProxy14 implements JobProxy {
     @Override
     public void plantPeriodic(JobRequest request) {
         PendingIntent pendingIntent = getPendingIntent(request, true);
-        mAlarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
+        mAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
 
         Cat.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
     }
@@ -84,13 +84,18 @@ public class JobProxy14 implements JobProxy {
         return PendingIntent.getBroadcast(mContext, request.getJobId(), intent, flags);
     }
 
-    protected void setAlarm(JobRequest request, int type, long triggerAtMillis, PendingIntent pendingIntent) {
-        if (request.isExact() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            mAlarmManager.setExactAndAllowWhileIdle(type, triggerAtMillis, pendingIntent);
-        } else if (request.isExact() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            mAlarmManager.setExact(type, triggerAtMillis, pendingIntent);
+    protected void setAlarm(JobRequest request, long triggerAtMillis, PendingIntent pendingIntent) {
+        if (request.isExact()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                mAlarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            } else {
+                mAlarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            }
+
         } else {
-            mAlarmManager.set(type, triggerAtMillis, pendingIntent);
+            mAlarmManager.set(AlarmManager.RTC, triggerAtMillis, pendingIntent);
         }
     }
 }
