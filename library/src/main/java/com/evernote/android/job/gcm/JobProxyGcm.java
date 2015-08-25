@@ -69,7 +69,7 @@ public class JobProxyGcm implements JobProxy {
 
         mGcmNetworkManager.schedule(task);
 
-        Cat.d("Scheduled OneoffTask tag = %s, start %s, end %s", task.getTag(),
+        Cat.d("Scheduled OneoffTask, %s, start %s, end %s", request,
                 JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
     }
 
@@ -87,7 +87,7 @@ public class JobProxyGcm implements JobProxy {
 
         mGcmNetworkManager.schedule(task);
 
-        Cat.d("Scheduled PeriodicTask tag = %s, interval %s", task.getTag(), JobUtil.timeToString(request.getIntervalMs()));
+        Cat.d("Scheduled PeriodicTask, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
     }
 
     @Override

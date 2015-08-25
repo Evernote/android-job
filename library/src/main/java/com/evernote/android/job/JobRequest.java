@@ -310,6 +310,11 @@ public final class JobRequest {
         return mBuilder.hashCode();
     }
 
+    @Override
+    public String toString() {
+        return "request{id=" + getJobId() + ", class=" + getJobClass().getSimpleName() + '}';
+    }
+
     /**
      * Builder class for constructing JobRequests.
      */

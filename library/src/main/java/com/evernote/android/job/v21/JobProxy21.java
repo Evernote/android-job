@@ -67,8 +67,8 @@ public class JobProxy21 implements JobProxy {
 
         int scheduleResult = mJobScheduler.schedule(jobInfo);
 
-        Cat.d("Schedule one-off jobInfo ID = %d %s, start %s, end %s", jobInfo.getId(), scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
-                JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
+        Cat.d("Schedule one-off jobInfo %s, %s, start %s, end %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
+                request, JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
     }
 
     @Override
@@ -83,8 +83,8 @@ public class JobProxy21 implements JobProxy {
 
         int scheduleResult = mJobScheduler.schedule(jobInfo);
 
-        Cat.d("Schedule periodic jobInfo ID = %d %s, interval %s", jobInfo.getId(), scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
-                JobUtil.timeToString(request.getIntervalMs()));
+        Cat.d("Schedule periodic jobInfo %s, %s, interval %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
+                request, JobUtil.timeToString(request.getIntervalMs()));
     }
 
     @Override

@@ -258,12 +258,13 @@ public abstract class Job {
 
     @Override
     public String toString() {
-        return "Job{"
-                + "mId=" + mParams.getId()
-                + ", mFinished=" + isFinished()
-                + ", mResult=" + mResult
-                + ", mCanceled=" + mCanceled
-                + ", mPeriodic=" + mParams.isPeriodic()
+        return "job{"
+                + "id=" + mParams.getId()
+                + ", finished=" + isFinished()
+                + ", result=" + mResult
+                + ", canceled=" + mCanceled
+                + ", periodic=" + mParams.isPeriodic()
+                + ", class=" + getClass().getSimpleName()
                 + '}';
     }
 

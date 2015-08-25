@@ -55,7 +55,7 @@ public class JobProxy14 implements JobProxy {
         PendingIntent pendingIntent = getPendingIntent(request, false);
         setAlarm(request, AlarmManager.RTC, System.currentTimeMillis() + Common.getAverageDelayMs(request), pendingIntent);
 
-        Cat.d("Scheduled alarm id = %d, delay %s, exact %b", request.getJobId(),
+        Cat.d("Scheduled alarm, %s, delay %s, exact %b", request,
                 JobUtil.timeToString(Common.getAverageDelayMs(request)), request.isExact());
     }
 
@@ -64,7 +64,7 @@ public class JobProxy14 implements JobProxy {
         PendingIntent pendingIntent = getPendingIntent(request, true);
         mAlarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
 
-        Cat.d("Scheduled repeating alarm id = %d, interval %s", request.getJobId(), JobUtil.timeToString(request.getIntervalMs()));
+        Cat.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
     }
 
     @Override

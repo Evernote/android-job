@@ -60,7 +60,7 @@ import java.util.concurrent.TimeUnit;
                     .setContext(context)
                     .setRequest(request);
 
-            Cat.i("Executing request %d, context %s", request.getJobId(), context.getClass().getSimpleName());
+            Cat.i("Executing %s, context %s", request, context.getClass().getSimpleName());
 
             mJobs.put(request.getJobId(), job);
             return mExecutorService.submit(new JobCallable(job));

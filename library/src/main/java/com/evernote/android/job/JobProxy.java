@@ -83,15 +83,15 @@ public interface JobProxy {
             boolean periodic = request != null && request.isPeriodic();
 
             if (job != null && !job.isFinished()) {
-                mCat.d("Job %d is already running", mJobId);
+                mCat.d("Job %d is already running, %s", mJobId, request);
                 return null;
 
             } else if (job != null && !periodic) {
-                mCat.d("Job %d already finished", mJobId);
+                mCat.d("Job %d already finished, %s", mJobId, request);
                 return null;
 
             } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < 2_000) {
-                mCat.d("Job %d is periodic and just finished", mJobId);
+                mCat.d("Job %d is periodic and just finished, %s", mJobId, request);
                 return null;
 
             } else if (request == null) {
@@ -113,7 +113,7 @@ public interface JobProxy {
                         JobUtil.timeToString(getEndMs(request)));
             }
 
-            mCat.d("Run job %d, waited %s, %s", mJobId, JobUtil.timeToString(waited), timeWindow);
+            mCat.d("Run job, %s, waited %s, %s", request, JobUtil.timeToString(waited), timeWindow);
             JobExecutor jobExecutor = JobManager.instance(mContext).getJobExecutor();
 
             try {
@@ -125,7 +125,7 @@ public interface JobProxy {
 
                 // wait until done
                 Job.Result result = future.get();
-                mCat.d("Finished job %d %s", mJobId, result);
+                mCat.d("Finished job, %s %s", request, result);
                 return result;
 
             } catch (InterruptedException | ExecutionException e) {
@@ -134,7 +134,7 @@ public interface JobProxy {
                 Job job = jobExecutor.getJob(mJobId);
                 if (job != null) {
                     job.cancel();
-                    mCat.e("Canceled %d", mJobId);
+                    mCat.e("Canceled %s", request);
                 }
 
                 return Job.Result.FAILURE;

@@ -234,7 +234,7 @@ public final class JobManager {
 
         JobRequest request = getJobRequest(jobId);
         if (request != null) {
-            Cat.i("Found pending job request %d, canceling", jobId);
+            Cat.i("Found pending job %s, canceling", request);
             getJobProxy(request).cancel(request);
             getJobStorage().remove(jobId);
             canceled = true;
