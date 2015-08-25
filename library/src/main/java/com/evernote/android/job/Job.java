@@ -35,6 +35,8 @@ import com.evernote.android.job.util.support.PersistableBundleCompat;
 
 import net.vrallev.android.cat.Cat;
 
+import java.lang.ref.WeakReference;
+
 /**
  * Base class for running delayed jobs. Each concrete class must provide a public default constructor.
  * A {@link Job} is executed in a background thread.
@@ -61,7 +63,8 @@ public abstract class Job {
     }
 
     private Params mParams;
-    private Context mContext;
+    private WeakReference<Context> mContextReference;
+    private Context mApplicationContext;
 
     private boolean mCanceled;
     private long mFinishedTimeStamp = -1;
@@ -191,16 +194,20 @@ public abstract class Job {
     }
 
     /*package*/ final Job setContext(Context context) {
-        mContext = context.getApplicationContext();
+        mContextReference = new WeakReference<>(context);
+        mApplicationContext = context.getApplicationContext();
         return this;
     }
 
     /**
      * @return The {@link Context} running this {@link Job}. In most situations it's a {@link Service}.
+     * If this context already was destroyed for some reason, then the application context is returned.
+     * Never returns {@code null}.
      */
     @NonNull
     protected final Context getContext() {
-        return mContext;
+        Context context = mContextReference.get();
+        return context == null ? mApplicationContext : context;
     }
 
     /**
