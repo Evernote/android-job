@@ -68,7 +68,12 @@ public final class Device {
     public static boolean isIdle(Context context) {
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return powerManager.isDeviceIdleMode();
+            /*
+             * isDeviceIdleMode() is a very strong requirement and could cause a job
+             * to be never run. isDeviceIdleMode() returns true in doze mode, but jobs
+             * are delayed until the device leaves doze mode
+             */
+            return powerManager.isDeviceIdleMode() || !powerManager.isInteractive();
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
             return !powerManager.isInteractive();
         } else {
