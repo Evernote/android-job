@@ -64,16 +64,17 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testCancelClass() {
+    public void testCancelTag() {
         JobRequest request = getJobRequest();
 
-        int id = request.schedule();
+        request.schedule();
 
-        assertThat(getManager().getJobRequest(id)).isNotNull();
-        assertThat(getManager().getAllJobRequestsForClass(TestJob.class)).isNotEmpty().hasSize(1);
+        assertThat(getManager().getJobRequest("tag")).isNotNull();
+        assertThat(getManager().getJobRequest("other")).isNull();
 
-        int canceled = getManager().cancelAllForClass(TestJob.class);
-        assertThat(canceled).isEqualTo(1);
+        boolean canceled = getManager().cancel("tag");
+        assertThat(canceled).isTrue();
+        assertThat(getManager().cancel("tag")).isFalse();
     }
 
     @After
@@ -84,6 +85,7 @@ public class JobManagerTest {
     private JobRequest getJobRequest() {
         return getBuilder()
                 .setExecutionWindow(300_000L, 300_000L)
+                .setTag("tag")
                 .build();
     }
 

@@ -74,13 +74,23 @@ import java.util.concurrent.TimeUnit;
         return mJobs.get(jobId);
     }
 
-    public synchronized Set<Job> getAllJobs(Class<? extends Job> clazz) {
-        Set<Job> result = new HashSet<>();
+    public synchronized Job getJob(String tag) {
+        if (tag == null) {
+            return null;
+        }
         for (int i = 0; i < mJobs.size(); i++) {
             Job job = mJobs.valueAt(i);
-            if (clazz == null || job.getClass().equals(clazz)) {
-                result.add(job);
+            if (tag.equals(job.getParams().getRequest().getTag())) {
+                return job;
             }
+        }
+        return null;
+    }
+
+    public synchronized Set<Job> getAllJobs() {
+        Set<Job> result = new HashSet<>();
+        for (int i = 0; i < mJobs.size(); i++) {
+            result.add(mJobs.valueAt(i));
         }
         return result;
     }

@@ -186,12 +186,12 @@ public final class JobRequest {
     }
 
     /**
-     * @return If {@code true}, then there is no or only one scheduled request for this job class.
+     * @return The specific tag for this request or {@code null} if not set.
      * @see #getJobClass()
-     * @see Builder#setSingle(boolean)
+     * @see Builder#setTag(String)
      */
-    public boolean isSingle() {
-        return mBuilder.mSingle;
+    public String getTag() {
+        return mBuilder.mTag;
     }
 
     /**
@@ -312,7 +312,7 @@ public final class JobRequest {
 
     @Override
     public String toString() {
-        return "request{id=" + getJobId() + ", class=" + getJobClass().getSimpleName() + '}';
+        return "request{id=" + getJobId() + ", class=" + getJobClass().getSimpleName() + ", tag=" + getTag() + '}';
     }
 
     /**
@@ -339,7 +339,8 @@ public final class JobRequest {
 
         private PersistableBundleCompat mExtras;
         private boolean mPersisted;
-        private boolean mSingle;
+
+        private String mTag;
 
         /**
          * @param context A {@link Context} which is used for initializing the {@link JobManager} if
@@ -379,7 +380,7 @@ public final class JobRequest {
 
             mExtras = request.getExtras();
             mPersisted = request.isPersisted();
-            mSingle = request.isSingle();
+            mTag = request.getTag();
         }
 
         @SuppressWarnings("unchecked")
@@ -403,7 +404,7 @@ public final class JobRequest {
 
             mExtras = bundle.getPersistableBundleCompat("extras");
             mPersisted = bundle.getBoolean("persisted", false);
-            mSingle = bundle.getBoolean("single", false);
+            mTag = bundle.getString("tag", null);
         }
 
         private PersistableBundleCompat asBundle() {
@@ -427,7 +428,7 @@ public final class JobRequest {
 
             bundle.putPersistableBundleCompat("extras", mExtras);
             bundle.putBoolean("persisted", mPersisted);
-            bundle.putBoolean("single", mSingle);
+            bundle.putString("tag", mTag);
 
             return bundle;
         }
@@ -631,14 +632,15 @@ public final class JobRequest {
         }
 
         /**
-         * Set whether there should be only a single scheduled job request for the set job class. If
-         * you schedule another request with the same job class before canceling the old scheduled
-         * request, then the new schedule call is ignored and the new request skipped.
+         * Associate this request with a specific tag. That makes it easier to find, update and
+         * cancel a pending request or running job. Note that if you schedule multiple requests
+         * with the same tag, then you can't predetermine, which request you cancel or get with
+         * {@link JobManager#getJobRequest(String)}.
          *
-         * @param single Whether there should be only one scheduled request for the set job class.
+         * @param tag The specific tag for this request.
          */
-        public Builder setSingle(boolean single) {
-            mSingle = single;
+        public Builder setTag(String tag) {
+            mTag = tag;
             return this;
         }
 

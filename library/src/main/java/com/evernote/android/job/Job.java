@@ -265,6 +265,7 @@ public abstract class Job {
                 + ", canceled=" + mCanceled
                 + ", periodic=" + mParams.isPeriodic()
                 + ", class=" + getClass().getSimpleName()
+                + ", tag=" + getClass().getSimpleName()
                 + '}';
     }
 
@@ -286,6 +287,13 @@ public abstract class Job {
          */
         public int getId() {
             return mRequest.getJobId();
+        }
+
+        /**
+         * @return The specific tag for this {@link Job} or {@code null} if not set.
+         */
+        public String getTag() {
+            return mRequest.getTag();
         }
 
         /**

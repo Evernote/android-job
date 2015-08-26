@@ -29,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Provides helper methods.
@@ -38,6 +39,8 @@ import java.util.TimeZone;
 public final class JobUtil {
 
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("HH:mm:ss", Locale.US);
+
+    private static final long ONE_DAY = TimeUnit.DAYS.toMillis(1);
 
     private JobUtil() {
         // no op
@@ -49,6 +52,15 @@ public final class JobUtil {
      */
     public static String timeToString(long timeMs) {
         FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-        return FORMAT.format(new Date(timeMs));
+        String result = FORMAT.format(new Date(timeMs));
+
+        long days = timeMs / ONE_DAY;
+        if (days == 1) {
+            result += " (+1 day)";
+        } else if (days > 1) {
+            result += " (+" + days + " days)";
+        }
+
+        return result;
     }
 }

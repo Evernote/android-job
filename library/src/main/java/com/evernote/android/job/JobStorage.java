@@ -76,19 +76,25 @@ import java.util.concurrent.atomic.AtomicInteger;
         return mCache.get(id);
     }
 
-    public synchronized Set<JobRequest> getAllJobs(Class<? extends Job> clazz) {
-        Set<JobRequest> result = new HashSet<>();
+    public synchronized JobRequest get(String tag) {
+        if (tag == null) {
+            return null;
+        }
+        for (String key : mPreferences.getAll().keySet()) {
+            JobRequest request = getRequestForKey(key);
+            if (request != null && tag.equals(request.getTag())) {
+                return request;
+            }
+        }
+        return null;
+    }
 
-        Set<String> keys = mPreferences.getAll().keySet();
-        for (String key : keys) {
-            if (isJobId(key)) {
-                int id = getIdFromKey(key);
-                if (id > 0) {
-                    JobRequest request = mCache.get(id);
-                    if (request != null && (clazz == null || clazz.equals(request.getJobClass()))) {
-                        result.add(request);
-                    }
-                }
+    public synchronized Set<JobRequest> getAllJobs() {
+        Set<JobRequest> result = new HashSet<>();
+        for (String key : mPreferences.getAll().keySet()) {
+            JobRequest request = getRequestForKey(key);
+            if (request != null) {
+                result.add(request);
             }
         }
 
@@ -150,6 +156,16 @@ import java.util.concurrent.atomic.AtomicInteger;
         } catch (NumberFormatException e) {
             return -1;
         }
+    }
+
+    private JobRequest getRequestForKey(String key) {
+        if (isJobId(key)) {
+            int id = getIdFromKey(key);
+            if (id > 0) {
+                return mCache.get(id);
+            }
+        }
+        return null;
     }
 
     private class JobCache extends LruCache<Integer, JobRequest> {

@@ -120,15 +120,6 @@ public final class JobManager {
      * @param request The {@link JobRequest} which will be run in the future.
      */
     public void schedule(JobRequest request) {
-        if (request.isSingle()) {
-            Set<JobRequest> requests = getAllJobRequestsForClass(request.getJobClass());
-            if (!requests.isEmpty()) {
-                Cat.i("Tried scheduling job request %d, but request %d for class %s was already scheduled",
-                        request.getJobId(), requests.iterator().next().getJobId(), request.getJobClass());
-                return;
-            }
-        }
-
         mJobStorage.put(request);
         request.setScheduledAt(System.currentTimeMillis());
 
@@ -149,22 +140,26 @@ public final class JobManager {
     }
 
     /**
+     * You can associate a tag with a specific {@link JobRequest.Builder#setTag(String)}. If you
+     * schedule multiple requests with the same tag, then you can't predetermine which request is
+     * returned by this function.
+     *
+     * @param tag The unique tag of the pending {@link JobRequest}.
+     * @return The {@link JobRequest} associated with this {@code tag} or {@code null} if no request
+     * was to be found.
+     * @see JobRequest.Builder#setTag(String)
+     */
+    public JobRequest getJobRequest(@NonNull String tag) {
+        return mJobStorage.get(tag);
+    }
+
+    /**
      * @return All pending JobRequests or an empty set. Never returns {@code null}.
      * @see #getJobRequest(int)
      */
     @NonNull
     public Set<JobRequest> getAllJobRequests() {
-        return mJobStorage.getAllJobs(null);
-    }
-
-    /**
-     * @param clazz The desired class which works as filter.
-     * @return All pending JobRequests which would run the job {@code clazz} or an empty set.
-     * Never returns {@code null}.
-     */
-    @NonNull
-    public Set<JobRequest> getAllJobRequestsForClass(@NonNull Class<? extends Job> clazz) {
-        return mJobStorage.getAllJobs(JobPreconditions.checkNotNull(clazz));
+        return mJobStorage.getAllJobs();
     }
 
     /**
@@ -183,23 +178,27 @@ public final class JobManager {
      * Jobs are cached in memory even if they already have finished. But finished jobs are never
      * restored after the app has launched.
      *
-     * @return All running and cached finished jobs or an empty set. Never returns {@code null}.
+     * You can associate a tag with a specific {@link JobRequest.Builder#setTag(String)}. If you
+     * schedule multiple requests with the same tag, then you can't predetermine which job is
+     * returned by this function.
+     *
+     * @param tag The unique tag of the running or finished {@link Job}.
+     * @return The {@link Job} associated with this {@code tag} if it's running or has been finished
+     * and is still cached. Returns {@code null} otherwise.
      */
-    @NonNull
-    public Set<Job> getAllJobs() {
-        return mJobExecutor.getAllJobs(null);
+    public Job getJob(String tag) {
+        return mJobExecutor.getJob(tag);
     }
 
     /**
      * Jobs are cached in memory even if they already have finished. But finished jobs are never
      * restored after the app has launched.
      *
-     * @param clazz The desired class which works as filter.
-     * @return All running and cached finished jobs which are instance of {@code clazz} or an empty
-     * set. Never return {@code null}.
+     * @return All running and cached finished jobs or an empty set. Never returns {@code null}.
      */
-    public Set<Job> getAllJobsForClass(Class<? extends Job> clazz) {
-        return mJobExecutor.getAllJobs(JobPreconditions.checkNotNull(clazz));
+    @NonNull
+    public Set<Job> getAllJobs() {
+        return mJobExecutor.getAllJobs();
     }
 
     /**
@@ -230,24 +229,20 @@ public final class JobManager {
      * @return {@code true} if a request or job were found and canceled.
      */
     public boolean cancel(int jobId) {
-        boolean canceled = false;
+        // call both methods
+        return cancelInner(getJobRequest(jobId)) | cancelInner(getJob(jobId));
+    }
 
-        JobRequest request = getJobRequest(jobId);
-        if (request != null) {
-            Cat.i("Found pending job %s, canceling", request);
-            getJobProxy(request).cancel(request);
-            getJobStorage().remove(jobId);
-            canceled = true;
-        }
-
-        Job job = mJobExecutor.getJob(jobId);
-        if (job != null && !job.isFinished() && !job.isCanceled()) {
-            Cat.i("Cancel running %s", job);
-            job.cancel();
-            canceled = true;
-        }
-
-        return canceled;
+    /**
+     * Cancel either the pending {@link JobRequest} or the running {@link Job} associated with this
+     * {@code tag}.
+     *
+     * @param tag The unique tag of the {@link JobRequest} or running {@link Job}.
+     * @return {@code true} if a request or job were found and canceled.
+     */
+    public boolean cancel(String tag) {
+        // call both methods
+        return cancelInner(getJobRequest(tag)) | cancelInner(getJob(tag));
     }
 
     /**
@@ -256,40 +251,41 @@ public final class JobManager {
      * @return The count of canceled requests and running jobs.
      */
     public int cancelAll() {
-        return cancelAllInner(null);
-    }
-
-    /**
-     * Cancel all pending JobRequests and running jobs for this {@code clazz}.
-     *
-     * @param clazz The desired class which works as filter.
-     * @return The count of canceled requests and running jobs.
-     * @see #getAllJobRequestsForClass(Class)
-     * @see #getAllJobsForClass(Class)
-     */
-    public int cancelAllForClass(Class<? extends Job> clazz) {
-        return cancelAllInner(JobPreconditions.checkNotNull(clazz));
-    }
-
-    private int cancelAllInner(@Nullable Class<? extends Job> clazz) {
         int canceled = 0;
 
-        Set<JobRequest> requests = clazz == null ? getAllJobRequests() : getAllJobRequestsForClass(clazz);
-        for (JobRequest request : requests) {
-            if (cancel(request.getJobId())) {
+        for (JobRequest request : getAllJobRequests()) {
+            if (cancelInner(request)) {
                 canceled++;
             }
         }
 
-        Set<Job> jobs = clazz == null ? getAllJobs() : getAllJobsForClass(clazz);
         for (Job job : getAllJobs()) {
-            if (!job.isFinished() && !job.isCanceled()) {
-                Cat.i("Cancel running %s", job);
-                job.cancel();
+            if (cancelInner(job)) {
                 canceled++;
             }
         }
         return canceled;
+    }
+
+    private boolean cancelInner(@Nullable JobRequest request) {
+        if (request != null) {
+            Cat.i("Found pending job %s, canceling", request);
+            getJobProxy(request).cancel(request);
+            getJobStorage().remove(request.getJobId());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean cancelInner(@Nullable Job job) {
+        if (job != null && !job.isFinished() && !job.isCanceled()) {
+            Cat.i("Cancel running %s", job);
+            job.cancel();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
