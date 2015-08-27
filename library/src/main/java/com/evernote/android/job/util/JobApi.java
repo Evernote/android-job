@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Evernote Corporation.
+ * Copyright 2007-present Evernote Corporation.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
