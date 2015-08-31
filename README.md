@@ -107,6 +107,27 @@ public class ExampleJob extends Job {
 
 **Warning:** With Android Marshmallow Google introduced the auto backup feature. All job information are stored in a shared preference file called `jobs.xml`. You should exclude this file so that it isn't backed up.
 
+#### Using the GcmNetworkManager
+
+By default the API for the `GcmNetworkManager` is disabled. In order to use it for pre Lollipop devices you must add the GCM dependency in your `build.gradle` and then add the service in your `AndroidManifest.xml` manually.
+
+```groovy
+dependencies {
+    compile 'com.google.android.gms:play-services-gcm:7.8.0' // or newer
+}
+```
+
+```xml
+<service
+    android:name="com.evernote.android.job.gcm.PlatformGcmService"
+    android:exported="true"
+    android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE">
+    <intent-filter>
+        <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY"/>
+    </intent-filter>
+</service>
+```
+
 License
 -------
 

@@ -30,14 +30,11 @@ import android.app.job.JobScheduler;
 import android.content.Context;
 import android.os.Build;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.gcm.GcmNetworkManager;
 import com.evernote.android.job.JobProxy;
+import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.v14.JobProxy14;
 import com.evernote.android.job.v21.JobProxy21;
-
-import com.evernote.android.job.gcm.JobProxyGcm;
+import com.google.android.gms.gcm.GcmNetworkManager;
 
 /**
  * All available APIs.
@@ -67,7 +64,7 @@ public enum JobApi {
             case V_14:
                 return true;
             case GCM:
-                return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS;
+                return GcmAvailableHelper.isGcmApiSupported(context);
             default:
                 throw new IllegalStateException("not implemented");
         }

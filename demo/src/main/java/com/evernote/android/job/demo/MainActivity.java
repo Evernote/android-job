@@ -16,6 +16,8 @@ import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
+import net.vrallev.android.cat.Cat;
+
 /**
  * @author rwondratschek
  */
@@ -67,9 +69,21 @@ public class MainActivity extends Activity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
-        menu.findItem(R.id.action_force_14).setChecked(false);
-        menu.findItem(R.id.action_force_21).setChecked(false);
-        menu.findItem(R.id.action_force_gcm).setChecked(false);
+        if (JobApi.V_14.isSupported(this)) {
+            menu.findItem(R.id.action_force_14).setChecked(false);
+        } else {
+            menu.findItem(R.id.action_force_14).setVisible(false);
+        }
+        if (JobApi.V_21.isSupported(this)) {
+            menu.findItem(R.id.action_force_21).setChecked(false);
+        } else {
+            menu.findItem(R.id.action_force_21).setVisible(false);
+        }
+        if (JobApi.GCM.isSupported(this)) {
+            menu.findItem(R.id.action_force_gcm).setChecked(false);
+        } else {
+            menu.findItem(R.id.action_force_gcm).setVisible(false);
+        }
 
         switch (mJobManager.getApi()) {
             case V_21:
@@ -158,8 +172,12 @@ public class MainActivity extends Activity {
         JobApi currentApi = mJobManager.getApi();
 
         for (JobApi api : JobApi.values()) {
-            mJobManager.forceApi(api);
-            testSimple();
+            if (api.isSupported(this)) {
+                mJobManager.forceApi(api);
+                testSimple();
+            } else {
+                Cat.w("%s is not supported", api);
+            }
         }
 
         mJobManager.forceApi(currentApi);

@@ -15,6 +15,13 @@ android {
         versionCode Integer.parseInt(project.VERSION_CODE)
     }
 
+    buildTypes {
+        gcm.initWith(buildTypes.debug)
+        gcm {
+            applicationIdSuffix ".gcm"
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
@@ -31,15 +38,6 @@ android {
 dependencies {
     compile project(':library')
     compile 'com.android.support:appcompat-v7:23.0.0'
-}
 
-// allows to run MNC preview build on SDK_INT < MNC device
-android.applicationVariants.all { variant ->
-    variant.outputs.each { output ->
-        output.processManifest.doLast {
-            def manifestOutFile = output.processManifest.manifestOutputFile
-            def newFileContents = manifestOutFile.getText('UTF-8').replace("minSdkVersion=\"MNC\"", "minSdkVersion=\"14\"").replace("targetSdkVersion=\"MNC\"", "targetSdkVersion=\"21\"")
-            manifestOutFile.write(newFileContents, 'UTF-8')
-        }
-    }
+    gcmCompile 'com.google.android.gms:play-services-gcm:7.8.0'
 }

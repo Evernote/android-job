@@ -2,9 +2,9 @@ apply plugin: 'com.android.library'
 apply from: '../build-config/gradle-quality.gradle'
 
 dependencies {
-    compile 'com.android.support:support-v4:23.0.0'
-    compile 'com.google.android.gms:play-services-gcm:7.8.0'
+    provided 'com.google.android.gms:play-services-gcm:7.8.0'
 
+    compile 'com.android.support:support-v4:23.0.0'
     compile 'net.vrallev.android:cat:1.0.2'
 
     androidTestCompile 'com.android.support.test:runner:0.3'

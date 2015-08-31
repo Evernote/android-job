@@ -1,0 +1,22 @@
+<manifest
+    package="com.evernote.android.job.demo"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/demo"
+        android:theme="@style/AppTheme">
+
+        <service
+            android:name="com.evernote.android.job.gcm.PlatformGcmService"
+            android:exported="true"
+            android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE">
+            <intent-filter>
+                <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY"/>
+            </intent-filter>
+        </service>
+
+    </application>
+</manifest>
