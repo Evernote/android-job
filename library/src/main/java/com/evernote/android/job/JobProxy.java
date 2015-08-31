@@ -118,7 +118,7 @@ public interface JobProxy {
 
             try {
                 if (!request.isPeriodic()) {
-                    JobManager.instance(mContext).getJobStorage().remove(mJobId);
+                    JobManager.instance(mContext).getJobStorage().remove(request);
                 }
 
                 Future<Job.Result> future = jobExecutor.execute(mContext, request);

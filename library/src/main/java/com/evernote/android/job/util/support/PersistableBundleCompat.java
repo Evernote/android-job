@@ -249,7 +249,7 @@ public final class PersistableBundleCompat {
 
     @SuppressWarnings("unchecked")
     @NonNull
-    public static PersistableBundleCompat fromXml(String xml) {
+    public static PersistableBundleCompat fromXml(@NonNull String xml) {
         ByteArrayInputStream inputStream = null;
         try {
             inputStream = new ByteArrayInputStream(xml.getBytes(UTF_8));

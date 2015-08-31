@@ -159,7 +159,7 @@ public final class JobManager {
      */
     @NonNull
     public Set<JobRequest> getAllJobRequests() {
-        return mJobStorage.getAllJobs();
+        return mJobStorage.getAllJobRequests();
     }
 
     /**
@@ -271,7 +271,7 @@ public final class JobManager {
         if (request != null) {
             Cat.i("Found pending job %s, canceling", request);
             getJobProxy(request).cancel(request);
-            getJobStorage().remove(request.getJobId());
+            getJobStorage().remove(request);
             return true;
         } else {
             return false;

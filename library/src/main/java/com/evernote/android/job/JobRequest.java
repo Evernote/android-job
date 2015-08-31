@@ -26,9 +26,12 @@
 package com.evernote.android.job;
 
 import android.app.AlarmManager;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobPreconditions;
@@ -274,20 +277,18 @@ public final class JobRequest {
         return newRequest.schedule();
     }
 
-    /*package*/ String saveToXml() {
-        PersistableBundleCompat bundle = new PersistableBundleCompat();
-        bundle.putPersistableBundleCompat("builder", mBuilder.asBundle());
-        bundle.putInt("numFailures", mNumFailures);
-        bundle.putLong("scheduledAt", mScheduledAt);
-        return bundle.saveToXml();
+    /*package*/ ContentValues toContentValues() {
+        ContentValues contentValues = new ContentValues();
+        mBuilder.fillContentValues(contentValues);
+        contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mNumFailures);
+        contentValues.put(JobStorage.COLUMN_SCHEDULED_AT, mScheduledAt);
+        return contentValues;
     }
 
-    /*package*/ static JobRequest fromXml(String xml) throws Exception {
-        PersistableBundleCompat bundle = PersistableBundleCompat.fromXml(xml);
-
-        JobRequest request = new Builder(bundle.getPersistableBundleCompat("builder")).build();
-        request.mNumFailures = bundle.getInt("numFailures", -1);
-        request.mScheduledAt = bundle.getLong("scheduledAt", -1);
+    /*package*/ static JobRequest fromCursor(Cursor cursor) throws Exception {
+        JobRequest request = new Builder(cursor).build();
+        request.mNumFailures = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_NUM_FAILURES));
+        request.mScheduledAt = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_SCHEDULED_AT));
 
         JobPreconditions.checkArgumentNonnegative(request.mNumFailures, "failure count can't be negative");
         JobPreconditions.checkArgumentNonnegative(request.mScheduledAt, "scheduled at can't be negative");
@@ -384,53 +385,57 @@ public final class JobRequest {
         }
 
         @SuppressWarnings("unchecked")
-        private Builder(PersistableBundleCompat bundle) throws Exception {
-            mId = bundle.getInt("id", -1);
-            mJobClass = (Class<? extends Job>) Class.forName(bundle.getString("jobClass", null));
+        private Builder(Cursor cursor) throws Exception {
+            mId = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_ID));
+            mJobClass = (Class<? extends Job>) Class.forName(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_JOB_CLASS)));
 
-            mStartMs = bundle.getLong("startMs", -1);
-            mEndMs = bundle.getLong("endMs", -1);
+            mStartMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_START_MS));
+            mEndMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_END_MS));
 
-            mBackoffMs = bundle.getLong("backoffMs", -1);
-            mBackoffPolicy = BackoffPolicy.valueOf(bundle.getString("backoffPolicy", null));
+            mBackoffMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_BACKOFF_MS));
+            mBackoffPolicy = BackoffPolicy.valueOf(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_BACKOFF_POLICY)));
 
-            mIntervalMs = bundle.getLong("intervalMs", 0);
+            mIntervalMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_INTERVAL_MS));
 
-            mRequirementsEnforced = bundle.getBoolean("requirementsEnforced", false);
-            mRequiresCharging = bundle.getBoolean("requiresCharging", false);
-            mRequiresDeviceIdle = bundle.getBoolean("requiresDeviceIdle", false);
-            mExact = bundle.getBoolean("exact", false);
-            mNetworkType = NetworkType.valueOf(bundle.getString("networkType", null));
+            mRequirementsEnforced = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIREMENTS_ENFORCED)) > 0;
+            mRequiresCharging = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIRES_CHARGING)) > 0;
+            mRequiresDeviceIdle = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIRES_DEVICE_IDLE)) > 0;
+            mExact = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_EXACT)) > 0;
+            mNetworkType = NetworkType.valueOf(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_NETWORK_TYPE)));
 
-            mExtras = bundle.getPersistableBundleCompat("extras");
-            mPersisted = bundle.getBoolean("persisted", false);
-            mTag = bundle.getString("tag", null);
+            String xml = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_EXTRAS));
+            if (!TextUtils.isEmpty(xml)) {
+                mExtras = PersistableBundleCompat.fromXml(xml);
+            }
+            mPersisted = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_PERSISTED)) > 0;
+            mTag = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_TAG));
         }
 
-        private PersistableBundleCompat asBundle() {
-            PersistableBundleCompat bundle = new PersistableBundleCompat();
-            bundle.putInt("id", mId);
-            bundle.putString("jobClass", mJobClass.getName());
+        private void fillContentValues(ContentValues contentValues) {
+            contentValues.put(JobStorage.COLUMN_ID, mId);
+            contentValues.put(JobStorage.COLUMN_JOB_CLASS, mJobClass.getName());
 
-            bundle.putLong("startMs", mStartMs);
-            bundle.putLong("endMs", mEndMs);
+            contentValues.put(JobStorage.COLUMN_START_MS, mStartMs);
+            contentValues.put(JobStorage.COLUMN_END_MS, mEndMs);
 
-            bundle.putLong("backoffMs", mBackoffMs);
-            bundle.putString("backoffPolicy", mBackoffPolicy.toString());
+            contentValues.put(JobStorage.COLUMN_BACKOFF_MS, mBackoffMs);
+            contentValues.put(JobStorage.COLUMN_BACKOFF_POLICY, mBackoffPolicy.toString());
 
-            bundle.putLong("intervalMs", mIntervalMs);
+            contentValues.put(JobStorage.COLUMN_INTERVAL_MS, mIntervalMs);
 
-            bundle.putBoolean("requirementsEnforced", mRequirementsEnforced);
-            bundle.putBoolean("requiresCharging", mRequiresCharging);
-            bundle.putBoolean("requiresDeviceIdle", mRequiresDeviceIdle);
-            bundle.putBoolean("exact", mExact);
-            bundle.putString("networkType", mNetworkType.toString());
+            contentValues.put(JobStorage.COLUMN_REQUIREMENTS_ENFORCED, mRequirementsEnforced);
+            contentValues.put(JobStorage.COLUMN_REQUIRES_CHARGING, mRequiresCharging);
+            contentValues.put(JobStorage.COLUMN_REQUIRES_DEVICE_IDLE, mRequiresDeviceIdle);
+            contentValues.put(JobStorage.COLUMN_EXACT, mExact);
+            contentValues.put(JobStorage.COLUMN_NETWORK_TYPE, mNetworkType.toString());
 
-            bundle.putPersistableBundleCompat("extras", mExtras);
-            bundle.putBoolean("persisted", mPersisted);
-            bundle.putString("tag", mTag);
-
-            return bundle;
+            if (mExtras != null) {
+                contentValues.put(JobStorage.COLUMN_EXTRAS, mExtras.saveToXml());
+            }
+            contentValues.put(JobStorage.COLUMN_PERSISTED, mPersisted);
+            if (mTag != null) {
+                contentValues.put(JobStorage.COLUMN_TAG, mTag);
+            }
         }
 
         /**
