@@ -21,6 +21,21 @@ Usage
 
 The class `JobManager` serves as entry point. Your jobs need to extend the class `Job`. Create a `JobRequest` with the corresponding builder class and schedule this request with the `JobManager`.
 
+Before you can use the `JobManager` you must initialize the singleton. You need to provide a `Context` and a `JobCreator` implementation. The `JobCreator` maps a job key to a specific job class. One simple implementation is the `JobCreator.ClassNameJobCreator`, which uses the fully-qualified job class name as key. It's recommend to initialize the `JobManager` in the `onCreate()` method of your `Application` object.
+
+```java
+public class App extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        JobManager.create(this, new JobCreator.ClassNameJobCreator());
+    }
+}
+```
+
+After that you can start scheduling jobs.
+
 ```java
 public class ExampleJob extends Job {
 
@@ -33,7 +48,7 @@ public class ExampleJob extends Job {
 }
 
 private void scheduleJob() {
-    new JobRequest.Builder(this, ExampleJob.class)
+    new JobRequest.Builder(ExampleJob.class)
             .setExecutionWindow(30_000L, 40_000L)
             .build()
             .schedule();
@@ -52,7 +67,7 @@ private void scheduleAdvancedJob() {
     PersistableBundleCompat extras = new PersistableBundleCompat();
     extras.putString("key", "Hello world");
 
-    int jobId = new JobRequest.Builder(this, ExampleJob.class)
+    int jobId = new JobRequest.Builder(ExampleJob.class)
             .setExecutionWindow(30_000L, 40_000L)
             .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.EXPONENTIAL)
             .setRequiresCharging(true)
@@ -66,7 +81,7 @@ private void scheduleAdvancedJob() {
 }
 
 private void schedulePeriodicJob() {
-    int jobId = new JobRequest.Builder(this, TestJob.class)
+    int jobId = new JobRequest.Builder(TestJob.class)
             .setPeriodic(60_000L)
             .setPersisted(true)
             .build()
@@ -74,7 +89,7 @@ private void schedulePeriodicJob() {
 }
 
 private void scheduleExactJob() {
-    int jobId = new JobRequest.Builder(this, TestJob.class)
+    int jobId = new JobRequest.Builder(TestJob.class)
             .setExact(20_000L)
             .setPersisted(true)
             .build()
@@ -82,7 +97,7 @@ private void scheduleExactJob() {
 }
 
 private void cancelJob(int jobId) {
-    JobManger.instance(this).cancel(jobId);
+    JobManger.instance().cancel(jobId);
 }
 ```
 
