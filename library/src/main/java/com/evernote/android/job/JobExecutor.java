@@ -53,12 +53,18 @@ import java.util.concurrent.TimeUnit;
         mJobs = new SparseArray<>();
     }
 
-    public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request) {
+    public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @NonNull JobCreator creator) {
         try {
-            Job job = request.getJobClass()
-                    .newInstance()
-                    .setContext(context)
-                    .setRequest(request);
+            Job job = creator.create(request.getJobKey());
+            if (job == null) {
+                Cat.w("JobCreator returned null for key %s", request.getJobKey());
+                return null;
+            }
+            if (job.isFinished()) {
+                throw new IllegalStateException("Job for key %s was already run, a creator should always create a new Job instance");
+            }
+
+            job.setContext(context).setRequest(request);
 
             Cat.i("Executing %s, context %s", request, context.getClass().getSimpleName());
 

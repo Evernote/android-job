@@ -78,8 +78,8 @@ public interface JobProxy {
 
         public JobRequest getPendingRequest() {
             // order is important for logging purposes
-            JobRequest request = JobManager.instance(mContext).getJobRequest(mJobId);
-            Job job = JobManager.instance(mContext).getJob(mJobId);
+            JobRequest request = JobManager.instance().getJobRequest(mJobId);
+            Job job = JobManager.instance().getJob(mJobId);
             boolean periodic = request != null && request.isPeriodic();
 
             if (job != null && !job.isFinished()) {
@@ -114,14 +114,18 @@ public interface JobProxy {
             }
 
             mCat.d("Run job, %s, waited %s, %s", request, JobUtil.timeToString(waited), timeWindow);
-            JobExecutor jobExecutor = JobManager.instance(mContext).getJobExecutor();
+            JobManager manager = JobManager.instance();
+            JobExecutor jobExecutor = manager.getJobExecutor();
 
             try {
                 if (!request.isPeriodic()) {
-                    JobManager.instance(mContext).getJobStorage().remove(request);
+                    manager.getJobStorage().remove(request);
                 }
 
-                Future<Job.Result> future = jobExecutor.execute(mContext, request);
+                Future<Job.Result> future = jobExecutor.execute(mContext, request, manager.getJobCreator());
+                if (future == null) {
+                    return Job.Result.FAILURE;
+                }
 
                 // wait until done
                 Job.Result result = future.get();

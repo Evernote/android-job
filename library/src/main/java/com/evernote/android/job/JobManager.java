@@ -27,6 +27,7 @@ package com.evernote.android.job;
 
 import android.Manifest;
 import android.app.AlarmManager;
+import android.app.Application;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -46,8 +47,17 @@ import java.util.Set;
 /**
  * Entry point for scheduling jobs. Depending on the platform and SDK version it uses different APIs
  * to schedule jobs. The {@link JobScheduler} is preferred, if the OS is running Lollipop or above.
- * Below Lollipop it uses the {@link GcmNetworkManager}, if the Google Play Services are installed.
- * The {@link AlarmManager} is the fallback.
+ * Otherwise it uses the {@link AlarmManager} as fallback. It's also possible to use the
+ * {@link GcmNetworkManager}, if the manager can be found in your classpath, the Google Play Services
+ * are installed and the service was added in the manifest. Take a look at the
+ * <a href="https://github.com/evernote/android-job#using-the-gcmnetworkmanager">README</a> for more
+ * help.
+ *
+ * <br>
+ * <br>
+ *
+ * Before you can use the {@code JobManager} you must call {@link #create(Context, JobCreator)} first.
+ * It's recommended to do this in the {@link Application#onCreate()} method.
  *
  * <br>
  * <br>
@@ -69,15 +79,19 @@ public final class JobManager {
     private static volatile JobManager instance;
 
     /**
-     * @param context Any {@link Context} to instantiate the singleton object. Can be {@code null}
-     *                if you are absolutely sure, that the manager was initialized.
-     * @return The concrete {@link JobManager} as singleton.
+     * Initializes the singleton. It's necessary to call this function before using the {@code JobManager}.
+     * Calling it multiple times has not effect.
+     *
+     * @param context Any {@link Context} to instantiate the singleton object.
+     * @param jobCreator The mapping between a specific job key and the job class.
+     * @return The new or existing singleton object.
      */
-    public static JobManager instance(Context context) {
+    public static JobManager create(Context context, JobCreator jobCreator) {
         if (instance == null) {
             synchronized (JobManager.class) {
                 if (instance == null) {
-                    JobPreconditions.checkNotNull(context, "Context cannot be null if the JobManager needs to be initialized");
+                    JobPreconditions.checkNotNull(context, "Context cannot be null");
+                    JobPreconditions.checkNotNull(jobCreator, "JobCreator cannot be null");
                     CatGlobal.setDefaultCatLogPackage(PACKAGE, new JobCat());
 
                     if (context.getApplicationContext() != null) {
@@ -85,7 +99,25 @@ public final class JobManager {
                         context = context.getApplicationContext();
                     }
 
-                    instance = new JobManager(context);
+                    instance = new JobManager(context, jobCreator);
+                }
+            }
+        }
+
+        return instance;
+    }
+
+    /**
+     * Ensure that you've called {@link #create(Context, JobCreator)} first. Otherwise this method
+     * throws an exception.
+     *
+     * @return The {@code JobManager} object.
+     */
+    public static JobManager instance() {
+        if (instance == null) {
+            synchronized (JobManager.class) {
+                if (instance == null) {
+                    throw new IllegalStateException("You need to call create() at least once to create the singleton");
                 }
             }
         }
@@ -94,13 +126,15 @@ public final class JobManager {
     }
 
     private final Context mContext;
+    private final JobCreator mJobCreator;
     private final JobStorage mJobStorage;
     private final JobExecutor mJobExecutor;
 
     private JobApi mApi;
 
-    private JobManager(Context context) {
+    private JobManager(Context context, JobCreator jobCreator) {
         mContext = context;
+        mJobCreator = jobCreator;
         mJobStorage = new JobStorage(context);
         mJobExecutor = new JobExecutor();
 
@@ -303,6 +337,10 @@ public final class JobManager {
 
     /*package*/ JobExecutor getJobExecutor() {
         return mJobExecutor;
+    }
+
+    /*package*/ JobCreator getJobCreator() {
+        return mJobCreator;
     }
 
     /*package*/ boolean hasBootPermission() {

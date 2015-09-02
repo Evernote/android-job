@@ -38,7 +38,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mJobManager = JobManager.instance(this);
+        mJobManager = JobManager.instance();
 
         if (savedInstanceState != null) {
             mLastJobId = savedInstanceState.getInt(LAST_JOB_ID, 0);
@@ -155,7 +155,7 @@ public class MainActivity extends Activity {
         PersistableBundleCompat extras = new PersistableBundleCompat();
         extras.putString("key", "Hello world");
 
-        mLastJobId = new JobRequest.Builder(this, TestJob.class)
+        mLastJobId = new JobRequest.Builder(TestJob.class)
                 .setExecutionWindow(3_000L, 4_000L)
                 .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.LINEAR)
                 .setRequiresCharging(mRequiresCharging.isChecked())
@@ -184,7 +184,7 @@ public class MainActivity extends Activity {
     }
 
     private void testPeriodic() {
-        mLastJobId = new JobRequest.Builder(this, TestJob.class)
+        mLastJobId = new JobRequest.Builder(TestJob.class)
                 .setPeriodic(60_000L)
                 .setRequiresCharging(mRequiresCharging.isChecked())
                 .setRequiresDeviceIdle(mRequiresDeviceIdle.isChecked())
@@ -198,7 +198,7 @@ public class MainActivity extends Activity {
         PersistableBundleCompat extras = new PersistableBundleCompat();
         extras.putString("key", "Hello world");
 
-        mLastJobId = new JobRequest.Builder(this, TestJob.class)
+        mLastJobId = new JobRequest.Builder(TestJob.class)
                 .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.EXPONENTIAL)
                 .setExtras(extras)
                 .setExact(20_000L)

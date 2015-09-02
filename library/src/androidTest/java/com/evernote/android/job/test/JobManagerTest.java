@@ -6,11 +6,13 @@ import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 
 import com.evernote.android.job.Job;
+import com.evernote.android.job.JobCreator;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobApi;
 
 import org.junit.After;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -22,6 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class JobManagerTest {
+
+    @BeforeClass
+    public static void createJobManager() {
+        JobManager.create(InstrumentationRegistry.getContext(), new JobCreator.ClassNameJobCreator());
+    }
 
     @Test
     public void testScheduleAndCancel() {
@@ -90,11 +97,11 @@ public class JobManagerTest {
     }
 
     private JobRequest.Builder getBuilder() {
-        return new JobRequest.Builder(InstrumentationRegistry.getContext(), TestJob.class);
+        return new JobRequest.Builder(TestJob.class);
     }
 
     private JobManager getManager() {
-        return JobManager.instance(InstrumentationRegistry.getContext());
+        return JobManager.instance();
     }
 
     private static final class TestJob extends Job {

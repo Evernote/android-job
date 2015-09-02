@@ -48,7 +48,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 /*package*/ class JobStorage {
 
-//    private static final String JOB_PREFIX = "JOB_";
     private static final String JOB_ID_COUNTER = "JOB_ID_COUNTER";
 
     private static final String DATABASE_NAME = "evernote_jobs.db";
@@ -57,7 +56,7 @@ import java.util.concurrent.atomic.AtomicInteger;
     private static final String JOB_TABLE_NAME = "jobs";
 
     public static final String COLUMN_ID = "_id";
-    public static final String COLUMN_JOB_CLASS = "jobClass";
+    public static final String COLUMN_JOB_KEY = "jobKey";
     public static final String COLUMN_START_MS = "startMs";
     public static final String COLUMN_END_MS = "endMs";
     public static final String COLUMN_BACKOFF_MS = "backoffMs";
@@ -264,7 +263,7 @@ import java.util.concurrent.atomic.AtomicInteger;
         private void createJobTable(SQLiteDatabase db) {
             db.execSQL("create table " + JOB_TABLE_NAME + " ("
                     + COLUMN_ID + " integer primary key, "
-                    + COLUMN_JOB_CLASS + " text not null, "
+                    + COLUMN_JOB_KEY + " text not null, "
                     + COLUMN_START_MS + " integer, "
                     + COLUMN_END_MS + " integer, "
                     + COLUMN_BACKOFF_MS + " integer, "
