@@ -60,7 +60,7 @@ public abstract class Job {
         FAILURE,
         /**
          * Indicates that {@link #onRunJob(Params)} failed and the {@link Job} should be rescheduled
-         * with the defined back-off criteria. Not that returning {@code RESCHEDULE} for a periodic
+         * with the defined back-off criteria. Note that returning {@code RESCHEDULE} for a periodic
          * {@link Job} is invalid and ignored.
          */
         RESCHEDULE

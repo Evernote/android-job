@@ -260,6 +260,7 @@ public final class JobRequest {
 
         if (!isPeriodic()) {
             long offset = System.currentTimeMillis() - mScheduledAt;
+            // can crash here if the first argument ends up being 0 somehow
             builder.setExecutionWindow(Math.max(0, getStartMs() - offset), Math.max(0, getEndMs() - offset));
         }
 
