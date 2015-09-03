@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
     private final AtomicInteger mJobCounter;
 
     public JobStorage(Context context) {
-        mPreferences = context.getSharedPreferences("jobs", Context.MODE_PRIVATE);
+        mPreferences = context.getSharedPreferences("evernote_job", Context.MODE_PRIVATE);
         mExecutorService = Executors.newSingleThreadExecutor();
         mCache = new JobCache();
 

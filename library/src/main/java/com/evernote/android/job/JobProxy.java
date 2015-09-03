@@ -27,12 +27,14 @@ package com.evernote.android.job;
 
 import android.app.Service;
 import android.content.Context;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
+import net.vrallev.android.cat.Cat;
 import net.vrallev.android.cat.CatLog;
 
 import java.util.Locale;
@@ -112,6 +114,10 @@ public interface JobProxy {
                 timeWindow = String.format(Locale.US, "start %s, end %s", JobUtil.timeToString(getStartMs(request)),
                         JobUtil.timeToString(getEndMs(request)));
             }
+
+          if (Looper.myLooper() == Looper.getMainLooper()) {
+            Cat.w("Running JobRequest on a main thread, this could cause stutter or ANR in your app.");
+          }
 
             mCat.d("Run job, %s, waited %s, %s", request, JobUtil.timeToString(waited), timeWindow);
             JobExecutor jobExecutor = JobManager.instance(mContext).getJobExecutor();
