@@ -112,6 +112,7 @@ import java.util.concurrent.TimeUnit;
             Context context = mJob.getContext();
             PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 
+            // we might want to check permissions here
             mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobExecutor.class.getSimpleName());
             acquireWakeLock();
         }
@@ -127,6 +128,8 @@ import java.util.concurrent.TimeUnit;
             } finally {
                 if (mWakeLock.isHeld()) {
                     mWakeLock.release();
+                } else {
+                    Cat.w("Wake lock was not held after job %s was done. The job took too long to complete. This could have unintended side effects on your app.", mJob);
                 }
             }
         }

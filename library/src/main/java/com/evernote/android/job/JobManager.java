@@ -188,7 +188,9 @@ public final class JobManager {
     }
 
     /**
-     * @return All pending JobRequests or an empty set. Never returns {@code null}.
+     * @return A duplicate {@link Set} containing all pending JobRequests or an empty set.
+     * Never returns {@code null}. The set may be modified without direct effects to the actual
+     * backing store.
      * @see #getJobRequest(int)
      */
     @NonNull
@@ -270,6 +272,9 @@ public final class JobManager {
     /**
      * Cancel either the pending {@link JobRequest} or the running {@link Job} associated with this
      * {@code tag}.
+     *
+     * This is an indeterminate action if there exists multiple {@link JobRequest}s with the same
+     * {@code tag} as only one of the existing {@link JobRequest}s will be cancelled.
      *
      * @param tag The unique tag of the {@link JobRequest} or running {@link Job}.
      * @return {@code true} if a request or job were found and canceled.

@@ -39,8 +39,6 @@ import net.vrallev.android.cat.Cat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -78,7 +76,6 @@ import java.util.concurrent.atomic.AtomicInteger;
     private final SharedPreferences mPreferences;
     private final JobCacheId mCacheId;
     private final JobCacheTag mCacheTag;
-    private final ExecutorService mExecutorService;
 
     private final AtomicInteger mJobCounter;
 
@@ -86,7 +83,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     public JobStorage(Context context) {
         mPreferences = context.getSharedPreferences("jobs", Context.MODE_PRIVATE);
-        mExecutorService = Executors.newSingleThreadExecutor();
+
         mCacheId = new JobCacheId();
         mCacheTag = new JobCacheTag();
 
@@ -102,12 +99,8 @@ import java.util.concurrent.atomic.AtomicInteger;
             mCacheTag.put(request.getTag(), request);
         }
 
-        mExecutorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                store(request);
-            }
-        });
+        // don't write to db async, there could be a race condition with remove()
+        store(request);
     }
 
     public synchronized JobRequest get(int id) {
@@ -156,7 +149,7 @@ import java.util.concurrent.atomic.AtomicInteger;
             mCacheTag.remove(request.getTag());
         }
         try {
-            mDbHelper.getWritableDatabase().delete(JOB_TABLE_NAME, COLUMN_ID + " = " + request.getJobId(), null);
+            mDbHelper.getWritableDatabase().delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
         } catch (Exception e) {
             Cat.e(e, "could not delete %s", request);
         }
