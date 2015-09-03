@@ -157,7 +157,7 @@ import java.util.concurrent.atomic.AtomicInteger;
             mCacheTag.remove(request.getTag());
         }
         try {
-            mDbHelper.getWritableDatabase().delete(JOB_TABLE_NAME, COLUMN_ID + " = " + request.getJobId(), null);
+            mDbHelper.getWritableDatabase().delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
         } catch (Exception e) {
             Cat.e(e, "could not delete %s", request);
         }

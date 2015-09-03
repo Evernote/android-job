@@ -178,6 +178,9 @@ public final class JobRequest {
      * @return The extras for this job.
      */
     public PersistableBundleCompat getExtras() {
+        if (mBuilder.mExtras == null && !TextUtils.isEmpty(mBuilder.mExtrasXml)) {
+            mBuilder.mExtras = PersistableBundleCompat.fromXml(mBuilder.mExtrasXml);
+        }
         return mBuilder.mExtras;
     }
 
@@ -339,6 +342,8 @@ public final class JobRequest {
         private NetworkType mNetworkType;
 
         private PersistableBundleCompat mExtras;
+        private String mExtrasXml;
+
         private boolean mPersisted;
 
         private String mTag;
@@ -379,7 +384,8 @@ public final class JobRequest {
             mExact = request.isExact();
             mNetworkType = request.requiredNetworkType();
 
-            mExtras = request.getExtras();
+            mExtras = request.mBuilder.mExtras;
+            mExtrasXml = request.mBuilder.mExtrasXml;
             mPersisted = request.isPersisted();
             mTag = request.getTag();
         }
@@ -403,10 +409,8 @@ public final class JobRequest {
             mExact = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_EXACT)) > 0;
             mNetworkType = NetworkType.valueOf(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_NETWORK_TYPE)));
 
-            String xml = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_EXTRAS));
-            if (!TextUtils.isEmpty(xml)) {
-                mExtras = PersistableBundleCompat.fromXml(xml);
-            }
+            mExtrasXml = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_EXTRAS));
+
             mPersisted = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_PERSISTED)) > 0;
             mTag = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_TAG));
         }
@@ -431,6 +435,8 @@ public final class JobRequest {
 
             if (mExtras != null) {
                 contentValues.put(JobStorage.COLUMN_EXTRAS, mExtras.saveToXml());
+            } else if (!TextUtils.isEmpty(mExtrasXml)) {
+                contentValues.put(JobStorage.COLUMN_EXTRAS, mExtrasXml);
             }
             contentValues.put(JobStorage.COLUMN_PERSISTED, mPersisted);
             if (mTag != null) {
@@ -459,7 +465,12 @@ public final class JobRequest {
          * @param extras Bundle containing extras which you can retrieve with {@link Job.Params#getExtras()}.
          */
         public Builder setExtras(@Nullable PersistableBundleCompat extras) {
-            mExtras = extras == null ? null : new PersistableBundleCompat(extras);
+            if (extras == null) {
+                mExtras = null;
+                mExtrasXml = null;
+            } else {
+                mExtras = new PersistableBundleCompat(extras);
+            }
             return this;
         }
 
