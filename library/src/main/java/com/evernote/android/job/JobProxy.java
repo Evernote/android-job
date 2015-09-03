@@ -115,9 +115,9 @@ public interface JobProxy {
                         JobUtil.timeToString(getEndMs(request)));
             }
 
-          if (Looper.myLooper() == Looper.getMainLooper()) {
-            Cat.w("Running JobRequest on a main thread, this could cause stutter or ANR in your app.");
-          }
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                Cat.w("Running JobRequest on a main thread, this could cause stutter or ANR in your app.");
+            }
 
             mCat.d("Run job, %s, waited %s, %s", request, JobUtil.timeToString(waited), timeWindow);
             JobExecutor jobExecutor = JobManager.instance(mContext).getJobExecutor();
