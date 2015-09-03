@@ -46,7 +46,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 /*package*/ class JobStorage {
 
-//    private static final String JOB_PREFIX = "JOB_";
     private static final String JOB_ID_COUNTER = "JOB_ID_COUNTER";
 
     private static final String DATABASE_NAME = "evernote_jobs.db";
