@@ -94,13 +94,25 @@ import java.util.concurrent.atomic.AtomicInteger;
     }
 
     public synchronized void put(final JobRequest request) {
+        updateRequestInCache(request);
+        // don't write to db async, there could be a race condition with remove()
+        store(request);
+    }
+
+    public synchronized void update(JobRequest request, ContentValues contentValues) {
+        updateRequestInCache(request);
+        try {
+            mDbHelper.getWritableDatabase().update(JOB_TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
+        } catch (Exception e) {
+            Cat.e(e, "could not update %s", request);
+        }
+    }
+
+    private void updateRequestInCache(JobRequest request) {
         mCacheId.put(request.getJobId(), request);
         if (!TextUtils.isEmpty(request.getTag())) {
             mCacheTag.put(request.getTag(), request);
         }
-
-        // don't write to db async, there could be a race condition with remove()
-        store(request);
     }
 
     public synchronized JobRequest get(int id) {

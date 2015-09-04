@@ -155,6 +155,8 @@ import java.util.concurrent.TimeUnit;
             if (!request.isPeriodic() && Job.Result.RESCHEDULE.equals(result)) {
                 int newJobId = request.reschedule(true);
                 mJob.onReschedule(newJobId);
+            } else if (request.isPeriodic() && !Job.Result.SUCCESS.equals(result)) {
+                request.incNumFailures();
             }
         }
 

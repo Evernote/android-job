@@ -51,7 +51,9 @@ public class TestJob extends Job {
                         .append(' ')
                         .append(params.getId())
                         .append(' ')
-                        .append(params.getExtras().getString("key", "NOT_FOUND"));
+                        .append(params.getExtras().getString("key", "NOT_FOUND"))
+                        .append(" failed ")
+                        .append(params.getFailureCount());
 
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                 latch.countDown();
