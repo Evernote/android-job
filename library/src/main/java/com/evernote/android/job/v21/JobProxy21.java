@@ -35,9 +35,10 @@ import android.support.annotation.NonNull;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
+import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.Cat;
+import net.vrallev.android.cat.CatLog;
 
 
 /**
@@ -45,6 +46,8 @@ import net.vrallev.android.cat.Cat;
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class JobProxy21 implements JobProxy {
+
+    private static final CatLog CAT = new JobCat("JobProxy21");
 
     private final Context mContext;
     private final JobScheduler mJobScheduler;
@@ -67,7 +70,7 @@ public class JobProxy21 implements JobProxy {
 
         int scheduleResult = mJobScheduler.schedule(jobInfo);
 
-        Cat.d("Schedule one-off jobInfo %s, %s, start %s, end %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
+        CAT.d("Schedule one-off jobInfo %s, %s, start %s, end %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
                 request, JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
     }
 
@@ -83,7 +86,7 @@ public class JobProxy21 implements JobProxy {
 
         int scheduleResult = mJobScheduler.schedule(jobInfo);
 
-        Cat.d("Schedule periodic jobInfo %s, %s, interval %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
+        CAT.d("Schedule periodic jobInfo %s, %s, interval %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
                 request, JobUtil.timeToString(request.getIntervalMs()));
     }
 

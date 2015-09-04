@@ -34,7 +34,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v4.util.LruCache;
 import android.text.TextUtils;
 
-import net.vrallev.android.cat.Cat;
+import com.evernote.android.job.util.JobCat;
+
+import net.vrallev.android.cat.CatLog;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,6 +47,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author rwondratschek
  */
 /*package*/ class JobStorage {
+
+    private static final CatLog CAT = new JobCat("JobStorage");
 
     private static final String JOB_ID_COUNTER = "JOB_ID_COUNTER";
 
@@ -101,7 +105,7 @@ import java.util.concurrent.atomic.AtomicInteger;
         try {
             mDbHelper.getWritableDatabase().update(JOB_TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
         } catch (Exception e) {
-            Cat.e(e, "could not update %s", request);
+            CAT.e(e, "could not update %s", request);
         }
     }
 
@@ -141,7 +145,7 @@ import java.util.concurrent.atomic.AtomicInteger;
                 }
             }
         } catch (Exception e) {
-            Cat.e(e, "could not load all jobs");
+            CAT.e(e, "could not load all jobs");
 
         } finally {
             if (cursor != null) {
@@ -157,7 +161,7 @@ import java.util.concurrent.atomic.AtomicInteger;
         try {
             mDbHelper.getWritableDatabase().delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
         } catch (Exception e) {
-            Cat.e(e, "could not delete %s", request);
+            CAT.e(e, "could not delete %s", request);
         }
     }
 
@@ -175,7 +179,7 @@ import java.util.concurrent.atomic.AtomicInteger;
             ContentValues contentValues = request.toContentValues();
             mDbHelper.getWritableDatabase().insert(JOB_TABLE_NAME, null, contentValues);
         } catch (Exception e) {
-            Cat.e(e, "could not store %s", request);
+            CAT.e(e, "could not store %s", request);
         }
     }
 
@@ -188,7 +192,7 @@ import java.util.concurrent.atomic.AtomicInteger;
             }
 
         } catch (Exception e) {
-            Cat.e(e, "could not load id %d", id);
+            CAT.e(e, "could not load id %d", id);
 
         } finally {
             if (cursor != null) {

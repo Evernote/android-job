@@ -30,7 +30,9 @@ import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
-import net.vrallev.android.cat.Cat;
+import com.evernote.android.job.util.JobCat;
+
+import net.vrallev.android.cat.CatLog;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -45,6 +47,8 @@ import java.util.concurrent.TimeUnit;
  */
 /*package*/ class JobExecutor {
 
+    private static final CatLog CAT = new JobCat("JobExecutor");
+
     private final ExecutorService mExecutorService;
     private final SparseArray<Job> mJobs; // only cached in memory, that's fine
 
@@ -57,7 +61,7 @@ import java.util.concurrent.TimeUnit;
         try {
             Job job = creator.create(request.getTag());
             if (job == null) {
-                Cat.w("JobCreator returned null for tag %s", request.getTag());
+                CAT.w("JobCreator returned null for tag %s", request.getTag());
                 return null;
             }
             if (job.isFinished()) {
@@ -66,7 +70,7 @@ import java.util.concurrent.TimeUnit;
 
             job.setContext(context).setRequest(request);
 
-            Cat.i("Executing %s, context %s", request, context.getClass().getSimpleName());
+            CAT.i("Executing %s, context %s", request, context.getClass().getSimpleName());
 
             mJobs.put(request.getJobId(), job);
             return mExecutorService.submit(new JobCallable(job));
@@ -123,7 +127,7 @@ import java.util.concurrent.TimeUnit;
                 if (mWakeLock.isHeld()) {
                     mWakeLock.release();
                 } else {
-                    Cat.w("Wake lock was not held after job %s was done. The job took too long to complete. This could have unintended side effects on your app.", mJob);
+                    CAT.w("Wake lock was not held after job %s was done. The job took too long to complete. This could have unintended side effects on your app.", mJob);
                 }
             }
         }
@@ -132,12 +136,12 @@ import java.util.concurrent.TimeUnit;
             Job.Result result;
             try {
                 result = mJob.runJob();
-                Cat.i("Finished %s", mJob);
+                CAT.i("Finished %s", mJob);
 
                 handleResult(result);
 
             } catch (Throwable t) {
-                Cat.e(t, "Crashed %s", mJob);
+                CAT.e(t, "Crashed %s", mJob);
                 result = mJob.getResult(); // probably the default value
             }
 

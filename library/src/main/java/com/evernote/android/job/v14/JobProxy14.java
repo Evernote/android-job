@@ -33,14 +33,17 @@ import android.os.Build;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
+import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.Cat;
+import net.vrallev.android.cat.CatLog;
 
 /**
  * @author rwondratschek
  */
 public class JobProxy14 implements JobProxy {
+
+    private static final CatLog CAT = new JobCat("JobProxy14");
 
     private final Context mContext;
     private final AlarmManager mAlarmManager;
@@ -55,7 +58,7 @@ public class JobProxy14 implements JobProxy {
         PendingIntent pendingIntent = getPendingIntent(request, false);
         setAlarm(request, System.currentTimeMillis() + Common.getAverageDelayMs(request), pendingIntent);
 
-        Cat.d("Scheduled alarm, %s, delay %s, exact %b", request,
+        CAT.d("Scheduled alarm, %s, delay %s, exact %b", request,
                 JobUtil.timeToString(Common.getAverageDelayMs(request)), request.isExact());
     }
 
@@ -64,7 +67,7 @@ public class JobProxy14 implements JobProxy {
         PendingIntent pendingIntent = getPendingIntent(request, true);
         mAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
 
-        Cat.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
+        CAT.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
     }
 
     @Override

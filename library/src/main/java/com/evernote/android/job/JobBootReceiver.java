@@ -30,8 +30,9 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.evernote.android.job.util.JobApi;
+import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.Cat;
+import net.vrallev.android.cat.CatLog;
 
 import java.util.Set;
 
@@ -42,6 +43,9 @@ import java.util.Set;
  * @author rwondratschek
  */
 public final class JobBootReceiver extends BroadcastReceiver {
+
+    private static final CatLog CAT = new JobCat("JobBootReceiver");
+
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent == null || !Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
@@ -50,7 +54,7 @@ public final class JobBootReceiver extends BroadcastReceiver {
 
         Set<JobRequest> requests = JobManager.instance().getAllJobRequests();
 
-        Cat.d("Schedule %d jobs if necessary", requests.size());
+        CAT.d("Schedule %d jobs if necessary", requests.size());
 
         for (JobRequest request : requests) {
             if (JobApi.V_14.equals(request.getJobApi())) {

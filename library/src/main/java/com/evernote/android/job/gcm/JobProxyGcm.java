@@ -28,6 +28,7 @@ package com.evernote.android.job.gcm;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.evernote.android.job.util.JobCat;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.OneoffTask;
 import com.google.android.gms.gcm.PeriodicTask;
@@ -36,12 +37,14 @@ import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.Cat;
+import net.vrallev.android.cat.CatLog;
 
 /**
  * @author rwondratschek
  */
 public class JobProxyGcm implements JobProxy {
+
+    private static final CatLog CAT = new JobCat("JobProxyGcm");
 
     /*
      * Requires charging doesn't work reliable. Like the documentation says, the job doesn't run if
@@ -69,7 +72,7 @@ public class JobProxyGcm implements JobProxy {
 
         mGcmNetworkManager.schedule(task);
 
-        Cat.d("Scheduled OneoffTask, %s, start %s, end %s", request,
+        CAT.d("Scheduled OneoffTask, %s, start %s, end %s", request,
                 JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
     }
 
@@ -87,7 +90,7 @@ public class JobProxyGcm implements JobProxy {
 
         mGcmNetworkManager.schedule(task);
 
-        Cat.d("Scheduled PeriodicTask, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
+        CAT.d("Scheduled PeriodicTask, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
     }
 
     @Override

@@ -34,9 +34,10 @@ import android.support.annotation.NonNull;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.evernote.android.job.util.Device;
+import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
-import net.vrallev.android.cat.Cat;
+import net.vrallev.android.cat.CatLog;
 
 import java.lang.ref.WeakReference;
 
@@ -48,6 +49,8 @@ import java.lang.ref.WeakReference;
  */
 @SuppressWarnings("unused")
 public abstract class Job {
+
+    private static final CatLog CAT = new JobCat("Job");
 
     public enum Result {
         /**
@@ -132,15 +135,15 @@ public abstract class Job {
         }
 
         if (!isRequirementChargingMet()) {
-            Cat.w("Job requires charging, reschedule");
+            CAT.w("Job requires charging, reschedule");
             return false;
         }
         if (!isRequirementDeviceIdleMet()) {
-            Cat.w("Job requires device to be idle, reschedule");
+            CAT.w("Job requires device to be idle, reschedule");
             return false;
         }
         if (!isRequirementNetworkTypeMet()) {
-            Cat.w("Job requires network to be %s, but was %s", getParams().getRequest().requiredNetworkType(),
+            CAT.w("Job requires network to be %s, but was %s", getParams().getRequest().requiredNetworkType(),
                     Device.getNetworkType(getContext()));
             return false;
         }

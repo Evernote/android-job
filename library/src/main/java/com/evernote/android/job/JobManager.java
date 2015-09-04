@@ -40,8 +40,8 @@ import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
 import com.google.android.gms.gcm.GcmNetworkManager;
 
-import net.vrallev.android.cat.Cat;
 import net.vrallev.android.cat.CatGlobal;
+import net.vrallev.android.cat.CatLog;
 
 import java.util.Set;
 
@@ -76,6 +76,7 @@ import java.util.Set;
 public final class JobManager {
 
     private static final String PACKAGE = JobManager.class.getPackage().getName();
+    private static final CatLog CAT = new JobCat("JobManager");
 
     private static volatile JobManager instance;
 
@@ -242,7 +243,7 @@ public final class JobManager {
      */
     public void forceApi(@NonNull JobApi api) {
         setJobProxy(JobPreconditions.checkNotNull(api));
-        Cat.w("Changed API to %s", api);
+        CAT.w("Changed API to %s", api);
     }
 
     /**
@@ -287,7 +288,7 @@ public final class JobManager {
 
     private boolean cancelInner(@Nullable JobRequest request) {
         if (request != null) {
-            Cat.i("Found pending job %s, canceling", request);
+            CAT.i("Found pending job %s, canceling", request);
             getJobProxy(request).cancel(request);
             getJobStorage().remove(request);
             return true;
@@ -298,7 +299,7 @@ public final class JobManager {
 
     private boolean cancelInner(@Nullable Job job) {
         if (job != null && !job.isFinished() && !job.isCanceled()) {
-            Cat.i("Cancel running %s", job);
+            CAT.i("Cancel running %s", job);
             job.cancel();
             return true;
         } else {
