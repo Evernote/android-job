@@ -350,6 +350,16 @@ public abstract class Job {
         }
 
         /**
+         * The failure count increases if a non periodic {@link Job} was rescheduled or if a periodic
+         * {@link Job} wasn't successful.
+         *
+         * @return How often the job already has failed.
+         */
+        public int getFailureCount() {
+            return mRequest.getNumFailures();
+        }
+
+        /**
          * @return Extra arguments for this {@link Job}. Never returns {@code null}.
          */
         @NonNull
