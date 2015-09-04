@@ -85,10 +85,11 @@ public final class JobRequest {
     }
 
     /**
-     * @return The key which is used to map this request to specific {@link Job}.
+     * @return The tag which is used to map this request to a specific {@link Job}.
      */
-    public String getJobKey() {
-        return mBuilder.mJobKey;
+    @NonNull
+    public String getTag() {
+        return mBuilder.mTag;
     }
 
     /**
@@ -188,14 +189,6 @@ public final class JobRequest {
      */
     public boolean isPersisted() {
         return mBuilder.mPersisted;
-    }
-
-    /**
-     * @return The specific tag for this request or {@code null} if not set.
-     * @see Builder#setTag(String)
-     */
-    public String getTag() {
-        return mBuilder.mTag;
     }
 
     /**
@@ -330,7 +323,7 @@ public final class JobRequest {
 
     @Override
     public String toString() {
-        return "request{id=" + getJobId() + ", key=" + getJobKey() + ", tag=" + getTag() + '}';
+        return "request{id=" + getJobId() + ", tag=" + getTag() + '}';
     }
 
     /**
@@ -339,7 +332,7 @@ public final class JobRequest {
     public static final class Builder {
 
         private final int mId;
-        private final String mJobKey;
+        private final String mTag;
 
         private long mStartMs;
         private long mEndMs;
@@ -360,25 +353,21 @@ public final class JobRequest {
 
         private boolean mPersisted;
 
-        private String mTag;
-
         /**
-         * Use the fully-qualified class name as key. This is necessary if you use the
-         * {@link JobCreator.ClassNameJobCreator} for your mapping.
+         * Creates a new instance to build a {@link JobRequest}. Note that the {@code tag} doesn't
+         * need to be unique. Each created request has an unique ID to differentiate between jobs
+         * with the same tag.
          *
-         * @param jobKey Your {@link Job} class which should be run.
-         * @see JobCreator
-         * @see JobCreator.ClassNameJobCreator
+         * <br>
+         * <br>
+         *
+         * When your job is about to start you receive a callback in your {@link JobCreator} to create
+         * a {@link Job} for this {@code tag}.
+         *
+         * @param tag The tag is used to identify your {@code Job} in {@link JobCreator#create(String)}.
          */
-        public Builder(@NonNull Class<? extends Job> jobKey) {
-            this(JobPreconditions.checkNotNull(jobKey).getName());
-        }
-
-        /**
-         * @param jobKey The key which is used to identify your {@code Job} in {@link JobCreator#create(String)}.
-         */
-        public Builder(@NonNull String jobKey) {
-            mJobKey = JobPreconditions.checkNotEmpty(jobKey);
+        public Builder(@NonNull String tag) {
+            mTag = JobPreconditions.checkNotEmpty(tag);
             mId = JobManager.instance().getJobStorage().nextJobId();
 
             mStartMs = -1;
@@ -392,7 +381,7 @@ public final class JobRequest {
 
         private Builder(JobRequest request, boolean createId) {
             mId = createId ? JobManager.instance().getJobStorage().nextJobId() : request.getJobId();
-            mJobKey = request.getJobKey();
+            mTag = request.getTag();
 
             mStartMs = request.getStartMs();
             mEndMs = request.getEndMs();
@@ -411,13 +400,12 @@ public final class JobRequest {
             mExtras = request.mBuilder.mExtras;
             mExtrasXml = request.mBuilder.mExtrasXml;
             mPersisted = request.isPersisted();
-            mTag = request.getTag();
         }
 
         @SuppressWarnings("unchecked")
         private Builder(Cursor cursor) throws Exception {
             mId = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_ID));
-            mJobKey = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_JOB_KEY));
+            mTag = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_TAG));
 
             mStartMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_START_MS));
             mEndMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_END_MS));
@@ -436,12 +424,11 @@ public final class JobRequest {
             mExtrasXml = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_EXTRAS));
 
             mPersisted = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_PERSISTED)) > 0;
-            mTag = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_TAG));
         }
 
         private void fillContentValues(ContentValues contentValues) {
             contentValues.put(JobStorage.COLUMN_ID, mId);
-            contentValues.put(JobStorage.COLUMN_JOB_KEY, mJobKey);
+            contentValues.put(JobStorage.COLUMN_TAG, mTag);
 
             contentValues.put(JobStorage.COLUMN_START_MS, mStartMs);
             contentValues.put(JobStorage.COLUMN_END_MS, mEndMs);
@@ -463,9 +450,6 @@ public final class JobRequest {
                 contentValues.put(JobStorage.COLUMN_EXTRAS, mExtrasXml);
             }
             contentValues.put(JobStorage.COLUMN_PERSISTED, mPersisted);
-            if (mTag != null) {
-                contentValues.put(JobStorage.COLUMN_TAG, mTag);
-            }
         }
 
         /**
@@ -672,24 +656,11 @@ public final class JobRequest {
         }
 
         /**
-         * Associate this request with a specific tag. That makes it easier to find, update and
-         * cancel a pending request or running job. Note that if you schedule multiple requests
-         * with the same tag, then you can't predetermine, which request you cancel or get with
-         * {@link JobManager#getJobRequest(String)}.
-         *
-         * @param tag The specific tag for this request.
-         */
-        public Builder setTag(String tag) {
-            mTag = tag;
-            return this;
-        }
-
-        /**
          * @return The {@link JobRequest} with this parameters to hand to the {@link JobManager}.
          */
         public JobRequest build() {
             JobPreconditions.checkArgumentNonnegative(mId, "id can't be negative");
-            JobPreconditions.checkNotEmpty(mJobKey);
+            JobPreconditions.checkNotEmpty(mTag);
             JobPreconditions.checkArgumentPositive(mBackoffMs, "backoffMs must be > 0");
             JobPreconditions.checkNotNull(mBackoffPolicy);
             JobPreconditions.checkNotNull(mNetworkType);

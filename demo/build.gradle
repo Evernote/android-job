@@ -18,12 +18,12 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
-            proguardFiles 'proguard1.cfg'
+            proguardFiles 'proguard.cfg'
         }
 
         release {
             minifyEnabled true
-            proguardFiles 'proguard1.cfg'
+            proguardFiles 'proguard.cfg'
         }
 
         gcm.initWith(buildTypes.debug)

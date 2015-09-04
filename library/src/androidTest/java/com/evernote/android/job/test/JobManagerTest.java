@@ -27,7 +27,12 @@ public class JobManagerTest {
 
     @BeforeClass
     public static void createJobManager() {
-        JobManager.create(InstrumentationRegistry.getContext(), new JobCreator.ClassNameJobCreator());
+        JobManager.create(InstrumentationRegistry.getContext(), new JobCreator() {
+            @Override
+            public Job create(String tag) {
+                return new TestJob();
+            }
+        });
     }
 
     @Test
@@ -76,12 +81,11 @@ public class JobManagerTest {
 
         request.schedule();
 
-        assertThat(getManager().getJobRequest("tag")).isNotNull();
-        assertThat(getManager().getJobRequest("other")).isNull();
+        assertThat(getManager().getAllJobRequestsForTag(TestJob.TAG)).isNotNull().hasSize(1);
+        assertThat(getManager().getAllJobRequestsForTag("other")).isNotNull().isEmpty();
 
-        boolean canceled = getManager().cancel("tag");
-        assertThat(canceled).isTrue();
-        assertThat(getManager().cancel("tag")).isFalse();
+        assertThat(getManager().cancelAllForTag(TestJob.TAG)).isEqualTo(1);
+        assertThat(getManager().cancelAllForTag(TestJob.TAG)).isZero();
     }
 
     @After
@@ -92,12 +96,11 @@ public class JobManagerTest {
     private JobRequest getJobRequest() {
         return getBuilder()
                 .setExecutionWindow(300_000L, 300_000L)
-                .setTag("tag")
                 .build();
     }
 
     private JobRequest.Builder getBuilder() {
-        return new JobRequest.Builder(TestJob.class);
+        return new JobRequest.Builder(TestJob.TAG);
     }
 
     private JobManager getManager() {
@@ -105,6 +108,9 @@ public class JobManagerTest {
     }
 
     private static final class TestJob extends Job {
+
+        private static final String TAG = "tag";
+
         @NonNull
         @Override
         protected Result onRunJob(@NonNull Params params) {

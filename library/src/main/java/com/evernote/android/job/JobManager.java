@@ -33,6 +33,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobCat;
@@ -83,7 +84,7 @@ public final class JobManager {
      * Calling it multiple times has not effect.
      *
      * @param context Any {@link Context} to instantiate the singleton object.
-     * @param jobCreator The mapping between a specific job key and the job class.
+     * @param jobCreator The mapping between a specific job tag and the job class.
      * @return The new or existing singleton object.
      */
     public static JobManager create(Context context, JobCreator jobCreator) {
@@ -174,20 +175,6 @@ public final class JobManager {
     }
 
     /**
-     * You can associate a tag with a specific {@link JobRequest.Builder#setTag(String)}. If you
-     * schedule multiple requests with the same tag, then you can't predetermine which request is
-     * returned by this function.
-     *
-     * @param tag The unique tag of the pending {@link JobRequest}.
-     * @return The {@link JobRequest} associated with this {@code tag} or {@code null} if no request
-     * was to be found.
-     * @see JobRequest.Builder#setTag(String)
-     */
-    public JobRequest getJobRequest(@NonNull String tag) {
-        return mJobStorage.get(tag);
-    }
-
-    /**
      * @return A duplicate {@link Set} containing all pending JobRequests or an empty set.
      * Never returns {@code null}. The set may be modified without direct effects to the actual
      * backing store.
@@ -196,6 +183,16 @@ public final class JobManager {
     @NonNull
     public Set<JobRequest> getAllJobRequests() {
         return mJobStorage.getAllJobRequests();
+    }
+
+    /**
+     * @param tag The tag of the pending requests.
+     * @return A duplicate {@link Set} containing all pending JobRequests associated with this
+     * {@code tag} or an empty set. Never returns {@code null}. The set may be modified without
+     * direct effects to the actual backing store.
+     */
+    public Set<JobRequest> getAllJobRequestsForTag(@NonNull String tag) {
+        return mJobStorage.getAllJobRequestsForTag(tag);
     }
 
     /**
@@ -212,29 +209,29 @@ public final class JobManager {
 
     /**
      * Jobs are cached in memory even if they already have finished. But finished jobs are never
-     * restored after the app has launched.
+     * restored after the app has relaunched.
      *
-     * You can associate a tag with a specific {@link JobRequest.Builder#setTag(String)}. If you
-     * schedule multiple requests with the same tag, then you can't predetermine which job is
-     * returned by this function.
-     *
-     * @param tag The unique tag of the running or finished {@link Job}.
-     * @return The {@link Job} associated with this {@code tag} if it's running or has been finished
-     * and is still cached. Returns {@code null} otherwise.
-     */
-    public Job getJob(String tag) {
-        return mJobExecutor.getJob(tag);
-    }
-
-    /**
-     * Jobs are cached in memory even if they already have finished. But finished jobs are never
-     * restored after the app has launched.
-     *
-     * @return All running and cached finished jobs or an empty set. Never returns {@code null}.
+     * @return A duplicate {@link Set} containing all running and cached finished jobs or an empty set.
+     * Never returns {@code null}. The set may be modified without direct effects to the actual
+     * backing store.
      */
     @NonNull
     public Set<Job> getAllJobs() {
         return mJobExecutor.getAllJobs();
+    }
+
+    /**
+     * Jobs are cached in memory even if they already have finished. But finished jobs are never
+     * restored after the app has relaunched.
+     *
+     * @param tag The tag of the running or finished jobs.
+     * @return A duplicate {@link Set} containing all running and cached finished jobs associated with
+     * this tag or an empty set. Never returns {@code null}. The set may be modified without direct
+     * effects to the actual backing store.
+     */
+    @NonNull
+    public Set<Job> getAllJobsForTag(@NonNull String tag) {
+        return mJobExecutor.getAllJobsForTag(tag);
     }
 
     /**
@@ -270,40 +267,22 @@ public final class JobManager {
     }
 
     /**
-     * Cancel either the pending {@link JobRequest} or the running {@link Job} associated with this
-     * {@code tag}.
-     *
-     * This is an indeterminate action if there exists multiple {@link JobRequest}s with the same
-     * {@code tag} as only one of the existing {@link JobRequest}s will be cancelled.
-     *
-     * @param tag The unique tag of the {@link JobRequest} or running {@link Job}.
-     * @return {@code true} if a request or job were found and canceled.
-     */
-    public boolean cancel(String tag) {
-        // call both methods
-        return cancelInner(getJobRequest(tag)) | cancelInner(getJob(tag));
-    }
-
-    /**
      * Cancel all pending JobRequests and running jobs.
      *
      * @return The count of canceled requests and running jobs.
      */
     public int cancelAll() {
-        int canceled = 0;
+        return cancelAllInner(null);
+    }
 
-        for (JobRequest request : getAllJobRequests()) {
-            if (cancelInner(request)) {
-                canceled++;
-            }
-        }
-
-        for (Job job : getAllJobs()) {
-            if (cancelInner(job)) {
-                canceled++;
-            }
-        }
-        return canceled;
+    /**
+     * Cancel all pending JobRequests and running jobs.
+     *
+     * @param tag The tag of the pending job requests and running jobs.
+     * @return The count of canceled requests and running jobs.
+     */
+    public int cancelAllForTag(@NonNull String tag) {
+        return cancelAllInner(tag);
     }
 
     private boolean cancelInner(@Nullable JobRequest request) {
@@ -325,6 +304,25 @@ public final class JobManager {
         } else {
             return false;
         }
+    }
+
+    private int cancelAllInner(@Nullable String tag) {
+        int canceled = 0;
+
+        Set<JobRequest> requests = TextUtils.isEmpty(tag) ? getAllJobRequests() : getAllJobRequestsForTag(tag);
+        for (JobRequest request : requests) {
+            if (cancelInner(request)) {
+                canceled++;
+            }
+        }
+
+        Set<Job> jobs = TextUtils.isEmpty(tag) ? getAllJobs() : getAllJobsForTag(tag);
+        for (Job job : jobs) {
+            if (cancelInner(job)) {
+                canceled++;
+            }
+        }
+        return canceled;
     }
 
     /**

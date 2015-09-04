@@ -55,13 +55,13 @@ import java.util.concurrent.TimeUnit;
 
     public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @NonNull JobCreator creator) {
         try {
-            Job job = creator.create(request.getJobKey());
+            Job job = creator.create(request.getTag());
             if (job == null) {
-                Cat.w("JobCreator returned null for key %s", request.getJobKey());
+                Cat.w("JobCreator returned null for tag %s", request.getTag());
                 return null;
             }
             if (job.isFinished()) {
-                throw new IllegalStateException("Job for key %s was already run, a creator should always create a new Job instance");
+                throw new IllegalStateException("Job for tag %s was already run, a creator should always create a new Job instance");
             }
 
             job.setContext(context).setRequest(request);
@@ -80,23 +80,17 @@ import java.util.concurrent.TimeUnit;
         return mJobs.get(jobId);
     }
 
-    public synchronized Job getJob(String tag) {
-        if (tag == null) {
-            return null;
-        }
-        for (int i = 0; i < mJobs.size(); i++) {
-            Job job = mJobs.valueAt(i);
-            if (tag.equals(job.getParams().getRequest().getTag())) {
-                return job;
-            }
-        }
-        return null;
+    public synchronized Set<Job> getAllJobs() {
+        return getAllJobsForTag(null);
     }
 
-    public synchronized Set<Job> getAllJobs() {
+    public synchronized Set<Job> getAllJobsForTag(String tag) {
         Set<Job> result = new HashSet<>();
         for (int i = 0; i < mJobs.size(); i++) {
-            result.add(mJobs.valueAt(i));
+            Job job = mJobs.valueAt(i);
+            if (tag == null || tag.equals(job.getParams().getTag())) {
+                result.add(job);
+            }
         }
         return result;
     }

@@ -26,7 +26,12 @@ public class JobRequestTest {
 
     @BeforeClass
     public static void createJobManager() {
-        JobManager.create(InstrumentationRegistry.getContext(), new JobCreator.ClassNameJobCreator());
+        JobManager.create(InstrumentationRegistry.getContext(), new JobCreator() {
+            @Override
+            public Job create(String tag) {
+                return new TestJob();
+            }
+        });
     }
 
     @Test
@@ -39,7 +44,7 @@ public class JobRequestTest {
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
-        assertThat(request.getJobKey()).isEqualTo(TestJob.class.getName());
+        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
         assertThat(request.getStartMs()).isEqualTo(2_000L);
         assertThat(request.getEndMs()).isEqualTo(3_000L);
         assertThat(request.getBackoffMs()).isEqualTo(4_000L);
@@ -65,7 +70,7 @@ public class JobRequestTest {
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
-        assertThat(request.getJobKey()).isEqualTo(TestJob.class.getName());
+        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
         assertThat(request.isPersisted()).isTrue();
         assertThat(request.getIntervalMs()).isEqualTo(60_000L);
         assertThat(request.isPeriodic()).isTrue();
@@ -92,7 +97,7 @@ public class JobRequestTest {
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
-        assertThat(request.getJobKey()).isEqualTo(TestJob.class.getName());
+        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
         assertThat(request.getStartMs()).isEqualTo(2_000L);
         assertThat(request.getEndMs()).isEqualTo(2_000L);
         assertThat(request.getBackoffMs()).isEqualTo(4_000L);
@@ -193,10 +198,13 @@ public class JobRequestTest {
     }
 
     private JobRequest.Builder getBuilder() {
-        return new JobRequest.Builder(TestJob.class);
+        return new JobRequest.Builder(TestJob.TAG);
     }
 
     private static final class TestJob extends Job {
+
+        private static final String TAG = "tag";
+
         @NonNull
         @Override
         protected Result onRunJob(@NonNull Params params) {
