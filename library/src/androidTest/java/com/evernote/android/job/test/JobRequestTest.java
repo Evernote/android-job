@@ -6,9 +6,12 @@ import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 
 import com.evernote.android.job.Job;
+import com.evernote.android.job.JobCreator;
+import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -21,6 +24,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 @LargeTest
 public class JobRequestTest {
 
+    @BeforeClass
+    public static void createJobManager() {
+        JobManager.create(InstrumentationRegistry.getContext(), new JobCreator() {
+            @Override
+            public Job create(String tag) {
+                return new TestJob();
+            }
+        });
+    }
+
     @Test
     public void testSimpleJob() {
         JobRequest request = getBuilder()
@@ -31,7 +44,7 @@ public class JobRequestTest {
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
-        assertThat(request.getJobClass()).isEqualTo(TestJob.class);
+        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
         assertThat(request.getStartMs()).isEqualTo(2_000L);
         assertThat(request.getEndMs()).isEqualTo(3_000L);
         assertThat(request.getBackoffMs()).isEqualTo(4_000L);
@@ -57,7 +70,7 @@ public class JobRequestTest {
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
-        assertThat(request.getJobClass()).isEqualTo(TestJob.class);
+        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
         assertThat(request.isPersisted()).isTrue();
         assertThat(request.getIntervalMs()).isEqualTo(60_000L);
         assertThat(request.isPeriodic()).isTrue();
@@ -84,7 +97,7 @@ public class JobRequestTest {
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
-        assertThat(request.getJobClass()).isEqualTo(TestJob.class);
+        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
         assertThat(request.getStartMs()).isEqualTo(2_000L);
         assertThat(request.getEndMs()).isEqualTo(2_000L);
         assertThat(request.getBackoffMs()).isEqualTo(4_000L);
@@ -185,10 +198,13 @@ public class JobRequestTest {
     }
 
     private JobRequest.Builder getBuilder() {
-        return new JobRequest.Builder(InstrumentationRegistry.getContext(), TestJob.class);
+        return new JobRequest.Builder(TestJob.TAG);
     }
 
     private static final class TestJob extends Job {
+
+        private static final String TAG = "tag";
+
         @NonNull
         @Override
         protected Result onRunJob(@NonNull Params params) {

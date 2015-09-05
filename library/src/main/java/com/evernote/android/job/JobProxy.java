@@ -27,12 +27,14 @@ package com.evernote.android.job;
 
 import android.app.Service;
 import android.content.Context;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
+import net.vrallev.android.cat.Cat;
 import net.vrallev.android.cat.CatLog;
 
 import java.util.Locale;
@@ -78,8 +80,8 @@ public interface JobProxy {
 
         public JobRequest getPendingRequest() {
             // order is important for logging purposes
-            JobRequest request = JobManager.instance(mContext).getJobRequest(mJobId);
-            Job job = JobManager.instance(mContext).getJob(mJobId);
+            JobRequest request = JobManager.instance().getJobRequest(mJobId);
+            Job job = JobManager.instance().getJob(mJobId);
             boolean periodic = request != null && request.isPeriodic();
 
             if (job != null && !job.isFinished()) {
@@ -113,15 +115,23 @@ public interface JobProxy {
                         JobUtil.timeToString(getEndMs(request)));
             }
 
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                Cat.w("Running JobRequest on a main thread, this could cause stutter or ANR in your app.");
+            }
+
             mCat.d("Run job, %s, waited %s, %s", request, JobUtil.timeToString(waited), timeWindow);
-            JobExecutor jobExecutor = JobManager.instance(mContext).getJobExecutor();
+            JobManager manager = JobManager.instance();
+            JobExecutor jobExecutor = manager.getJobExecutor();
 
             try {
                 if (!request.isPeriodic()) {
-                    JobManager.instance(mContext).getJobStorage().remove(request);
+                    manager.getJobStorage().remove(request);
                 }
 
-                Future<Job.Result> future = jobExecutor.execute(mContext, request);
+                Future<Job.Result> future = jobExecutor.execute(mContext, request, manager.getJobCreator());
+                if (future == null) {
+                    return Job.Result.FAILURE;
+                }
 
                 // wait until done
                 Job.Result result = future.get();

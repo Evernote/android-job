@@ -27,7 +27,6 @@ package com.evernote.android.job;
 
 import android.app.AlarmManager;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -75,7 +74,7 @@ public final class JobRequest {
 
     private JobRequest(Builder builder) {
         mBuilder = builder;
-        mJobApi = builder.mExact ? JobApi.V_14 : JobManager.instance(null).getApi();
+        mJobApi = builder.mExact ? JobApi.V_14 : JobManager.instance().getApi();
     }
 
     /**
@@ -86,10 +85,11 @@ public final class JobRequest {
     }
 
     /**
-     * @return The {@link Job} class which will run in the future.
+     * @return The tag which is used to map this request to a specific {@link Job}.
      */
-    public Class<? extends Job> getJobClass() {
-        return mBuilder.mJobClass;
+    @NonNull
+    public String getTag() {
+        return mBuilder.mTag;
     }
 
     /**
@@ -192,15 +192,6 @@ public final class JobRequest {
     }
 
     /**
-     * @return The specific tag for this request or {@code null} if not set.
-     * @see #getJobClass()
-     * @see Builder#setTag(String)
-     */
-    public String getTag() {
-        return mBuilder.mTag;
-    }
-
-    /**
      * @return If {@code true}, then the job will run at exact time ignoring the device state.
      */
     public boolean isExact() {
@@ -208,6 +199,10 @@ public final class JobRequest {
     }
 
     /*package*/ long getBackoffOffset() {
+        if (isPeriodic()) {
+            return 0L;
+        }
+
         long offset;
         switch (getBackoffPolicy()) {
             case LINEAR:
@@ -241,6 +236,10 @@ public final class JobRequest {
         return mScheduledAt;
     }
 
+    /*package*/ int getNumFailures() {
+        return mNumFailures;
+    }
+
     /**
      * Convenience method. Internally it calls {@link JobManager#schedule(JobRequest)}
      * and {@link #getJobId()} for this request.
@@ -248,7 +247,7 @@ public final class JobRequest {
      * @return The unique ID for this job.
      */
     public int schedule() {
-        JobManager.instance(null).schedule(this);
+        JobManager.instance().schedule(this);
         return getJobId();
     }
 
@@ -261,23 +260,31 @@ public final class JobRequest {
      * @return A builder to modify the parameters.
      */
     public Builder cancelAndEdit() {
-        JobManager.instance(null).cancel(getJobId());
-        Builder builder = new Builder(null, this, false);
+        JobManager.instance().cancel(getJobId());
+        Builder builder = new Builder(this, false);
 
         if (!isPeriodic()) {
             long offset = System.currentTimeMillis() - mScheduledAt;
-            builder.setExecutionWindow(Math.max(0, getStartMs() - offset), Math.max(0, getEndMs() - offset));
+            long minValue = 1L; // 1ms
+            builder.setExecutionWindow(Math.max(minValue, getStartMs() - offset), Math.max(minValue, getEndMs() - offset));
         }
 
         return builder;
     }
 
     /*package*/ int reschedule(boolean failure) {
-        JobRequest newRequest = new Builder(null, this, true).build();
+        JobRequest newRequest = new Builder(this, true).build();
         if (failure) {
             newRequest.mNumFailures = mNumFailures + 1;
         }
         return newRequest.schedule();
+    }
+
+    /*package*/ void incNumFailures() {
+        mNumFailures++;
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mNumFailures);
+        JobManager.instance().getJobStorage().update(this, contentValues);
     }
 
     /*package*/ ContentValues toContentValues() {
@@ -316,7 +323,7 @@ public final class JobRequest {
 
     @Override
     public String toString() {
-        return "request{id=" + getJobId() + ", class=" + getJobClass().getSimpleName() + ", tag=" + getTag() + '}';
+        return "request{id=" + getJobId() + ", tag=" + getTag() + '}';
     }
 
     /**
@@ -325,7 +332,7 @@ public final class JobRequest {
     public static final class Builder {
 
         private final int mId;
-        private final Class<? extends Job> mJobClass;
+        private final String mTag;
 
         private long mStartMs;
         private long mEndMs;
@@ -346,16 +353,22 @@ public final class JobRequest {
 
         private boolean mPersisted;
 
-        private String mTag;
-
         /**
-         * @param context A {@link Context} which is used for initializing the {@link JobManager} if
-         *                it hasn't been done.
-         * @param jobClass The endpoint that you implement that will receive the callback.
+         * Creates a new instance to build a {@link JobRequest}. Note that the {@code tag} doesn't
+         * need to be unique. Each created request has an unique ID to differentiate between jobs
+         * with the same tag.
+         *
+         * <br>
+         * <br>
+         *
+         * When your job is about to start you receive a callback in your {@link JobCreator} to create
+         * a {@link Job} for this {@code tag}.
+         *
+         * @param tag The tag is used to identify your {@code Job} in {@link JobCreator#create(String)}.
          */
-        public Builder(@NonNull Context context, @NonNull Class<? extends Job> jobClass) {
-            mJobClass = JobPreconditions.checkNotNull(jobClass);
-            mId = JobManager.instance(context).getJobStorage().nextJobId();
+        public Builder(@NonNull String tag) {
+            mTag = JobPreconditions.checkNotEmpty(tag);
+            mId = JobManager.instance().getJobStorage().nextJobId();
 
             mStartMs = -1;
             mEndMs = -1;
@@ -366,9 +379,9 @@ public final class JobRequest {
             mNetworkType = DEFAULT_NETWORK_TYPE;
         }
 
-        private Builder(Context context, JobRequest request, boolean createId) {
-            mId = createId ? JobManager.instance(context).getJobStorage().nextJobId() : request.getJobId();
-            mJobClass = request.getJobClass();
+        private Builder(JobRequest request, boolean createId) {
+            mId = createId ? JobManager.instance().getJobStorage().nextJobId() : request.getJobId();
+            mTag = request.getTag();
 
             mStartMs = request.getStartMs();
             mEndMs = request.getEndMs();
@@ -387,13 +400,12 @@ public final class JobRequest {
             mExtras = request.mBuilder.mExtras;
             mExtrasXml = request.mBuilder.mExtrasXml;
             mPersisted = request.isPersisted();
-            mTag = request.getTag();
         }
 
         @SuppressWarnings("unchecked")
         private Builder(Cursor cursor) throws Exception {
             mId = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_ID));
-            mJobClass = (Class<? extends Job>) Class.forName(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_JOB_CLASS)));
+            mTag = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_TAG));
 
             mStartMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_START_MS));
             mEndMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_END_MS));
@@ -412,12 +424,11 @@ public final class JobRequest {
             mExtrasXml = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_EXTRAS));
 
             mPersisted = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_PERSISTED)) > 0;
-            mTag = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_TAG));
         }
 
         private void fillContentValues(ContentValues contentValues) {
             contentValues.put(JobStorage.COLUMN_ID, mId);
-            contentValues.put(JobStorage.COLUMN_JOB_CLASS, mJobClass.getName());
+            contentValues.put(JobStorage.COLUMN_TAG, mTag);
 
             contentValues.put(JobStorage.COLUMN_START_MS, mStartMs);
             contentValues.put(JobStorage.COLUMN_END_MS, mEndMs);
@@ -439,9 +450,6 @@ public final class JobRequest {
                 contentValues.put(JobStorage.COLUMN_EXTRAS, mExtrasXml);
             }
             contentValues.put(JobStorage.COLUMN_PERSISTED, mPersisted);
-            if (mTag != null) {
-                contentValues.put(JobStorage.COLUMN_TAG, mTag);
-            }
         }
 
         /**
@@ -640,23 +648,10 @@ public final class JobRequest {
          * @param persisted If {@code true} the job is scheduled after a reboot.
          */
         public Builder setPersisted(boolean persisted) {
-            if (!JobManager.instance(null).hasBootPermission()) {
+            if (!JobManager.instance().hasBootPermission()) {
                 throw new IllegalStateException("Does not have RECEIVE_BOOT_COMPLETED permission, which is mandatory for this feature");
             }
             mPersisted = persisted;
-            return this;
-        }
-
-        /**
-         * Associate this request with a specific tag. That makes it easier to find, update and
-         * cancel a pending request or running job. Note that if you schedule multiple requests
-         * with the same tag, then you can't predetermine, which request you cancel or get with
-         * {@link JobManager#getJobRequest(String)}.
-         *
-         * @param tag The specific tag for this request.
-         */
-        public Builder setTag(String tag) {
-            mTag = tag;
             return this;
         }
 
@@ -665,7 +660,7 @@ public final class JobRequest {
          */
         public JobRequest build() {
             JobPreconditions.checkArgumentNonnegative(mId, "id can't be negative");
-            JobPreconditions.checkNotNull(mJobClass);
+            JobPreconditions.checkNotEmpty(mTag);
             JobPreconditions.checkArgumentPositive(mBackoffMs, "backoffMs must be > 0");
             JobPreconditions.checkNotNull(mBackoffPolicy);
             JobPreconditions.checkNotNull(mNetworkType);

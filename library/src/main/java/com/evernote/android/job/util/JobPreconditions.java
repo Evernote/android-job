@@ -154,7 +154,7 @@ public final class JobPreconditions {
     /**
      * Ensures that that the argument numeric value is positive.
      *
-     * @param value a numeric int value
+     * @param value a numeric long value
      * @param errorMessage the exception message to use if the check fails
      * @return the validated numeric value
      * @throws IllegalArgumentException if {@code value} was not positive
@@ -252,7 +252,7 @@ public final class JobPreconditions {
     /**
      * Ensures that the argument int value is within the inclusive range.
      *
-     * @param value a int value
+     * @param value a long value
      * @param lower the lower endpoint of the inclusive range
      * @param upper the upper endpoint of the inclusive range
      * @param valueName the name of the argument to use if the check fails

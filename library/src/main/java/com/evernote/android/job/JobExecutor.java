@@ -53,12 +53,18 @@ import java.util.concurrent.TimeUnit;
         mJobs = new SparseArray<>();
     }
 
-    public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request) {
+    public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @NonNull JobCreator creator) {
         try {
-            Job job = request.getJobClass()
-                    .newInstance()
-                    .setContext(context)
-                    .setRequest(request);
+            Job job = creator.create(request.getTag());
+            if (job == null) {
+                Cat.w("JobCreator returned null for tag %s", request.getTag());
+                return null;
+            }
+            if (job.isFinished()) {
+                throw new IllegalStateException("Job for tag %s was already run, a creator should always create a new Job instance");
+            }
+
+            job.setContext(context).setRequest(request);
 
             Cat.i("Executing %s, context %s", request, context.getClass().getSimpleName());
 
@@ -74,23 +80,17 @@ import java.util.concurrent.TimeUnit;
         return mJobs.get(jobId);
     }
 
-    public synchronized Job getJob(String tag) {
-        if (tag == null) {
-            return null;
-        }
-        for (int i = 0; i < mJobs.size(); i++) {
-            Job job = mJobs.valueAt(i);
-            if (tag.equals(job.getParams().getRequest().getTag())) {
-                return job;
-            }
-        }
-        return null;
+    public synchronized Set<Job> getAllJobs() {
+        return getAllJobsForTag(null);
     }
 
-    public synchronized Set<Job> getAllJobs() {
+    public synchronized Set<Job> getAllJobsForTag(String tag) {
         Set<Job> result = new HashSet<>();
         for (int i = 0; i < mJobs.size(); i++) {
-            result.add(mJobs.valueAt(i));
+            Job job = mJobs.valueAt(i);
+            if (tag == null || tag.equals(job.getParams().getTag())) {
+                result.add(job);
+            }
         }
         return result;
     }
@@ -106,6 +106,7 @@ import java.util.concurrent.TimeUnit;
             Context context = mJob.getContext();
             PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 
+            // we might want to check permissions here
             mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobExecutor.class.getSimpleName());
             acquireWakeLock();
         }
@@ -121,6 +122,8 @@ import java.util.concurrent.TimeUnit;
             } finally {
                 if (mWakeLock.isHeld()) {
                     mWakeLock.release();
+                } else {
+                    Cat.w("Wake lock was not held after job %s was done. The job took too long to complete. This could have unintended side effects on your app.", mJob);
                 }
             }
         }
@@ -146,6 +149,8 @@ import java.util.concurrent.TimeUnit;
             if (!request.isPeriodic() && Job.Result.RESCHEDULE.equals(result)) {
                 int newJobId = request.reschedule(true);
                 mJob.onReschedule(newJobId);
+            } else if (request.isPeriodic() && !Job.Result.SUCCESS.equals(result)) {
+                request.incNumFailures();
             }
         }
 

@@ -25,6 +25,8 @@ import java.util.concurrent.CountDownLatch;
  */
 public class TestJob extends Job {
 
+    public static final String TAG = "TestJobTag";
+
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault());
 
     public static File getTestFile(Context context) {
@@ -51,7 +53,9 @@ public class TestJob extends Job {
                         .append(' ')
                         .append(params.getId())
                         .append(' ')
-                        .append(params.getExtras().getString("key", "NOT_FOUND"));
+                        .append(params.getExtras().getString("key", "NOT_FOUND"))
+                        .append(" failed ")
+                        .append(params.getFailureCount());
 
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                 latch.countDown();

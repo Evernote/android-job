@@ -46,7 +46,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 /*package*/ class JobStorage {
 
-//    private static final String JOB_PREFIX = "JOB_";
     private static final String JOB_ID_COUNTER = "JOB_ID_COUNTER";
 
     private static final String DATABASE_NAME = "evernote_jobs.db";
@@ -55,7 +54,7 @@ import java.util.concurrent.atomic.AtomicInteger;
     private static final String JOB_TABLE_NAME = "jobs";
 
     public static final String COLUMN_ID = "_id";
-    public static final String COLUMN_JOB_CLASS = "jobClass";
+    public static final String COLUMN_TAG = "tag";
     public static final String COLUMN_START_MS = "startMs";
     public static final String COLUMN_END_MS = "endMs";
     public static final String COLUMN_BACKOFF_MS = "backoffMs";
@@ -68,7 +67,6 @@ import java.util.concurrent.atomic.AtomicInteger;
     public static final String COLUMN_NETWORK_TYPE = "networkType";
     public static final String COLUMN_EXTRAS = "extras";
     public static final String COLUMN_PERSISTED = "persisted";
-    public static final String COLUMN_TAG = "tag";
     public static final String COLUMN_NUM_FAILURES = "numFailures";
     public static final String COLUMN_SCHEDULED_AT = "scheduledAt";
 
@@ -76,7 +74,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     private final SharedPreferences mPreferences;
     private final JobCacheId mCacheId;
-    private final JobCacheTag mCacheTag;
 
     private final AtomicInteger mJobCounter;
 
@@ -86,7 +83,6 @@ import java.util.concurrent.atomic.AtomicInteger;
         mPreferences = context.getSharedPreferences("jobs", Context.MODE_PRIVATE);
 
         mCacheId = new JobCacheId();
-        mCacheTag = new JobCacheTag();
 
         int lastJobId = mPreferences.getInt(JOB_ID_COUNTER, 0);
         mJobCounter = new AtomicInteger(lastJobId);
@@ -95,32 +91,44 @@ import java.util.concurrent.atomic.AtomicInteger;
     }
 
     public synchronized void put(final JobRequest request) {
-        mCacheId.put(request.getJobId(), request);
-        if (!TextUtils.isEmpty(request.getTag())) {
-            mCacheTag.put(request.getTag(), request);
-        }
-
+        updateRequestInCache(request);
         // don't write to db async, there could be a race condition with remove()
         store(request);
+    }
+
+    public synchronized void update(JobRequest request, ContentValues contentValues) {
+        updateRequestInCache(request);
+        try {
+            mDbHelper.getWritableDatabase().update(JOB_TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
+        } catch (Exception e) {
+            Cat.e(e, "could not update %s", request);
+        }
+    }
+
+    private void updateRequestInCache(JobRequest request) {
+        mCacheId.put(request.getJobId(), request);
     }
 
     public synchronized JobRequest get(int id) {
         return mCacheId.get(id);
     }
 
-    public synchronized JobRequest get(String tag) {
-        if (tag == null) {
-            return null;
-        }
-        return mCacheTag.get(tag);
+    public synchronized Set<JobRequest> getAllJobRequests() {
+        return getAllJobRequestsForTag(null);
     }
 
-    public synchronized Set<JobRequest> getAllJobRequests() {
+    public synchronized Set<JobRequest> getAllJobRequestsForTag(String tag) {
         Set<JobRequest> result = new HashSet<>();
 
         Cursor cursor = null;
         try {
-            cursor = mDbHelper.getWritableDatabase().query(JOB_TABLE_NAME, null, null, null, null, null, null);
+            SQLiteDatabase database = mDbHelper.getWritableDatabase();
+            if (TextUtils.isEmpty(tag)) {
+                cursor = database.query(JOB_TABLE_NAME, null, null, null, null, null, null);
+            } else {
+                cursor = database.query(JOB_TABLE_NAME, null, COLUMN_TAG + "=?", new String[]{tag}, null, null, null);
+            }
+
             HashMap<Integer, JobRequest> cachedRequests = new HashMap<>(mCacheId.snapshot());
 
             while (cursor.moveToNext()) {
@@ -146,9 +154,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     public synchronized void remove(JobRequest request) {
         mCacheId.remove(request.getJobId());
-        if (!TextUtils.isEmpty(request.getTag())) {
-            mCacheTag.remove(request.getTag());
-        }
         try {
             mDbHelper.getWritableDatabase().delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
         } catch (Exception e) {
@@ -194,26 +199,6 @@ import java.util.concurrent.atomic.AtomicInteger;
         return null;
     }
 
-    private JobRequest load(String tag) {
-        Cursor cursor = null;
-        try {
-            cursor = mDbHelper.getWritableDatabase().query(JOB_TABLE_NAME, null, COLUMN_TAG + "=?", new String[]{tag}, null, null, null);
-            if (cursor.moveToFirst()) {
-                return JobRequest.fromCursor(cursor);
-            }
-
-        } catch (Exception e) {
-            Cat.e(e, "could not load tag %s", tag);
-
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-
-        return null;
-    }
-
     private class JobCacheId extends LruCache<Integer, JobRequest> {
 
         public JobCacheId() {
@@ -223,18 +208,6 @@ import java.util.concurrent.atomic.AtomicInteger;
         @Override
         protected JobRequest create(Integer id) {
             return load(id);
-        }
-    }
-
-    private class JobCacheTag extends LruCache<String, JobRequest> {
-
-        public JobCacheTag() {
-            super(CACHE_SIZE);
-        }
-
-        @Override
-        protected JobRequest create(String tag) {
-            return load(tag);
         }
     }
 
@@ -257,7 +230,7 @@ import java.util.concurrent.atomic.AtomicInteger;
         private void createJobTable(SQLiteDatabase db) {
             db.execSQL("create table " + JOB_TABLE_NAME + " ("
                     + COLUMN_ID + " integer primary key, "
-                    + COLUMN_JOB_CLASS + " text not null, "
+                    + COLUMN_TAG + " text not null, "
                     + COLUMN_START_MS + " integer, "
                     + COLUMN_END_MS + " integer, "
                     + COLUMN_BACKOFF_MS + " integer, "
@@ -270,7 +243,6 @@ import java.util.concurrent.atomic.AtomicInteger;
                     + COLUMN_NETWORK_TYPE + " text not null, "
                     + COLUMN_EXTRAS + " text, "
                     + COLUMN_PERSISTED + " integer, "
-                    + COLUMN_TAG + " text, "
                     + COLUMN_NUM_FAILURES + " integer, "
                     + COLUMN_SCHEDULED_AT + " integer);");
         }
