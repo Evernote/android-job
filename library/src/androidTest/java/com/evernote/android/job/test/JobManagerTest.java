@@ -6,11 +6,13 @@ import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 
 import com.evernote.android.job.Job;
+import com.evernote.android.job.JobCreator;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobApi;
 
 import org.junit.After;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -22,6 +24,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class JobManagerTest {
+
+    @BeforeClass
+    public static void createJobManager() {
+        JobManager.create(InstrumentationRegistry.getContext(), new JobCreator() {
+            @Override
+            public Job create(String tag) {
+                return new TestJob();
+            }
+        });
+    }
 
     @Test
     public void testScheduleAndCancel() {
@@ -69,12 +81,11 @@ public class JobManagerTest {
 
         request.schedule();
 
-        assertThat(getManager().getJobRequest("tag")).isNotNull();
-        assertThat(getManager().getJobRequest("other")).isNull();
+        assertThat(getManager().getAllJobRequestsForTag(TestJob.TAG)).isNotNull().hasSize(1);
+        assertThat(getManager().getAllJobRequestsForTag("other")).isNotNull().isEmpty();
 
-        boolean canceled = getManager().cancel("tag");
-        assertThat(canceled).isTrue();
-        assertThat(getManager().cancel("tag")).isFalse();
+        assertThat(getManager().cancelAllForTag(TestJob.TAG)).isEqualTo(1);
+        assertThat(getManager().cancelAllForTag(TestJob.TAG)).isZero();
     }
 
     @After
@@ -85,19 +96,21 @@ public class JobManagerTest {
     private JobRequest getJobRequest() {
         return getBuilder()
                 .setExecutionWindow(300_000L, 300_000L)
-                .setTag("tag")
                 .build();
     }
 
     private JobRequest.Builder getBuilder() {
-        return new JobRequest.Builder(InstrumentationRegistry.getContext(), TestJob.class);
+        return new JobRequest.Builder(TestJob.TAG);
     }
 
     private JobManager getManager() {
-        return JobManager.instance(InstrumentationRegistry.getContext());
+        return JobManager.instance();
     }
 
     private static final class TestJob extends Job {
+
+        private static final String TAG = "tag";
+
         @NonNull
         @Override
         protected Result onRunJob(@NonNull Params params) {

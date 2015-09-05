@@ -48,7 +48,7 @@ public final class JobBootReceiver extends BroadcastReceiver {
             return;
         }
 
-        Set<JobRequest> requests = JobManager.instance(context).getAllJobRequests();
+        Set<JobRequest> requests = JobManager.instance().getAllJobRequests();
 
         Cat.d("Schedule %d jobs if necessary", requests.size());
 

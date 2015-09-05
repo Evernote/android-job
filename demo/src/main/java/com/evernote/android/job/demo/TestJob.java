@@ -25,6 +25,8 @@ import java.util.concurrent.CountDownLatch;
  */
 public class TestJob extends Job {
 
+    public static final String TAG = "TestJobTag";
+
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault());
 
     public static File getTestFile(Context context) {

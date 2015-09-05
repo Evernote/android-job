@@ -16,6 +16,16 @@ android {
     }
 
     buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles 'proguard.cfg'
+        }
+
+        release {
+            minifyEnabled true
+            proguardFiles 'proguard.cfg'
+        }
+
         gcm.initWith(buildTypes.debug)
         gcm {
             applicationIdSuffix ".gcm"

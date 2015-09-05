@@ -335,7 +335,7 @@ public abstract class Job {
         }
 
         /**
-         * @return The specific tag for this {@link Job} or {@code null} if not set.
+         * @return The tag for this {@link Job} which was passed in the constructor of the {@link JobRequest.Builder}.
          */
         public String getTag() {
             return mRequest.getTag();
