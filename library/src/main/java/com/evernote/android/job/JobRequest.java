@@ -208,6 +208,10 @@ public final class JobRequest {
     }
 
     /*package*/ long getBackoffOffset() {
+        if (isPeriodic()) {
+            return 0L;
+        }
+
         long offset;
         switch (getBackoffPolicy()) {
             case LINEAR:
@@ -241,6 +245,10 @@ public final class JobRequest {
         return mScheduledAt;
     }
 
+    /*package*/ int getNumFailures() {
+        return mNumFailures;
+    }
+
     /**
      * Convenience method. Internally it calls {@link JobManager#schedule(JobRequest)}
      * and {@link #getJobId()} for this request.
@@ -266,8 +274,8 @@ public final class JobRequest {
 
         if (!isPeriodic()) {
             long offset = System.currentTimeMillis() - mScheduledAt;
-            // can crash here if the first argument ends up being 0 somehow
-            builder.setExecutionWindow(Math.max(0, getStartMs() - offset), Math.max(0, getEndMs() - offset));
+            long minValue = 1L; // 1ms
+            builder.setExecutionWindow(Math.max(minValue, getStartMs() - offset), Math.max(minValue, getEndMs() - offset));
         }
 
         return builder;
@@ -279,6 +287,13 @@ public final class JobRequest {
             newRequest.mNumFailures = mNumFailures + 1;
         }
         return newRequest.schedule();
+    }
+
+    /*package*/ void incNumFailures() {
+        mNumFailures++;
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mNumFailures);
+        JobManager.instance(null).getJobStorage().update(this, contentValues);
     }
 
     /*package*/ ContentValues toContentValues() {
