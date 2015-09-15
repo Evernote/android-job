@@ -133,7 +133,7 @@ public class ExampleJob extends Job {
 }
 ```
 
-**Warning:** With Android Marshmallow Google introduced the auto backup feature. All job information are stored in a shared preference file called `jobs.xml` and in a database called `evernote_jobs.db`. You should exclude these files so that they aren't backed up.
+**Warning:** With Android Marshmallow Google introduced the auto backup feature. All job information are stored in a shared preference file called `evernote_jobs.xml` and in a database called `evernote_jobs.db`. You should exclude these files so that they aren't backed up.
 
 #### Using the GcmNetworkManager
 

@@ -4,7 +4,7 @@ apply from: '../build-config/gradle-quality.gradle'
 dependencies {
     provided 'com.google.android.gms:play-services-gcm:7.8.0'
 
-    compile 'com.android.support:support-v4:23.0.0'
+    compile 'com.android.support:support-v4:23.0.1'
     compile 'net.vrallev.android:cat:1.0.2'
 
     androidTestCompile 'com.android.support.test:runner:0.3'

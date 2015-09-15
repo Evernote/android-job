@@ -52,7 +52,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     private static final String JOB_ID_COUNTER = "JOB_ID_COUNTER";
 
-    private static final String DATABASE_NAME = "evernote_jobs.db";
+    private static final String PREF_FILE_NAME = "evernote_jobs";
+    private static final String DATABASE_NAME = PREF_FILE_NAME + ".db";
     private static final int DATABASE_VERSION = 1;
 
     private static final String JOB_TABLE_NAME = "jobs";
@@ -84,7 +85,7 @@ import java.util.concurrent.atomic.AtomicInteger;
     private final JobOpenHelper mDbHelper;
 
     public JobStorage(Context context) {
-        mPreferences = context.getSharedPreferences("jobs", Context.MODE_PRIVATE);
+        mPreferences = context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE);
 
         mCacheId = new JobCacheId();
 
