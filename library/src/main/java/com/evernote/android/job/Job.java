@@ -313,7 +313,7 @@ public abstract class Job {
                 + ", canceled=" + mCanceled
                 + ", periodic=" + mParams.isPeriodic()
                 + ", class=" + getClass().getSimpleName()
-                + ", tag=" + getClass().getSimpleName()
+                + ", tag=" + mParams.getTag()
                 + '}';
     }
 

@@ -156,8 +156,8 @@ public final class JobManager {
      * @param request The {@link JobRequest} which will be run in the future.
      */
     public void schedule(JobRequest request) {
-        mJobStorage.put(request);
         request.setScheduledAt(System.currentTimeMillis());
+        mJobStorage.put(request);
 
         JobProxy proxy = getJobProxy(request);
         if (request.isPeriodic()) {
