@@ -141,6 +141,13 @@ public final class JobManager {
         mJobExecutor = new JobExecutor();
 
         setJobProxy(JobApi.getDefault(mContext));
+
+        new Thread() {
+            @Override
+            public void run() {
+                rescheduleTasksIfNecessary();
+            }
+        }.start();
     }
 
     protected void setJobProxy(JobApi api) {
@@ -356,5 +363,23 @@ public final class JobManager {
 
     private JobProxy getJobProxy(JobRequest request) {
         return request.getJobApi().getCachedProxy(mContext);
+    }
+
+    private void rescheduleTasksIfNecessary() {
+        Set<JobRequest> requests = JobManager.instance().getAllJobRequests();
+
+        int rescheduledCount = 0;
+        for (JobRequest request : requests) {
+            if (!getJobProxy(request).isPlatformJobScheduled(request)) {
+                // update execution window
+                request.cancelAndEdit()
+                        .build()
+                        .schedule();
+
+                rescheduledCount++;
+            }
+        }
+
+        CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
     }
 }

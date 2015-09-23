@@ -30,11 +30,6 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.evernote.android.job.util.JobApi;
-import com.evernote.android.job.util.JobCat;
-
-import net.vrallev.android.cat.CatLog;
-
-import java.util.Set;
 
 /**
  * A {@code BroadcastReceiver} rescheduling jobs after a reboot, if the underlying {@link JobApi} can't
@@ -44,25 +39,12 @@ import java.util.Set;
  */
 public final class JobBootReceiver extends BroadcastReceiver {
 
-    private static final CatLog CAT = new JobCat("JobBootReceiver");
-
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent == null || !Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
-            return;
-        }
-
-        Set<JobRequest> requests = JobManager.instance().getAllJobRequests();
-
-        CAT.d("Schedule %d jobs if necessary", requests.size());
-
-        for (JobRequest request : requests) {
-            if (JobApi.V_14.equals(request.getJobApi())) {
-                // update execution window
-                request.cancelAndEdit()
-                        .build()
-                        .schedule();
-            }
-        }
+        /*
+         * We don't need to do anything. This receiver causes the app to be loaded. In the onCreate()
+         * method of the Application object we initialize the JobManager. There we reschedule tasks
+         * if necessary.
+         */
     }
 }

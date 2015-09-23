@@ -75,13 +75,22 @@ public class JobProxy14 implements JobProxy {
         mAlarmManager.cancel(getPendingIntent(request, request.isPeriodic()));
     }
 
-    protected PendingIntent getPendingIntent(JobRequest request, boolean repeating) {
-        Intent intent = PlatformAlarmReceiver.createIntent(request);
+    @Override
+    public boolean isPlatformJobScheduled(JobRequest request) {
+        PendingIntent pendingIntent = getPendingIntent(request, PendingIntent.FLAG_NO_CREATE);
+        return pendingIntent != null;
+    }
 
+    protected PendingIntent getPendingIntent(JobRequest request, boolean repeating) {
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (!repeating) {
             flags |= PendingIntent.FLAG_ONE_SHOT;
         }
+        return getPendingIntent(request, flags);
+    }
+
+    protected PendingIntent getPendingIntent(JobRequest request, int flags) {
+        Intent intent = PlatformAlarmReceiver.createIntent(request);
 
         // repeating PendingIntent with service seams to have problems
         return PendingIntent.getBroadcast(mContext, request.getJobId(), intent, flags);
