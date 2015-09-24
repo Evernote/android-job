@@ -40,6 +40,8 @@ import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
 
+import java.util.List;
+
 
 /**
  * @author rwondratschek
@@ -93,6 +95,23 @@ public class JobProxy21 implements JobProxy {
     @Override
     public void cancel(JobRequest request) {
         mJobScheduler.cancel(request.getJobId());
+    }
+
+    @Override
+    public boolean isPlatformJobScheduled(JobRequest request) {
+        List<JobInfo> pendingJobs = mJobScheduler.getAllPendingJobs();
+        if (pendingJobs == null || pendingJobs.isEmpty()) {
+            return false;
+        }
+
+        int requestId = request.getJobId();
+        for (JobInfo info : pendingJobs) {
+            if (info.getId() == requestId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected JobInfo.Builder createBaseBuilder(JobRequest request) {

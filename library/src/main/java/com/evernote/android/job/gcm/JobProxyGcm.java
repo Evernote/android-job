@@ -98,6 +98,12 @@ public class JobProxyGcm implements JobProxy {
         mGcmNetworkManager.cancelTask(createTag(request), PlatformGcmService.class);
     }
 
+    @Override
+    public boolean isPlatformJobScheduled(JobRequest request) {
+        // there is no option to check whether a task is scheduled, assume it is
+        return true;
+    }
+
     protected String createTag(JobRequest request) {
         return String.valueOf(request.getJobId());
     }

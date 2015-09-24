@@ -53,6 +53,8 @@ public interface JobProxy {
 
     void cancel(JobRequest request);
 
+    boolean isPlatformJobScheduled(JobRequest request);
+
     /*package*/ final class Common {
 
         public static long getStartMs(JobRequest request) {
