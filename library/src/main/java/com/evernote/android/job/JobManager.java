@@ -31,6 +31,8 @@ import android.app.Application;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.PowerManager;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -44,6 +46,7 @@ import net.vrallev.android.cat.CatGlobal;
 import net.vrallev.android.cat.CatLog;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Entry point for scheduling jobs. Depending on the platform and SDK version it uses different APIs
@@ -366,20 +369,40 @@ public final class JobManager {
     }
 
     private void rescheduleTasksIfNecessary() {
-        Set<JobRequest> requests = JobManager.instance().getAllJobRequests();
+        PowerManager powerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobManager.class.getName());
 
-        int rescheduledCount = 0;
-        for (JobRequest request : requests) {
-            if (!getJobProxy(request).isPlatformJobScheduled(request)) {
-                // update execution window
-                request.cancelAndEdit()
-                        .build()
-                        .schedule();
+        try {
+            wakeLock.acquire(TimeUnit.SECONDS.toMillis(3));
 
-                rescheduledCount++;
+            /*
+             * Delay this slightly. This avoids a race condition if the app was launched by the
+             * AlarmManager. Then the alarm was already removed, but the JobRequest might still
+             * be available in the storage. We still catch this case, because we never execute
+             * a job with the same ID twice. However, the still save resources with the delay.
+             */
+            SystemClock.sleep(10_000L);
+
+            Set<JobRequest> requests = JobManager.instance().getAllJobRequests();
+
+            int rescheduledCount = 0;
+            for (JobRequest request : requests) {
+                if (!getJobProxy(request).isPlatformJobScheduled(request)) {
+                    // update execution window
+                    request.cancelAndEdit()
+                            .build()
+                            .schedule();
+
+                    rescheduledCount++;
+                }
+            }
+
+            CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
+
+        } finally {
+            if (wakeLock.isHeld()) {
+                wakeLock.release();
             }
         }
-
-        CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
     }
 }
