@@ -42,6 +42,7 @@ import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
 import com.google.android.gms.gcm.GcmNetworkManager;
 
+import net.vrallev.android.cat.Cat;
 import net.vrallev.android.cat.CatGlobal;
 import net.vrallev.android.cat.CatLog;
 
@@ -105,6 +106,13 @@ public final class JobManager {
                     }
 
                     instance = new JobManager(context, jobCreator);
+
+                    if (!instance.hasWakeLockPermission()) {
+                        Cat.w("No wake lock permission");
+                    }
+                    if (!instance.hasBootPermission()) {
+                        Cat.w("No boot permission");
+                    }
                 }
             }
         }
@@ -364,6 +372,13 @@ public final class JobManager {
         return result == PackageManager.PERMISSION_GRANTED;
     }
 
+    /*package*/ boolean hasWakeLockPermission() {
+        int result = mContext.getPackageManager()
+                .checkPermission(Manifest.permission.WAKE_LOCK, mContext.getPackageName());
+
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
     private JobProxy getJobProxy(JobRequest request) {
         return request.getJobApi().getCachedProxy(mContext);
     }
@@ -373,7 +388,9 @@ public final class JobManager {
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobManager.class.getName());
 
         try {
-            wakeLock.acquire(TimeUnit.SECONDS.toMillis(3));
+            if (hasWakeLockPermission()) {
+                wakeLock.acquire(TimeUnit.SECONDS.toMillis(3));
+            }
 
             /*
              * Delay this slightly. This avoids a race condition if the app was launched by the

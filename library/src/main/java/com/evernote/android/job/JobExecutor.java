@@ -110,7 +110,6 @@ import java.util.concurrent.TimeUnit;
             Context context = mJob.getContext();
             PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 
-            // we might want to check permissions here
             mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobExecutor.class.getSimpleName());
             acquireWakeLock();
         }
@@ -159,7 +158,7 @@ import java.util.concurrent.TimeUnit;
         }
 
         private void acquireWakeLock() {
-            if (!mWakeLock.isHeld()) {
+            if (!mWakeLock.isHeld() && JobManager.instance().hasWakeLockPermission()) {
                 mWakeLock.acquire(TimeUnit.MINUTES.toMillis(3));
             }
         }
