@@ -31,6 +31,7 @@ import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
 import com.evernote.android.job.util.JobCat;
+import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
 
@@ -158,7 +159,7 @@ import java.util.concurrent.TimeUnit;
         }
 
         private void acquireWakeLock() {
-            if (!mWakeLock.isHeld() && JobManager.instance().hasWakeLockPermission()) {
+            if (!mWakeLock.isHeld() && JobUtil.hasWakeLockPermission(mJob.getContext())) {
                 mWakeLock.acquire(TimeUnit.MINUTES.toMillis(3));
             }
         }

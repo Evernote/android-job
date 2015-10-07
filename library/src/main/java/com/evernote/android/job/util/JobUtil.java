@@ -25,6 +25,10 @@
  */
 package com.evernote.android.job.util;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -62,5 +66,27 @@ public final class JobUtil {
         }
 
         return result;
+    }
+
+    /**
+     * @param context Any context.
+     * @return Whether the package has the RECEIVE_BOOT_COMPLETED permission.
+     */
+    public static boolean hasBootPermission(Context context) {
+        int result = context.getPackageManager()
+                .checkPermission(Manifest.permission.RECEIVE_BOOT_COMPLETED, context.getPackageName());
+
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * @param context Any context.
+     * @return Whether the package has the WAKE_LOCK permission.
+     */
+    public static boolean hasWakeLockPermission(Context context) {
+        int result = context.getPackageManager()
+                .checkPermission(Manifest.permission.WAKE_LOCK, context.getPackageName());
+
+        return result == PackageManager.PERMISSION_GRANTED;
     }
 }

@@ -34,6 +34,7 @@ import android.text.TextUtils;
 
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobPreconditions;
+import com.evernote.android.job.util.JobUtil;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
 import java.util.concurrent.TimeUnit;
@@ -648,7 +649,7 @@ public final class JobRequest {
          * @param persisted If {@code true} the job is scheduled after a reboot.
          */
         public Builder setPersisted(boolean persisted) {
-            if (!JobManager.instance().hasBootPermission()) {
+            if (!JobUtil.hasBootPermission(JobManager.instance().getContext())) {
                 throw new IllegalStateException("Does not have RECEIVE_BOOT_COMPLETED permission, which is mandatory for this feature");
             }
             mPersisted = persisted;

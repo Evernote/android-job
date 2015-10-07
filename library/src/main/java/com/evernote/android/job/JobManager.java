@@ -25,12 +25,10 @@
  */
 package com.evernote.android.job;
 
-import android.Manifest;
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.job.JobScheduler;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
@@ -40,6 +38,7 @@ import android.text.TextUtils;
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
+import com.evernote.android.job.util.JobUtil;
 import com.google.android.gms.gcm.GcmNetworkManager;
 
 import net.vrallev.android.cat.Cat;
@@ -107,10 +106,10 @@ public final class JobManager {
 
                     instance = new JobManager(context, jobCreator);
 
-                    if (!instance.hasWakeLockPermission()) {
+                    if (!JobUtil.hasWakeLockPermission(context)) {
                         Cat.w("No wake lock permission");
                     }
-                    if (!instance.hasBootPermission()) {
+                    if (!JobUtil.hasBootPermission(context)) {
                         Cat.w("No boot permission");
                     }
                 }
@@ -365,18 +364,8 @@ public final class JobManager {
         return mJobCreator;
     }
 
-    /*package*/ boolean hasBootPermission() {
-        int result = mContext.getPackageManager()
-                .checkPermission(Manifest.permission.RECEIVE_BOOT_COMPLETED, mContext.getPackageName());
-
-        return result == PackageManager.PERMISSION_GRANTED;
-    }
-
-    /*package*/ boolean hasWakeLockPermission() {
-        int result = mContext.getPackageManager()
-                .checkPermission(Manifest.permission.WAKE_LOCK, mContext.getPackageName());
-
-        return result == PackageManager.PERMISSION_GRANTED;
+    /*package*/ Context getContext() {
+        return mContext;
     }
 
     private JobProxy getJobProxy(JobRequest request) {
@@ -388,7 +377,7 @@ public final class JobManager {
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobManager.class.getName());
 
         try {
-            if (hasWakeLockPermission()) {
+            if (JobUtil.hasWakeLockPermission(mContext)) {
                 wakeLock.acquire(TimeUnit.SECONDS.toMillis(3));
             }
 

@@ -22,6 +22,7 @@
             android:name="com.evernote.android.job.v14.PlatformAlarmReceiver"
             android:exported="false">
             <intent-filter>
+                <action android:name="com.evernote.android.job.v14.RUN_JOB"/>
                 <action android:name="net.vrallev.android.job.v14.RUN_JOB"/>
             </intent-filter>
         </receiver>
