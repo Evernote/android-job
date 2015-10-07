@@ -99,7 +99,15 @@ public class JobProxy21 implements JobProxy {
 
     @Override
     public boolean isPlatformJobScheduled(JobRequest request) {
-        List<JobInfo> pendingJobs = mJobScheduler.getAllPendingJobs();
+        List<JobInfo> pendingJobs;
+        try {
+            pendingJobs = mJobScheduler.getAllPendingJobs();
+        } catch (Exception e) {
+            // it's possible that this throws an exception, see https://gist.github.com/vRallev/a59947dd3932d2642641
+            CAT.e(e);
+            return false;
+        }
+
         if (pendingJobs == null || pendingJobs.isEmpty()) {
             return false;
         }
