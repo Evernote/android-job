@@ -152,12 +152,7 @@ public final class JobManager {
 
         setJobProxy(JobApi.getDefault(mContext));
 
-        new Thread() {
-            @Override
-            public void run() {
-                rescheduleTasksIfNecessary();
-            }
-        }.start();
+        rescheduleTasksIfNecessary();
     }
 
     protected void setJobProxy(JobApi api) {
@@ -374,41 +369,45 @@ public final class JobManager {
 
     private void rescheduleTasksIfNecessary() {
         PowerManager powerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobManager.class.getName());
+        final PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobManager.class.getName());
+        if (JobUtil.hasWakeLockPermission(mContext)) {
+            wakeLock.acquire(TimeUnit.SECONDS.toMillis(3));
+        }
 
-        try {
-            if (JobUtil.hasWakeLockPermission(mContext)) {
-                wakeLock.acquire(TimeUnit.SECONDS.toMillis(3));
-            }
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    /*
+                     * Delay this slightly. This avoids a race condition if the app was launched by the
+                     * AlarmManager. Then the alarm was already removed, but the JobRequest might still
+                     * be available in the storage. We still catch this case, because we never execute
+                     * a job with the same ID twice. However, the still save resources with the delay.
+                     */
+                    SystemClock.sleep(10_000L);
 
-            /*
-             * Delay this slightly. This avoids a race condition if the app was launched by the
-             * AlarmManager. Then the alarm was already removed, but the JobRequest might still
-             * be available in the storage. We still catch this case, because we never execute
-             * a job with the same ID twice. However, the still save resources with the delay.
-             */
-            SystemClock.sleep(10_000L);
+                    Set<JobRequest> requests = JobManager.instance().getAllJobRequests();
 
-            Set<JobRequest> requests = JobManager.instance().getAllJobRequests();
+                    int rescheduledCount = 0;
+                    for (JobRequest request : requests) {
+                        if (!getJobProxy(request).isPlatformJobScheduled(request)) {
+                            // update execution window
+                            request.cancelAndEdit()
+                                    .build()
+                                    .schedule();
 
-            int rescheduledCount = 0;
-            for (JobRequest request : requests) {
-                if (!getJobProxy(request).isPlatformJobScheduled(request)) {
-                    // update execution window
-                    request.cancelAndEdit()
-                            .build()
-                            .schedule();
+                            rescheduledCount++;
+                        }
+                    }
 
-                    rescheduledCount++;
+                    CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
+
+                } finally {
+                    if (wakeLock.isHeld()) {
+                        wakeLock.release();
+                    }
                 }
             }
-
-            CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
-
-        } finally {
-            if (wakeLock.isHeld()) {
-                wakeLock.release();
-            }
-        }
+        }.start();
     }
 }

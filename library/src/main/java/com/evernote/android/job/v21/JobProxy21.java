@@ -52,11 +52,9 @@ public class JobProxy21 implements JobProxy {
     private static final CatLog CAT = new JobCat("JobProxy21");
 
     private final Context mContext;
-    private final JobScheduler mJobScheduler;
 
     public JobProxy21(Context context) {
         mContext = context;
-        mJobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
     }
 
     @Override
@@ -70,7 +68,13 @@ public class JobProxy21 implements JobProxy {
                 .setPersisted(request.isPersisted())
                 .build();
 
-        int scheduleResult = mJobScheduler.schedule(jobInfo);
+        int scheduleResult;
+        try {
+            scheduleResult = getJobScheduler().schedule(jobInfo);
+        } catch (Exception e) {
+            CAT.e(e);
+            scheduleResult = JobScheduler.RESULT_FAILURE;
+        }
 
         CAT.d("Schedule one-off jobInfo %s, %s, start %s, end %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
                 request, JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
@@ -86,7 +90,13 @@ public class JobProxy21 implements JobProxy {
                 .setPersisted(request.isPersisted())
                 .build();
 
-        int scheduleResult = mJobScheduler.schedule(jobInfo);
+        int scheduleResult;
+        try {
+            scheduleResult = getJobScheduler().schedule(jobInfo);
+        } catch (Exception e) {
+            CAT.e(e);
+            scheduleResult = JobScheduler.RESULT_FAILURE;
+        }
 
         CAT.d("Schedule periodic jobInfo %s, %s, interval %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
                 request, JobUtil.timeToString(request.getIntervalMs()));
@@ -94,14 +104,19 @@ public class JobProxy21 implements JobProxy {
 
     @Override
     public void cancel(JobRequest request) {
-        mJobScheduler.cancel(request.getJobId());
+        try {
+            getJobScheduler().cancel(request.getJobId());
+        } catch (Exception e) {
+            // https://gist.github.com/vRallev/5d48a4a8e8d05067834e
+            CAT.e(e);
+        }
     }
 
     @Override
     public boolean isPlatformJobScheduled(JobRequest request) {
         List<JobInfo> pendingJobs;
         try {
-            pendingJobs = mJobScheduler.getAllPendingJobs();
+            pendingJobs = getJobScheduler().getAllPendingJobs();
         } catch (Exception e) {
             // it's possible that this throws an exception, see https://gist.github.com/vRallev/a59947dd3932d2642641
             CAT.e(e);
@@ -137,5 +152,9 @@ public class JobProxy21 implements JobProxy {
             default:
                 throw new IllegalStateException("not implemented");
         }
+    }
+
+    protected final JobScheduler getJobScheduler() {
+        return (JobScheduler) mContext.getSystemService(Context.JOB_SCHEDULER_SERVICE);
     }
 }

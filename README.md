@@ -141,7 +141,7 @@ By default the API for the `GcmNetworkManager` is disabled. In order to use it f
 
 ```groovy
 dependencies {
-    compile 'com.google.android.gms:play-services-gcm:7.8.0' // or newer
+    compile 'com.google.android.gms:play-services-gcm:8.1.0' // or newer
 }
 ```
 
