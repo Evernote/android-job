@@ -29,6 +29,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
+import net.vrallev.android.cat.CatLog;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -45,6 +47,8 @@ public final class JobUtil {
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("HH:mm:ss", Locale.US);
 
     private static final long ONE_DAY = TimeUnit.DAYS.toMillis(1);
+
+    private static final CatLog CAT = new JobCat("JobUtil");
 
     private JobUtil() {
         // no op
@@ -73,10 +77,7 @@ public final class JobUtil {
      * @return Whether the package has the RECEIVE_BOOT_COMPLETED permission.
      */
     public static boolean hasBootPermission(Context context) {
-        int result = context.getPackageManager()
-                .checkPermission(Manifest.permission.RECEIVE_BOOT_COMPLETED, context.getPackageName());
-
-        return result == PackageManager.PERMISSION_GRANTED;
+        return hasPermission(context, Manifest.permission.RECEIVE_BOOT_COMPLETED, 0);
     }
 
     /**
@@ -84,9 +85,19 @@ public final class JobUtil {
      * @return Whether the package has the WAKE_LOCK permission.
      */
     public static boolean hasWakeLockPermission(Context context) {
-        int result = context.getPackageManager()
-                .checkPermission(Manifest.permission.WAKE_LOCK, context.getPackageName());
+        return hasPermission(context, Manifest.permission.WAKE_LOCK, 0);
+    }
 
-        return result == PackageManager.PERMISSION_GRANTED;
+    private static boolean hasPermission(Context context, String permission, int repeatCount) {
+        try {
+            return PackageManager.PERMISSION_GRANTED == context.getPackageManager()
+                    .checkPermission(permission, context.getPackageName());
+        } catch (Exception e) {
+            CAT.e(e);
+            // crash https://gist.github.com/vRallev/6affe17c93e993681bfd
+
+            // give it another chance with the application context
+            return repeatCount < 1 && hasPermission(context.getApplicationContext(), permission, repeatCount + 1);
+        }
     }
 }
