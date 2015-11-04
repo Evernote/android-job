@@ -59,26 +59,21 @@ import java.util.concurrent.TimeUnit;
     }
 
     public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @NonNull JobCreator creator) {
-        try {
-            Job job = creator.create(request.getTag());
-            if (job == null) {
-                CAT.w("JobCreator returned null for tag %s", request.getTag());
-                return null;
-            }
-            if (job.isFinished()) {
-                throw new IllegalStateException("Job for tag %s was already run, a creator should always create a new Job instance");
-            }
-
-            job.setContext(context).setRequest(request);
-
-            CAT.i("Executing %s, context %s", request, context.getClass().getSimpleName());
-
-            mJobs.put(request.getJobId(), job);
-            return mExecutorService.submit(new JobCallable(job));
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        Job job = creator.create(request.getTag());
+        if (job == null) {
+            CAT.w("JobCreator returned null for tag %s", request.getTag());
+            return null;
         }
+        if (job.isFinished()) {
+            throw new IllegalStateException("Job for tag %s was already run, a creator should always create a new Job instance");
+        }
+
+        job.setContext(context).setRequest(request);
+
+        CAT.i("Executing %s, context %s", request, context.getClass().getSimpleName());
+
+        mJobs.put(request.getJobId(), job);
+        return mExecutorService.submit(new JobCallable(job));
     }
 
     public synchronized Job getJob(int jobId) {
@@ -111,7 +106,7 @@ import java.util.concurrent.TimeUnit;
             Context context = mJob.getContext();
             PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 
-            mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobExecutor.class.getSimpleName());
+            mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "JobExecutor");
             acquireWakeLock();
         }
 
@@ -125,7 +120,12 @@ import java.util.concurrent.TimeUnit;
 
             } finally {
                 if (mWakeLock.isHeld()) {
-                    mWakeLock.release();
+                    try {
+                        mWakeLock.release();
+                    } catch (Exception e) {
+                        // just to make sure if the PowerManager crashes while acquiring a wake lock
+                        CAT.e(e);
+                    }
                 } else {
                     CAT.w("Wake lock was not held after job %s was done. The job took too long to complete. This could have unintended side effects on your app.", mJob);
                 }
@@ -160,7 +160,13 @@ import java.util.concurrent.TimeUnit;
 
         private void acquireWakeLock() {
             if (!mWakeLock.isHeld() && JobUtil.hasWakeLockPermission(mJob.getContext())) {
-                mWakeLock.acquire(TimeUnit.MINUTES.toMillis(3));
+                try {
+                    mWakeLock.acquire(TimeUnit.MINUTES.toMillis(3));
+                } catch (Exception e) {
+                    // saw an NPE on rooted Galaxy Nexus Android 4.1.1
+                    // android.os.IPowerManager$Stub$Proxy.acquireWakeLock(IPowerManager.java:288)
+                    CAT.e(e);
+                }
             }
         }
     }

@@ -286,7 +286,12 @@ public abstract class Job {
      * @see WakefulBroadcastReceiver
      */
     public static boolean completeWakefulIntent(@NonNull Intent intent) {
-        return WakefulBroadcastReceiver.completeWakefulIntent(intent);
+        try {
+            return WakefulBroadcastReceiver.completeWakefulIntent(intent);
+        } catch (Exception e) {
+            // could end in a NPE if the intent no wake lock was found
+            return true;
+        }
     }
 
     @Override
