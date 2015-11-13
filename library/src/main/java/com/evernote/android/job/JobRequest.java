@@ -33,9 +33,12 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.evernote.android.job.util.JobApi;
+import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.JobUtil;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
+
+import net.vrallev.android.cat.CatLog;
 
 import java.util.concurrent.TimeUnit;
 
@@ -66,6 +69,8 @@ public final class JobRequest {
      * @see Builder#setRequirementsEnforced(boolean)
      */
     public static final NetworkType DEFAULT_NETWORK_TYPE = NetworkType.ANY;
+
+    private static final CatLog CAT = new JobCat("JobRequest");
 
     private final Builder mBuilder;
     private final JobApi mJobApi;
@@ -412,7 +417,12 @@ public final class JobRequest {
             mEndMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_END_MS));
 
             mBackoffMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_BACKOFF_MS));
-            mBackoffPolicy = BackoffPolicy.valueOf(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_BACKOFF_POLICY)));
+            try {
+                mBackoffPolicy = BackoffPolicy.valueOf(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_BACKOFF_POLICY)));
+            } catch (Throwable t) {
+                CAT.e(t); // https://gist.github.com/vRallev/574563f0e3fe636b19a7
+                mBackoffPolicy = DEFAULT_BACKOFF_POLICY;
+            }
 
             mIntervalMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_INTERVAL_MS));
 
@@ -420,7 +430,12 @@ public final class JobRequest {
             mRequiresCharging = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIRES_CHARGING)) > 0;
             mRequiresDeviceIdle = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIRES_DEVICE_IDLE)) > 0;
             mExact = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_EXACT)) > 0;
-            mNetworkType = NetworkType.valueOf(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_NETWORK_TYPE)));
+            try {
+                mNetworkType = NetworkType.valueOf(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_NETWORK_TYPE)));
+            } catch (Throwable t) {
+                CAT.e(t); // https://gist.github.com/vRallev/574563f0e3fe636b19a7
+                mNetworkType = DEFAULT_NETWORK_TYPE;
+            }
 
             mExtrasXml = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_EXTRAS));
 
