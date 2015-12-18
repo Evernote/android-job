@@ -84,7 +84,7 @@ private void scheduleAdvancedJob() {
     PersistableBundleCompat extras = new PersistableBundleCompat();
     extras.putString("key", "Hello world");
 
-    int jobId = new JobRequest.Builder(ExampleJob.class)
+    int jobId = new JobRequest.Builder(DemoJob.TAG)
             .setExecutionWindow(30_000L, 40_000L)
             .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.EXPONENTIAL)
             .setRequiresCharging(true)
@@ -98,7 +98,7 @@ private void scheduleAdvancedJob() {
 }
 
 private void schedulePeriodicJob() {
-    int jobId = new JobRequest.Builder(TestJob.class)
+    int jobId = new JobRequest.Builder(DemoJob.TAG)
             .setPeriodic(60_000L)
             .setPersisted(true)
             .build()
@@ -106,7 +106,7 @@ private void schedulePeriodicJob() {
 }
 
 private void scheduleExactJob() {
-    int jobId = new JobRequest.Builder(TestJob.class)
+    int jobId = new JobRequest.Builder(DemoJob.class)
             .setExact(20_000L)
             .setPersisted(true)
             .build()
@@ -121,7 +121,7 @@ private void cancelJob(int jobId) {
 If a non periodic `Job` fails, then you can reschedule it with the defined back-off criteria.
 
 ```java
-public class ExampleJob extends Job {
+public class RescheduleDemoJob extends Job {
 
     @Override
     @NonNull
@@ -145,7 +145,7 @@ By default the API for the `GcmNetworkManager` is disabled. In order to use it f
 
 ```groovy
 dependencies {
-    compile 'com.google.android.gms:play-services-gcm:8.1.0' // or newer
+    compile 'com.google.android.gms:play-services-gcm:8.4.0' // or newer
 }
 ```
 
