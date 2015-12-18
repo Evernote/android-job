@@ -26,7 +26,7 @@ public class FileActivity extends Activity {
     }
 
     private void refreshView() {
-        File file = TestJob.getTestFile(this);
+        File file = DemoJob.getTestFile(this);
         if (!file.exists()) {
             return;
         }

@@ -21,7 +21,7 @@ Usage
 
 The class `JobManager` serves as entry point. Your jobs need to extend the class `Job`. Create a `JobRequest` with the corresponding builder class and schedule this request with the `JobManager`.
 
-Before you can use the `JobManager` you must initialize the singleton. You need to provide a `Context` and a `JobCreator` implementation. The `JobCreator` maps a job tag to a specific job class. It's recommend to initialize the `JobManager` in the `onCreate()` method of your `Application` object.
+Before you can use the `JobManager` you must initialize the singleton. You need to provide a `Context` and add a `JobCreator` implementation after that. The `JobCreator` maps a job tag to a specific job class. It's recommend to initialize the `JobManager` in the `onCreate()` method of your `Application` object.
 
 ```java
 public class App extends Application {
@@ -29,19 +29,21 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        JobManager.create(this, new MyJobCreator());
+        JobManager.create(this).addJobCreator(new DemoJobCreator());
     }
+}
+```
 
-    private static class MyJobCreator implements JobCreator {
+```java
+public class DemoJobCreator implements JobCreator {
 
-        @Override
-        public Job create(String tag) {
-            switch (tag) {
-                case TestJob.TAG:
-                    return new TestJob();
-                default:
-                    throw new RuntimeException("Cannot find job for tag " + tag);
-            }
+    @Override
+    public Job create(String tag) {
+        switch (tag) {
+            case DemoJob.TAG:
+                return new DemoJob();
+            default:
+                return null;
         }
     }
 }
@@ -50,7 +52,9 @@ public class App extends Application {
 After that you can start scheduling jobs.
 
 ```java
-public class ExampleJob extends Job {
+public class DemoJob extends Job {
+
+    public static final String TAG = "job_demo_tag";
 
     @Override
     @NonNull
@@ -61,7 +65,7 @@ public class ExampleJob extends Job {
 }
 
 private void scheduleJob() {
-    new JobRequest.Builder(ExampleJob.class)
+    new JobRequest.Builder(DemoJob.TAG)
             .setExecutionWindow(30_000L, 40_000L)
             .build()
             .schedule();
