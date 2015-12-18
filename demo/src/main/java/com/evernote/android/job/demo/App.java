@@ -14,7 +14,8 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        JobManager.create(this, new MyJobCreator());
+
+        JobManager.create(this).addJobCreator(new MyJobCreator());
     }
 
     private static class MyJobCreator implements JobCreator {

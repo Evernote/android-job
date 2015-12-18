@@ -58,8 +58,8 @@ import java.util.concurrent.TimeUnit;
         mJobs = new SparseArray<>();
     }
 
-    public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @NonNull JobCreator creator) {
-        Job job = creator.create(request.getTag());
+    public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @NonNull JobCreatorHolder jobCreatorHolder) {
+        Job job = jobCreatorHolder.createJob(request.getTag());
         if (job == null) {
             CAT.w("JobCreator returned null for tag %s", request.getTag());
             return null;

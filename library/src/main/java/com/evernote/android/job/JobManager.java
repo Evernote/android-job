@@ -60,14 +60,15 @@ import java.util.concurrent.TimeUnit;
  * <br>
  * <br>
  *
- * Before you can use the {@code JobManager} you must call {@link #create(Context, JobCreator)} first.
+ * Before you can use the {@code JobManager} you must call {@link #create(Context)} first and add a
+ * {@link JobCreator} to map tags to your desired jobs with {@link #addJobCreator(JobCreator)}.
  * It's recommended to do this in the {@link Application#onCreate()} method.
  *
  * <br>
  * <br>
  *
  * In order to schedule a job you must extend the {@link Job} class. A {@link Job} is a simple class
- * which must provide a public default constructor in order to be instantiated. Thus a {@link Job}
+ * with one abstract method which is invoked on a background thread. Thus a {@link Job}
  * doesn't need to be registered in the manifest. Create a {@link JobRequest} with the corresponding
  * {@link JobRequest.Builder}, set your desired parameters and call {@link #schedule(JobRequest)}. If you want
  * to update a pending request, call {@link JobRequest#cancelAndEdit()} on the request, update your
@@ -88,15 +89,13 @@ public final class JobManager {
      * Calling it multiple times has not effect.
      *
      * @param context Any {@link Context} to instantiate the singleton object.
-     * @param jobCreator The mapping between a specific job tag and the job class.
      * @return The new or existing singleton object.
      */
-    public static JobManager create(Context context, JobCreator jobCreator) {
+    public static JobManager create(Context context) {
         if (instance == null) {
             synchronized (JobManager.class) {
                 if (instance == null) {
                     JobPreconditions.checkNotNull(context, "Context cannot be null");
-                    JobPreconditions.checkNotNull(jobCreator, "JobCreator cannot be null");
                     CatGlobal.setDefaultCatLogPackage(PACKAGE, new JobCat());
 
                     if (context.getApplicationContext() != null) {
@@ -104,7 +103,7 @@ public final class JobManager {
                         context = context.getApplicationContext();
                     }
 
-                    instance = new JobManager(context, jobCreator);
+                    instance = new JobManager(context);
 
                     if (!JobUtil.hasWakeLockPermission(context)) {
                         Cat.w("No wake lock permission");
@@ -120,7 +119,32 @@ public final class JobManager {
     }
 
     /**
-     * Ensure that you've called {@link #create(Context, JobCreator)} first. Otherwise this method
+     * Initializes the singleton. It's necessary to call this function before using the {@code JobManager}.
+     * Calling it multiple times has not effect.
+     *
+     * @param context Any {@link Context} to instantiate the singleton object.
+     * @param jobCreator The mapping between a specific job tag and the job class.
+     * @return The new or existing singleton object.
+     * @deprecated Use {@link #create(Context)} instead and call {@link #addJobCreator(JobCreator)} after that.
+     */
+    @Deprecated
+    public static JobManager create(Context context, JobCreator jobCreator) {
+        boolean addJobCreator;
+        synchronized (JobManager.class) {
+            addJobCreator = instance == null;
+        }
+
+        create(context);
+
+        if (addJobCreator) {
+            instance.addJobCreator(jobCreator);
+        }
+
+        return instance;
+    }
+
+    /**
+     * Ensure that you've called {@link #create(Context)} first. Otherwise this method
      * throws an exception.
      *
      * @return The {@code JobManager} object.
@@ -138,15 +162,15 @@ public final class JobManager {
     }
 
     private final Context mContext;
-    private final JobCreator mJobCreator;
+    private final JobCreatorHolder mJobCreatorHolder;
     private final JobStorage mJobStorage;
     private final JobExecutor mJobExecutor;
 
     private JobApi mApi;
 
-    private JobManager(Context context, JobCreator jobCreator) {
+    private JobManager(Context context) {
         mContext = context;
-        mJobCreator = jobCreator;
+        mJobCreatorHolder = new JobCreatorHolder();
         mJobStorage = new JobStorage(context);
         mJobExecutor = new JobExecutor();
 
@@ -168,6 +192,10 @@ public final class JobManager {
      * @param request The {@link JobRequest} which will be run in the future.
      */
     public void schedule(JobRequest request) {
+        if (mJobCreatorHolder.isEmpty()) {
+            CAT.w("you haven't registered a JobCreator with addJobCreator(), it's likely that your job never will be executed");
+        }
+
         request.setScheduledAt(System.currentTimeMillis());
         mJobStorage.put(request);
 
@@ -347,6 +375,25 @@ public final class JobManager {
         CatGlobal.setPackageEnabled(PACKAGE, verbose);
     }
 
+    /**
+     * Registers this instance to create jobs for a specific tag. It's possible to have multiple
+     * {@link JobCreator}s with a first come first serve order.
+     *
+     * @param jobCreator The mapping between a specific job tag and the job class.
+     */
+    public void addJobCreator(JobCreator jobCreator) {
+        mJobCreatorHolder.addJobCreator(jobCreator);
+    }
+
+    /**
+     * Remove the mapping to stop it from creating new jobs.
+     *
+     * @param jobCreator The mapping between a specific job tag and the job class.
+     */
+    public void removeJobCreator(JobCreator jobCreator) {
+        mJobCreatorHolder.removeJobCreator(jobCreator);
+    }
+
     /*package*/ JobStorage getJobStorage() {
         return mJobStorage;
     }
@@ -355,8 +402,8 @@ public final class JobManager {
         return mJobExecutor;
     }
 
-    /*package*/ JobCreator getJobCreator() {
-        return mJobCreator;
+    /*package*/ JobCreatorHolder getJobCreatorHolder() {
+        return mJobCreatorHolder;
     }
 
     /*package*/ Context getContext() {
