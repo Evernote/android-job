@@ -26,6 +26,8 @@ android {
         versionName project.VERSION_NAME
         versionCode Integer.parseInt(project.VERSION_CODE)
 
+        consumerProguardFiles 'proguard.txt'
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
