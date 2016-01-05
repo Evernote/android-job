@@ -1,20 +1,20 @@
 Android-Job
 ============
 
-An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used.
+An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post][1] why you should prefer this library than each separate API.
 
 Download
 --------
 
-Download [the latest version][1] or grab via Gradle:
+Download [the latest version][2] or grab via Gradle:
 
 ```groovy
 dependencies {
-    compile 'com.evernote:android-job:1.0.1'
+    compile 'com.evernote:android-job:1.0.2'
 }
 ```
 
-If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest][2].
+If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest][3].
 
 Usage
 -----
@@ -162,7 +162,7 @@ dependencies {
 
 #### Proguard
 
-The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules][3] in your configuration.  
+The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules][4] in your configuration.  
 
 License
 -------
@@ -193,6 +193,7 @@ License
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
     THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-[1]: http://search.maven.org/#search|gav|1|g:"com.evernote"%20AND%20a:"android-job"
-[2]: https://github.com/evernote/android-job/blob/master/library/src/main/AndroidManifest.xml
-[3]: https://github.com/evernote/android-job/blob/master/library/proguard.txt
+[1]: https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/
+[2]: http://search.maven.org/#search|gav|1|g:"com.evernote"%20AND%20a:"android-job"
+[3]: https://github.com/evernote/android-job/blob/master/library/src/main/AndroidManifest.xml
+[4]: https://github.com/evernote/android-job/blob/master/library/proguard.txt
