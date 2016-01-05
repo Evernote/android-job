@@ -129,7 +129,7 @@ public interface JobProxy {
                     manager.getJobStorage().remove(request);
                 }
 
-                Future<Job.Result> future = jobExecutor.execute(mContext, request, manager.getJobCreator());
+                Future<Job.Result> future = jobExecutor.execute(mContext, request, manager.getJobCreatorHolder());
                 if (future == null) {
                     return Job.Result.FAILURE;
                 }

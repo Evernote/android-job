@@ -26,7 +26,7 @@ public class JobRequestTest {
 
     @BeforeClass
     public static void createJobManager() {
-        JobManager.create(InstrumentationRegistry.getContext(), new JobCreator() {
+        JobManager.create(InstrumentationRegistry.getContext()).addJobCreator(new JobCreator() {
             @Override
             public Job create(String tag) {
                 return new TestJob();

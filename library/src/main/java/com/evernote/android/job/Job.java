@@ -42,8 +42,7 @@ import net.vrallev.android.cat.CatLog;
 import java.lang.ref.WeakReference;
 
 /**
- * Base class for running delayed jobs. Each concrete class must provide a public default constructor.
- * A {@link Job} is executed in a background thread.
+ * Base class for running delayed jobs. A {@link Job} is executed in a background thread.
  *
  * @author rwondratschek
  */

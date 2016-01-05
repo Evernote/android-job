@@ -23,9 +23,9 @@ import java.util.concurrent.CountDownLatch;
 /**
  * @author rwondratschek
  */
-public class TestJob extends Job {
+public class DemoJob extends Job {
 
-    public static final String TAG = "TestJobTag";
+    public static final String TAG = "job_demo_tag";
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault());
 
@@ -37,8 +37,6 @@ public class TestJob extends Job {
     @NonNull
     protected Result onRunJob(final Params params) {
         SystemClock.sleep(3000);
-
-
 
         if (!isCanceled()) {
             writeIntoFile();

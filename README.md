@@ -1,27 +1,27 @@
 Android-Job
 ============
 
-An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used.
+An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post][1] why you should prefer this library than each separate API.
 
 Download
 --------
 
-Download [the latest version][1] or grab via Gradle:
+Download [the latest version][2] or grab via Gradle:
 
 ```groovy
 dependencies {
-    compile 'com.evernote:android-job:1.0.1'
+    compile 'com.evernote:android-job:1.0.2'
 }
 ```
 
-If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest][2].
+If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest][3].
 
 Usage
 -----
 
 The class `JobManager` serves as entry point. Your jobs need to extend the class `Job`. Create a `JobRequest` with the corresponding builder class and schedule this request with the `JobManager`.
 
-Before you can use the `JobManager` you must initialize the singleton. You need to provide a `Context` and a `JobCreator` implementation. The `JobCreator` maps a job tag to a specific job class. It's recommend to initialize the `JobManager` in the `onCreate()` method of your `Application` object.
+Before you can use the `JobManager` you must initialize the singleton. You need to provide a `Context` and add a `JobCreator` implementation after that. The `JobCreator` maps a job tag to a specific job class. It's recommend to initialize the `JobManager` in the `onCreate()` method of your `Application` object.
 
 ```java
 public class App extends Application {
@@ -29,19 +29,21 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        JobManager.create(this, new MyJobCreator());
+        JobManager.create(this).addJobCreator(new DemoJobCreator());
     }
+}
+```
 
-    private static class MyJobCreator implements JobCreator {
+```java
+public class DemoJobCreator implements JobCreator {
 
-        @Override
-        public Job create(String tag) {
-            switch (tag) {
-                case TestJob.TAG:
-                    return new TestJob();
-                default:
-                    throw new RuntimeException("Cannot find job for tag " + tag);
-            }
+    @Override
+    public Job create(String tag) {
+        switch (tag) {
+            case DemoJob.TAG:
+                return new DemoJob();
+            default:
+                return null;
         }
     }
 }
@@ -50,7 +52,9 @@ public class App extends Application {
 After that you can start scheduling jobs.
 
 ```java
-public class ExampleJob extends Job {
+public class DemoJob extends Job {
+
+    public static final String TAG = "job_demo_tag";
 
     @Override
     @NonNull
@@ -61,7 +65,7 @@ public class ExampleJob extends Job {
 }
 
 private void scheduleJob() {
-    new JobRequest.Builder(ExampleJob.class)
+    new JobRequest.Builder(DemoJob.TAG)
             .setExecutionWindow(30_000L, 40_000L)
             .build()
             .schedule();
@@ -80,7 +84,7 @@ private void scheduleAdvancedJob() {
     PersistableBundleCompat extras = new PersistableBundleCompat();
     extras.putString("key", "Hello world");
 
-    int jobId = new JobRequest.Builder(ExampleJob.class)
+    int jobId = new JobRequest.Builder(DemoJob.TAG)
             .setExecutionWindow(30_000L, 40_000L)
             .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.EXPONENTIAL)
             .setRequiresCharging(true)
@@ -94,7 +98,7 @@ private void scheduleAdvancedJob() {
 }
 
 private void schedulePeriodicJob() {
-    int jobId = new JobRequest.Builder(TestJob.class)
+    int jobId = new JobRequest.Builder(DemoJob.TAG)
             .setPeriodic(60_000L)
             .setPersisted(true)
             .build()
@@ -102,7 +106,7 @@ private void schedulePeriodicJob() {
 }
 
 private void scheduleExactJob() {
-    int jobId = new JobRequest.Builder(TestJob.class)
+    int jobId = new JobRequest.Builder(DemoJob.class)
             .setExact(20_000L)
             .setPersisted(true)
             .build()
@@ -117,7 +121,7 @@ private void cancelJob(int jobId) {
 If a non periodic `Job` fails, then you can reschedule it with the defined back-off criteria.
 
 ```java
-public class ExampleJob extends Job {
+public class RescheduleDemoJob extends Job {
 
     @Override
     @NonNull
@@ -141,7 +145,7 @@ By default the API for the `GcmNetworkManager` is disabled. In order to use it f
 
 ```groovy
 dependencies {
-    compile 'com.google.android.gms:play-services-gcm:8.1.0' // or newer
+    compile 'com.google.android.gms:play-services-gcm:8.4.0' // or newer
 }
 ```
 
@@ -158,7 +162,7 @@ dependencies {
 
 #### Proguard
 
-The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules][3] in your configuration.  
+The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules][4] in your configuration.  
 
 License
 -------
@@ -189,6 +193,7 @@ License
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
     THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-[1]: http://search.maven.org/#search|gav|1|g:"com.evernote"%20AND%20a:"android-job"
-[2]: https://github.com/evernote/android-job/blob/master/library/src/main/AndroidManifest.xml
-[3]: https://github.com/evernote/android-job/blob/master/library/proguard.txt
+[1]: https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/
+[2]: http://search.maven.org/#search|gav|1|g:"com.evernote"%20AND%20a:"android-job"
+[3]: https://github.com/evernote/android-job/blob/master/library/src/main/AndroidManifest.xml
+[4]: https://github.com/evernote/android-job/blob/master/library/proguard.txt

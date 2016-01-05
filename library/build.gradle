@@ -1,16 +1,17 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.ben-manes.versions'
 apply from: '../build-config/gradle-quality.gradle'
 
 dependencies {
-    provided 'com.google.android.gms:play-services-gcm:8.1.0'
+    provided 'com.google.android.gms:play-services-gcm:8.4.0'
 
-    compile 'com.android.support:support-v4:23.1.0'
+    compile 'com.android.support:support-v4:23.1.1'
     compile 'net.vrallev.android:cat:1.0.2'
 
-    androidTestCompile 'com.android.support.test:runner:0.3'
-    androidTestCompile 'com.android.support.test:rules:0.3'
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2'
-    androidTestCompile 'com.squareup.assertj:assertj-android:1.1.0'
+    androidTestCompile 'com.android.support.test:runner:0.4.1'
+    androidTestCompile 'com.android.support.test:rules:0.4.1'
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.1'
+    androidTestCompile 'com.squareup.assertj:assertj-android:1.1.1'
 }
 
 android {
