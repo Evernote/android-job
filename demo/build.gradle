@@ -23,7 +23,8 @@ android {
 
         release {
             minifyEnabled true
-            proguardFiles 'proguard.cfg'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard.cfg'
+            signingConfig signingConfigs.debug
         }
 
         gcm.initWith(buildTypes.debug)

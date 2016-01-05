@@ -160,6 +160,10 @@ dependencies {
 </service>
 ```
 
+#### Proguard
+
+The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules][3] in your configuration.  
+
 License
 -------
 
@@ -191,3 +195,4 @@ License
 
 [1]: http://search.maven.org/#search|gav|1|g:"com.evernote"%20AND%20a:"android-job"
 [2]: https://github.com/evernote/android-job/blob/master/library/src/main/AndroidManifest.xml
+[3]: https://github.com/evernote/android-job/blob/master/library/proguard.txt
