@@ -30,6 +30,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
@@ -46,11 +47,10 @@ public class JobProxy14 implements JobProxy {
     private static final CatLog CAT = new JobCat("JobProxy14");
 
     private final Context mContext;
-    private final AlarmManager mAlarmManager;
+    private AlarmManager mAlarmManager;
 
     public JobProxy14(Context context) {
         mContext = context;
-        mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
     }
 
     @Override
@@ -65,14 +65,20 @@ public class JobProxy14 implements JobProxy {
     @Override
     public void plantPeriodic(JobRequest request) {
         PendingIntent pendingIntent = getPendingIntent(request, true);
-        mAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
+        AlarmManager alarmManager = getAlarmManager();
+        if (alarmManager != null) {
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
+        }
 
         CAT.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
     }
 
     @Override
     public void cancel(JobRequest request) {
-        mAlarmManager.cancel(getPendingIntent(request, request.isPeriodic()));
+        AlarmManager alarmManager = getAlarmManager();
+        if (alarmManager != null) {
+            alarmManager.cancel(getPendingIntent(request, request.isPeriodic()));
+        }
     }
 
     @Override
@@ -97,17 +103,34 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected void setAlarm(JobRequest request, long triggerAtMillis, PendingIntent pendingIntent) {
+        AlarmManager alarmManager = getAlarmManager();
+        if (alarmManager == null) {
+            return;
+        }
+
         if (request.isExact()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                mAlarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
             } else {
-                mAlarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
             }
 
         } else {
-            mAlarmManager.set(AlarmManager.RTC, triggerAtMillis, pendingIntent);
+            alarmManager.set(AlarmManager.RTC, triggerAtMillis, pendingIntent);
         }
+    }
+
+    @Nullable
+    protected AlarmManager getAlarmManager() {
+        if (mAlarmManager == null) {
+            mAlarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+        }
+        if (mAlarmManager == null) {
+            // https://gist.github.com/vRallev/5daef6e8a3b0d4a7c366
+            CAT.e("AlarmManager is null");
+        }
+        return mAlarmManager;
     }
 }
