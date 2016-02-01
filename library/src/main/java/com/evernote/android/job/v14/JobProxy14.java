@@ -108,17 +108,22 @@ public class JobProxy14 implements JobProxy {
             return;
         }
 
-        if (request.isExact()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-            } else {
-                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-            }
+        try {
+            if (request.isExact()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+                } else {
+                    alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+                }
 
-        } else {
-            alarmManager.set(AlarmManager.RTC, triggerAtMillis, pendingIntent);
+            } else {
+                alarmManager.set(AlarmManager.RTC, triggerAtMillis, pendingIntent);
+            }
+        } catch (Exception e) {
+            // https://gist.github.com/vRallev/621b0b76a14ddde8691c
+            CAT.e(e);
         }
     }
 
