@@ -139,6 +139,22 @@ public class RescheduleDemoJob extends Job {
 
 **Warning:** With Android Marshmallow Google introduced the auto backup feature. All job information are stored in a shared preference file called `evernote_jobs.xml` and in a database called `evernote_jobs.db`. You should exclude these files so that they aren't backed up.
 
+You can do this by defining a resource XML file (i.e., `res/xml/backup_config.xml`) with content:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <exclude domain="sharedpref" path="evernote_jobs.xml" />
+    <exclude domain="database" path="evernote_jobs.db" />
+</full-backup-content>
+``` 
+
+And then referring to it in your application tag in `AndroidManifest.xml`:
+
+```xml
+<application ...  android:fullBackupContent="@xml/backup_config">
+```
+
 #### Using the GcmNetworkManager
 
 By default the API for the `GcmNetworkManager` is disabled. In order to use it for pre Lollipop devices you must add the GCM dependency in your `build.gradle` and then add the service in your `AndroidManifest.xml` manually.
