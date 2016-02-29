@@ -40,11 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** @hide */
-@SuppressWarnings({"unused", "FinalStaticMethod", "JavaDoc", "WhileLoopReplaceableByForEach", "ForLoopReplaceableByForEach",
-        "FinalPrivateMethod", "Convert2Diamond", "AccessStaticViaInstance", "unchecked", "StatementWithEmptyBody", "IfCanBeSwitch",
-        "UnnecessarySemicolon"})
-/*package*/ final class XmlUtils {
+/*package*/ @SuppressWarnings({"unused", "StatementWithEmptyBody", "FinalStaticMethod", "WhileLoopReplaceableByForEach",
+        "ForLoopReplaceableByForEach", "FinalPrivateMethod", "AccessStaticViaInstance", "unchecked", "IfCanBeSwitch"})
+final class XmlUtils {
 
     private XmlUtils() {
         // no op
@@ -242,8 +240,6 @@ import java.util.Set;
      * @see #writeListXml
      * @see #writeValueXml
      * @see #readMapXml
-     *
-     * @hide
      */
     public static final void writeMapXml(Map val, String name, XmlSerializer out,
                                          WriteMapCallback callback) throws XmlPullParserException, java.io.IOException {
@@ -276,8 +272,6 @@ import java.util.Set;
      * @see #writeListXml
      * @see #writeValueXml
      * @see #readMapXml
-     *
-     * @hide
      */
     public static final void writeMapXml(Map val, XmlSerializer out,
                                          WriteMapCallback callback) throws XmlPullParserException, java.io.IOException {
@@ -769,12 +763,11 @@ import java.util.Set;
      * @return HashMap The newly generated map.
      *
      * @see #readMapXml
-     * @hide
      */
     public static final HashMap<String, ?> readThisMapXml(XmlPullParser parser, String endTag,
                                                           String[] name, ReadMapCallback callback)
             throws XmlPullParserException, java.io.IOException {
-        HashMap<String, Object> map = new HashMap<String, Object>();
+        HashMap<String, Object> map = new HashMap<>();
 
         int eventType = parser.getEventType();
         do {
@@ -891,7 +884,6 @@ import java.util.Set;
      * @throws java.io.IOException
      *
      * @see #readSetXml
-     * @hide
      */
     private static final HashSet readThisSetXml(XmlPullParser parser, String endTag, String[] name,
                                                 ReadMapCallback callback) throws XmlPullParserException, java.io.IOException {
@@ -1506,7 +1498,6 @@ import java.util.Set;
         }
     }
 
-    /** @hide */
     @SuppressWarnings("UnnecessaryInterfaceModifier")
     public interface WriteMapCallback {
         /**
@@ -1519,13 +1510,11 @@ import java.util.Set;
          * @param out The XML output stream.
          * @throws XmlPullParserException on unrecognized Object type.
          * @throws IOException on XmlSerializer serialization errors.
-         * @hide
          */
         public void writeUnknownObject(Object v, String name, XmlSerializer out)
                 throws XmlPullParserException, IOException;
     }
 
-    /** @hide */
     @SuppressWarnings("UnnecessaryInterfaceModifier")
     public interface ReadMapCallback {
         /**
@@ -1537,7 +1526,6 @@ import java.util.Set;
          * @return the Object parsed from the stream which will be put into the map.
          * @throws XmlPullParserException if the START_TAG is not recognized.
          * @throws IOException on XmlPullParser serialization errors.
-         * @hide
          */
         public Object readThisUnknownObjectXml(XmlPullParser in, String tag)
                 throws XmlPullParserException, IOException;

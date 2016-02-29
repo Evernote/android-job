@@ -242,6 +242,11 @@ public final class PersistableBundleCompat {
             // shouldn't happen
             return "";
 
+        } catch (VerifyError e) {
+            // https://gist.github.com/vRallev/9444359f05259e4b6317
+            CAT.e(e);
+            return "";
+
         } finally {
             try {
                 outputStream.close();
@@ -260,6 +265,11 @@ public final class PersistableBundleCompat {
             return new PersistableBundleCompat((Map<String, Object>) map);
 
         } catch (XmlPullParserException | IOException e) {
+            CAT.e(e);
+            return new PersistableBundleCompat();
+
+        } catch (VerifyError e) {
+            // https://gist.github.com/vRallev/9444359f05259e4b6317
             CAT.e(e);
             return new PersistableBundleCompat();
 
