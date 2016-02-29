@@ -450,8 +450,13 @@ public final class JobManager {
                     CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
 
                 } finally {
-                    if (wakeLock.isHeld()) {
-                        wakeLock.release();
+                    try {
+                        if (wakeLock.isHeld()) {
+                            wakeLock.release();
+                        }
+                    } catch (Exception e) {
+                        // just to make sure if the PowerManager crashes while acquiring a wake lock
+                        CAT.e(e);
                     }
                 }
             }
