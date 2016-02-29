@@ -1,3 +1,7 @@
+## 1.0.3 (2016-02-29)
+
+* Bug fixes
+
 ## 1.0.2 (2016-01-05)
 
 * Add option to attach multiple job creators 
