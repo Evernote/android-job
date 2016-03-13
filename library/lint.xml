@@ -3,4 +3,10 @@
     <issue id="AllowBackup">
         <ignore path="src/main/AndroidManifest.xml"/>
     </issue>
+    <issue id="GoogleAppIndexingWarning">
+        <ignore path="src/main/AndroidManifest.xml"/>
+    </issue>
+    <issue id="UnsafeProtectedBroadcastReceiver">
+        <ignore path="src/main/java/com/evernote/android/job/JobBootReceiver.java"/>
+    </issue>
 </lint>
