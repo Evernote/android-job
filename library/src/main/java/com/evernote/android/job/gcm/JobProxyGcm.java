@@ -67,7 +67,7 @@ public class JobProxyGcm implements JobProxy {
                 .setExecutionWindow(Common.getStartMs(request) / 1_000, Common.getEndMs(request) / 1_000)
                 .setRequiredNetwork(convertNetworkType(request.requiredNetworkType()))
                 .setPersisted(request.isPersisted())
-                .setRequiresCharging(false)
+                .setRequiresCharging(request.requiresCharging())
                 .build();
 
         mGcmNetworkManager.schedule(task);
@@ -85,7 +85,7 @@ public class JobProxyGcm implements JobProxy {
                 .setPeriod(request.getIntervalMs() / 1_000)
                 .setRequiredNetwork(convertNetworkType(request.requiredNetworkType()))
                 .setPersisted(request.isPersisted())
-                .setRequiresCharging(false)
+                .setRequiresCharging(request.requiresCharging())
                 .build();
 
         mGcmNetworkManager.schedule(task);
