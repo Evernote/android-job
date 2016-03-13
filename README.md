@@ -16,6 +16,8 @@ dependencies {
 
 If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest][3].
 
+You can read the [JavaDoc here][4].
+
 Usage
 -----
 
@@ -178,7 +180,7 @@ dependencies {
 
 #### Proguard
 
-The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules][4] in your configuration.  
+The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules][5] in your configuration.  
 
 License
 -------
@@ -212,4 +214,5 @@ License
 [1]: https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/
 [2]: http://search.maven.org/#search|gav|1|g:"com.evernote"%20AND%20a:"android-job"
 [3]: https://github.com/evernote/android-job/blob/master/library/src/main/AndroidManifest.xml
-[4]: https://github.com/evernote/android-job/blob/master/library/proguard.txt
+[4]: http://evernote.github.io/android-job/javadoc/
+[5]: https://github.com/evernote/android-job/blob/master/library/proguard.txt
