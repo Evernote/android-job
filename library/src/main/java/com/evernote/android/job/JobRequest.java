@@ -198,6 +198,13 @@ public final class JobRequest {
     }
 
     /**
+     * @return If {@code true}, then this request will overwrite any preexisting jobs.
+     */
+    public boolean isUpdateCurrent() {
+        return mBuilder.mUpdateCurrent;
+    }
+
+    /**
      * @return If {@code true}, then the job will run at exact time ignoring the device state.
      */
     public boolean isExact() {
@@ -358,6 +365,8 @@ public final class JobRequest {
         private String mExtrasXml;
 
         private boolean mPersisted;
+
+        private boolean mUpdateCurrent;
 
         /**
          * Creates a new instance to build a {@link JobRequest}. Note that the {@code tag} doesn't
@@ -668,6 +677,19 @@ public final class JobRequest {
                 throw new IllegalStateException("Does not have RECEIVE_BOOT_COMPLETED permission, which is mandatory for this feature");
             }
             mPersisted = persisted;
+            return this;
+        }
+
+        /**
+         * Sets whether this request should overwrite any preexisting jobs with the same tag. If {@code true},
+         * then this request calls {@link JobManager#cancelAllForTag(String)} with the given tag before
+         * being scheduled.
+         *
+         * @param updateCurrent If {code true} this request will cancel any preexisting job with the same tag
+         *                      while being scheduled.
+         */
+        public Builder setUpdateCurrent(boolean updateCurrent) {
+            mUpdateCurrent = updateCurrent;
             return this;
         }
 

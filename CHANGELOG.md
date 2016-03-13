@@ -1,3 +1,7 @@
+## 1.0.4 (2016-03-13)
+
+* Add option to update any preexisting jobs 
+
 ## 1.0.3 (2016-02-29)
 
 * Bug fixes

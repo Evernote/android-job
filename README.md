@@ -10,7 +10,7 @@ Download [the latest version][2] or grab via Gradle:
 
 ```groovy
 dependencies {
-    compile 'com.evernote:android-job:1.0.3'
+    compile 'com.evernote:android-job:1.0.4'
 }
 ```
 
@@ -95,6 +95,7 @@ private void scheduleAdvancedJob() {
             .setExtras(extras)
             .setRequirementsEnforced(true)
             .setPersisted(true)
+            .setUpdateCurrent(true)
             .build()
             .schedule();
 }

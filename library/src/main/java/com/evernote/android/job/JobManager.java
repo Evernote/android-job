@@ -196,6 +196,10 @@ public final class JobManager {
             CAT.w("you haven't registered a JobCreator with addJobCreator(), it's likely that your job never will be executed");
         }
 
+        if (request.isUpdateCurrent()) {
+            cancelAllForTag(request.getTag());
+        }
+
         request.setScheduledAt(System.currentTimeMillis());
         mJobStorage.put(request);
 

@@ -142,7 +142,9 @@ public class MainActivity extends Activity {
                 break;
 
             case R.id.button_exact:
-                testExact();
+                for (int i = 0; i < 5; i++) {
+                    testExact();
+                }
                 break;
 
             case R.id.button_file_activity:
@@ -203,6 +205,7 @@ public class MainActivity extends Activity {
                 .setExtras(extras)
                 .setExact(20_000L)
                 .setPersisted(true)
+                .setUpdateCurrent(true)
                 .build()
                 .schedule();
     }
