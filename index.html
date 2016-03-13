@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Android-Job by evernote</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Android-Job</h1>
+          <h2>Android library to handle jobs in the background.</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/evernote/android-job/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/evernote/android-job/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/evernote/android-job" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Overview</h1>
+
+<p>Android provides three different APIs to run tasks in the future. All of them have their benefits and downsides. The AlarmManager’s API has <a href="https://plus.google.com/+AndroidDevelopers/posts/GdNrQciPwqo">changed over time</a>, so you need to be careful which method you use on which platform. The <a href="https://developer.android.com/reference/android/app/job/JobScheduler.html">JobScheduler</a> is only available on Android Lollipop and Marshmallow, whereas the <a href="https://developers.google.com/cloud-messaging/network-manager">GcmNetworkManager</a> is only available on devices with Google Play preinstalled.</p>
+
+<p>There are three options with changing API levels, so it can be hard to know which one you need. You will also end up with many different paths in your code all doing the same for a different environment. We're open-sourcing this unified library to schedule jobs on Android. Depending on your requirements, this library decides which API suits your job. It provides a superset of all features from the existing AlarmManager, JobScheduler and GcmNetworkManager, e.g. you can run your job only if the device has a working Internet connection and is charging.</p>
+
+<p>Setting up the library is straightforward. You only need to initialize the JobManager and then you can start scheduling your jobs. You don’t need to declare any services, receivers or permissions in your manifest.</p>
+
+<h1>
+<a id="download" class="anchor" href="#download" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Download</h1>
+
+<p>Download <a href="http://search.maven.org/#search%7Cgav%7C1%7Cg:%22com.evernote%22%20AND%20a:%22android-job%22">the latest version</a> or grab via Gradle:</p>
+
+<div class="highlight highlight-source-groovy"><pre>dependencies {
+    compile <span class="pl-s"><span class="pl-pds">'</span>com.evernote:android-job:1.0.3<span class="pl-pds">'</span></span>
+}</pre></div>
+
+<h1>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h1>
+
+<p>The class <code>JobManager</code> serves as entry point. Your jobs need to extend the class <code>Job</code>. Create a <code>JobRequest</code> with the corresponding builder class and schedule this request with the <code>JobManager</code>.</p>
+
+<p>Before you can use the <code>JobManager</code> you must initialize the singleton. You need to provide a <code>Context</code> and add a <code>JobCreator</code> implementation after that. The <code>JobCreator</code> maps a job tag to a specific job class. It's recommend to initialize the <code>JobManager</code> in the <code>onCreate()</code> method of your <code>Application</code> object.</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-en">App</span> <span class="pl-k">extends</span> <span class="pl-e">Application</span> {
+
+    <span class="pl-k">@Override</span>
+    <span class="pl-k">public</span> <span class="pl-k">void</span> <span class="pl-en">onCreate</span>() {
+        <span class="pl-v">super</span><span class="pl-k">.</span>onCreate();
+        <span class="pl-smi">JobManager</span><span class="pl-k">.</span>create(<span class="pl-v">this</span>)<span class="pl-k">.</span>addJobCreator(<span class="pl-k">new</span> <span class="pl-smi">DemoJobCreator</span>());
+    }
+}</pre></div>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-en">DemoJobCreator</span> <span class="pl-k">implements</span> <span class="pl-e">JobCreator</span> {
+
+    <span class="pl-k">@Override</span>
+    <span class="pl-k">public</span> <span class="pl-smi">Job</span> <span class="pl-en">create</span>(<span class="pl-smi">String</span> <span class="pl-v">tag</span>) {
+        <span class="pl-k">switch</span> (tag) {
+            <span class="pl-k">case</span> <span class="pl-smi">DemoJob</span><span class="pl-c1"><span class="pl-k">.</span>TAG</span><span class="pl-k">:</span>
+                <span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-smi">DemoJob</span>();
+            <span class="pl-k">default</span><span class="pl-k">:</span>
+                <span class="pl-k">return</span> <span class="pl-c1">null</span>;
+        }
+    }
+}</pre></div>
+
+<p>After that you can start scheduling jobs.</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-en">DemoJob</span> <span class="pl-k">extends</span> <span class="pl-e">Job</span> {
+
+    <span class="pl-k">public</span> <span class="pl-k">static</span> <span class="pl-k">final</span> <span class="pl-smi">String</span> <span class="pl-c1">TAG</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>job_demo_tag<span class="pl-pds">"</span></span>;
+
+    <span class="pl-k">@Override</span>
+    <span class="pl-k">@NonNull</span>
+    <span class="pl-k">protected</span> <span class="pl-smi">Result</span> <span class="pl-en">onRunJob</span>(<span class="pl-smi">Params</span> <span class="pl-v">params</span>) {
+        <span class="pl-c">// run your job</span>
+        <span class="pl-k">return</span> <span class="pl-smi">Result</span><span class="pl-c1"><span class="pl-k">.</span>SUCCESS</span>;
+    }
+}
+
+<span class="pl-k">private</span> <span class="pl-k">void</span> scheduleJob() {
+    <span class="pl-k">new</span> <span class="pl-smi">JobRequest</span>.<span class="pl-smi">Builder</span>(<span class="pl-smi">DemoJob</span><span class="pl-c1"><span class="pl-k">.</span>TAG</span>)
+            .setExecutionWindow(<span class="pl-c1">30_000L</span>, <span class="pl-c1">40_000L</span>)
+            .build()
+            .schedule();
+}</pre></div>
+        </section>
+
+        <footer>
+          Android-Job is maintained by <a href="https://github.com/evernote">evernote</a><br>
+          This page was generated by <a href="https://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
