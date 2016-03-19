@@ -32,6 +32,8 @@ import android.content.Intent;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 
+import net.vrallev.android.cat.Cat;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -54,6 +56,11 @@ public class PlatformAlarmService extends IntentService {
 
     @Override
     protected void onHandleIntent(final Intent intent) {
+        if (intent == null) {
+            Cat.i("Delivered intent is null");
+            return;
+        }
+
         int jobId = intent.getIntExtra(PlatformAlarmReceiver.EXTRA_JOB_ID, -1);
 
         final JobProxy.Common common = new JobProxy.Common(this, jobId);
