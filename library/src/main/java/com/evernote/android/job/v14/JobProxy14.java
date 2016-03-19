@@ -37,6 +37,7 @@ import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
+import net.vrallev.android.cat.Cat;
 import net.vrallev.android.cat.CatLog;
 
 /**
@@ -77,7 +78,13 @@ public class JobProxy14 implements JobProxy {
     public void cancel(JobRequest request) {
         AlarmManager alarmManager = getAlarmManager();
         if (alarmManager != null) {
-            alarmManager.cancel(getPendingIntent(request, request.isPeriodic()));
+            try {
+                alarmManager.cancel(getPendingIntent(request, request.isPeriodic()));
+            } catch (Exception e) {
+                // java.lang.SecurityException: get application info: Neither user 1010133 nor
+                // current process has android.permission.INTERACT_ACROSS_USERS.
+                CAT.e(e);
+            }
         }
     }
 
@@ -99,7 +106,14 @@ public class JobProxy14 implements JobProxy {
         Intent intent = PlatformAlarmReceiver.createIntent(request);
 
         // repeating PendingIntent with service seams to have problems
-        return PendingIntent.getBroadcast(mContext, request.getJobId(), intent, flags);
+        try {
+            return PendingIntent.getBroadcast(mContext, request.getJobId(), intent, flags);
+        } catch (Exception e) {
+            // java.lang.SecurityException: Permission Denial: getIntentSender() from pid=31482, uid=10057,
+            // (need uid=-1) is not allowed to send as package com.evernote
+            CAT.e(e);
+            return null;
+        }
     }
 
     protected void setAlarm(JobRequest request, long triggerAtMillis, PendingIntent pendingIntent) {
