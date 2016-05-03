@@ -3,15 +3,16 @@ apply plugin: 'com.github.ben-manes.versions'
 apply from: '../build-config/gradle-quality.gradle'
 
 dependencies {
-    provided 'com.google.android.gms:play-services-gcm:8.4.0'
+    provided "com.google.android.gms:play-services-gcm:$rootProject.ext.playServicesVersion"
+    //compile "com.google.android.gms:play-services-gcm:$rootProject.ext.playServicesVersion"
 
     //noinspection GradleDependency
-    compile 'com.android.support:support-v4:23.2.1'
-    compile 'net.vrallev.android:cat:1.0.2'
+    compile "com.android.support:support-v4:$rootProject.ext.supportLibVersion"
+    compile 'net.vrallev.android:cat:1.0.3'
 
-    androidTestCompile 'com.android.support.test:runner:0.4.1'
-    androidTestCompile 'com.android.support.test:rules:0.4.1'
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.1'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
     androidTestCompile 'com.squareup.assertj:assertj-android:1.1.1'
 }
 

@@ -48,7 +48,7 @@ android {
 
 dependencies {
     compile project(':library')
-    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile "com.android.support:appcompat-v7:$rootProject.ext.supportLibVersion"
 
-    gcmCompile 'com.google.android.gms:play-services-gcm:8.4.0'
+    gcmCompile "com.google.android.gms:play-services-gcm:$rootProject.ext.playServicesVersion"
 }
