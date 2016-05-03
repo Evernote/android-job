@@ -1,3 +1,7 @@
+## 1.0.5 (2016-05-03)
+
+* Fix "WakeLock under-locked" crash
+
 ## 1.0.4 (2016-03-13)
 
 * Add option to update any preexisting jobs 
