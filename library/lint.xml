@@ -9,4 +9,7 @@
     <issue id="UnsafeProtectedBroadcastReceiver">
         <ignore path="src/main/java/com/evernote/android/job/JobBootReceiver.java"/>
     </issue>
+    <issue id="Registered">
+        <ignore path="src/main/java/com/evernote/android/job/gcm/PlatformGcmService.java"/>
+    </issue>
 </lint>

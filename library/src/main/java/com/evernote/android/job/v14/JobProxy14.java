@@ -37,7 +37,6 @@ import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.Cat;
 import net.vrallev.android.cat.CatLog;
 
 /**
