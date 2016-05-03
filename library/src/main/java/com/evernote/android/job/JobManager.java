@@ -422,6 +422,7 @@ public final class JobManager {
         PowerManager powerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
         final PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobManager.class.getName());
         if (JobUtil.hasWakeLockPermission(mContext)) {
+            wakeLock.setReferenceCounted(false);
             wakeLock.acquire(TimeUnit.SECONDS.toMillis(3));
         }
 

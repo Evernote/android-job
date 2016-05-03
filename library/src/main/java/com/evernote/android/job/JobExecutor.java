@@ -107,6 +107,7 @@ import java.util.concurrent.TimeUnit;
             PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 
             mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "JobExecutor");
+            mWakeLock.setReferenceCounted(false);
             acquireWakeLock();
         }
 
