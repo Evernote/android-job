@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager.WakeLock;
 import android.support.annotation.NonNull;
+import android.support.annotation.WorkerThread;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.evernote.android.job.util.Device;
@@ -99,6 +100,7 @@ public abstract class Job {
      * {@link Job} is invalid and ignored.
      */
     @NonNull
+    @WorkerThread
     protected abstract Result onRunJob(Params params);
 
     /*package*/ final Result runJob() {
@@ -124,6 +126,7 @@ public abstract class Job {
      * @param newJobId The new ID of the rescheduled {@link JobRequest}.
      */
     @SuppressWarnings("UnusedParameters")
+    @WorkerThread
     protected void onReschedule(int newJobId) {
         // override me
     }
