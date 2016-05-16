@@ -21,7 +21,7 @@ ext {
 
     buildToolsVersion = "23.0.3"
 
-    supportLibVersion = '23.3.0'
+    supportLibVersion = '23.4.0'
     playServicesVersion = '8.4.0'
 }
 
