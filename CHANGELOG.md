@@ -1,3 +1,7 @@
+## 1.0.6 (2016-05-20)
+
+* Clean up orphaned jobs after the database was deleted
+
 ## 1.0.5 (2016-05-03)
 
 * Fix "WakeLock under-locked" crash
