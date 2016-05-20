@@ -103,9 +103,9 @@ public class JobProxy21 implements JobProxy {
     }
 
     @Override
-    public void cancel(JobRequest request) {
+    public void cancel(int jobId) {
         try {
-            getJobScheduler().cancel(request.getJobId());
+            getJobScheduler().cancel(jobId);
         } catch (Exception e) {
             // https://gist.github.com/vRallev/5d48a4a8e8d05067834e
             CAT.e(e);

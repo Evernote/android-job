@@ -61,6 +61,7 @@ public class PlatformJobService extends JobService {
 
         final JobRequest request = common.getPendingRequest();
         if (request == null) {
+            common.cleanUpOrphanedJob();
             return false;
         }
 

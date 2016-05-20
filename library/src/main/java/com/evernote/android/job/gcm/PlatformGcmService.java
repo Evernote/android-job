@@ -45,6 +45,7 @@ public class PlatformGcmService extends GcmTaskService {
 
         JobRequest request = common.getPendingRequest();
         if (request == null) {
+            common.cleanUpOrphanedJob();
             return GcmNetworkManager.RESULT_FAILURE;
         }
 

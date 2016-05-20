@@ -200,6 +200,8 @@ public final class JobManager {
             cancelAllForTag(request.getTag());
         }
 
+        JobProxy.Common.cleanUpOrphanedJob(mContext, request.getJobId());
+
         request.setScheduledAt(System.currentTimeMillis());
         mJobStorage.put(request);
 
@@ -308,7 +310,9 @@ public final class JobManager {
      */
     public boolean cancel(int jobId) {
         // call both methods
-        return cancelInner(getJobRequest(jobId)) | cancelInner(getJob(jobId));
+        boolean result = cancelInner(getJobRequest(jobId)) | cancelInner(getJob(jobId));
+        JobProxy.Common.cleanUpOrphanedJob(mContext, jobId); // do this as well, just in case
+        return result;
     }
 
     /**
@@ -333,7 +337,7 @@ public final class JobManager {
     private boolean cancelInner(@Nullable JobRequest request) {
         if (request != null) {
             CAT.i("Found pending job %s, canceling", request);
-            getJobProxy(request).cancel(request);
+            getJobProxy(request).cancel(request.getJobId());
             getJobStorage().remove(request);
             return true;
         } else {

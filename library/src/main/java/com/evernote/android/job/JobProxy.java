@@ -51,7 +51,7 @@ public interface JobProxy {
 
     void plantPeriodic(JobRequest request);
 
-    void cancel(JobRequest request);
+    void cancel(int jobId);
 
     boolean isPlatformJobScheduled(JobRequest request);
 
@@ -149,6 +149,23 @@ public interface JobProxy {
                 }
 
                 return Job.Result.FAILURE;
+            }
+        }
+
+        public void cleanUpOrphanedJob() {
+            cleanUpOrphanedJob(mContext, mJobId);
+        }
+
+        public static void cleanUpOrphanedJob(Context context, int jobId) {
+            /*
+             * That's necessary if the database was deleted and jobs (especially the JobScheduler) are still around.
+             * Then if a new job is being scheduled, it's possible that the new job has the ID of the old one. Here
+             * we make sure, that no job is left in the system.
+             */
+            for (JobApi jobApi : JobApi.values()) {
+                if (jobApi.isSupported(context)) {
+                    jobApi.getCachedProxy(context).cancel(jobId);
+                }
             }
         }
     }

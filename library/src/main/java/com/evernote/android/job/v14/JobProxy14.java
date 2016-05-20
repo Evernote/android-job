@@ -74,11 +74,12 @@ public class JobProxy14 implements JobProxy {
     }
 
     @Override
-    public void cancel(JobRequest request) {
+    public void cancel(int jobId) {
         AlarmManager alarmManager = getAlarmManager();
         if (alarmManager != null) {
             try {
-                alarmManager.cancel(getPendingIntent(request, request.isPeriodic()));
+                alarmManager.cancel(getPendingIntent(jobId, createPendingIntentFlags(true)));
+                alarmManager.cancel(getPendingIntent(jobId, createPendingIntentFlags(false)));
             } catch (Exception e) {
                 // java.lang.SecurityException: get application info: Neither user 1010133 nor
                 // current process has android.permission.INTERACT_ACROSS_USERS.
@@ -93,20 +94,28 @@ public class JobProxy14 implements JobProxy {
         return pendingIntent != null;
     }
 
-    protected PendingIntent getPendingIntent(JobRequest request, boolean repeating) {
+    protected int createPendingIntentFlags(boolean repeating) {
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (!repeating) {
             flags |= PendingIntent.FLAG_ONE_SHOT;
         }
-        return getPendingIntent(request, flags);
+        return flags;
+    }
+
+    protected PendingIntent getPendingIntent(JobRequest request, boolean repeating) {
+        return getPendingIntent(request, createPendingIntentFlags(repeating));
     }
 
     protected PendingIntent getPendingIntent(JobRequest request, int flags) {
-        Intent intent = PlatformAlarmReceiver.createIntent(request);
+        return getPendingIntent(request.getJobId(), flags);
+    }
+
+    protected PendingIntent getPendingIntent(int jobId, int flags) {
+        Intent intent = PlatformAlarmReceiver.createIntent(jobId);
 
         // repeating PendingIntent with service seams to have problems
         try {
-            return PendingIntent.getBroadcast(mContext, request.getJobId(), intent, flags);
+            return PendingIntent.getBroadcast(mContext, jobId, intent, flags);
         } catch (Exception e) {
             // java.lang.SecurityException: Permission Denial: getIntentSender() from pid=31482, uid=10057,
             // (need uid=-1) is not allowed to send as package com.evernote

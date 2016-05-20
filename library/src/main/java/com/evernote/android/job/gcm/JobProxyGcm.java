@@ -94,8 +94,8 @@ public class JobProxyGcm implements JobProxy {
     }
 
     @Override
-    public void cancel(JobRequest request) {
-        mGcmNetworkManager.cancelTask(createTag(request), PlatformGcmService.class);
+    public void cancel(int jobId) {
+        mGcmNetworkManager.cancelTask(createTag(jobId), PlatformGcmService.class);
     }
 
     @Override
@@ -105,7 +105,11 @@ public class JobProxyGcm implements JobProxy {
     }
 
     protected String createTag(JobRequest request) {
-        return String.valueOf(request.getJobId());
+        return createTag(request.getJobId());
+    }
+
+    protected String createTag(int jobId) {
+        return String.valueOf(jobId);
     }
 
     protected int convertNetworkType(@NonNull JobRequest.NetworkType networkType) {

@@ -66,21 +66,24 @@ public class PlatformAlarmService extends IntentService {
         final JobProxy.Common common = new JobProxy.Common(this, jobId);
 
         final JobRequest request = common.getPendingRequest();
-        if (request != null) {
-            // parallel execution
-            EXECUTOR_SERVICE.execute(new Runnable() {
-                @Override
-                public void run() {
-                    common.executeJobRequest(request);
-
-                    // call here, our own wake lock could be acquired too late
-                    try {
-                        PlatformAlarmReceiver.completeWakefulIntent(intent);
-                    } catch (Exception e) {
-                        // could end in a NPE if the intent has no wake lock
-                    }
-                }
-            });
+        if (request == null) {
+            common.cleanUpOrphanedJob();
+            return;
         }
+
+        // parallel execution
+        EXECUTOR_SERVICE.execute(new Runnable() {
+            @Override
+            public void run() {
+                common.executeJobRequest(request);
+
+                // call here, our own wake lock could be acquired too late
+                try {
+                    PlatformAlarmReceiver.completeWakefulIntent(intent);
+                } catch (Exception e) {
+                    // could end in a NPE if the intent has no wake lock
+                }
+            }
+        });
     }
 }
