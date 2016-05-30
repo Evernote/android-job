@@ -65,7 +65,7 @@ public class DemoJob extends Job {
         return Result.SUCCESS;
     }
 
-private void scheduleJob() {
+public static void scheduleJob() {
     new JobRequest.Builder(DemoJob.TAG)
             .setExecutionWindow(30_000L, 40_000L)
             .build()
