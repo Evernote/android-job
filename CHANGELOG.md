@@ -1,3 +1,7 @@
+## 1.0.7 (2016-06-03)
+
+* Weird bug fixes
+
 ## 1.0.6 (2016-05-20)
 
 * Clean up orphaned jobs after the database was deleted
