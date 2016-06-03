@@ -8,6 +8,8 @@ import com.evernote.android.job.gcm.PlatformGcmService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
+import net.vrallev.android.cat.Cat;
+
 import java.util.List;
 
 /**
@@ -34,9 +36,15 @@ import java.util.List;
     }
 
     public static boolean isGcmApiSupported(Context context) {
-        return GCM_IN_CLASSPATH
-                && GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
-                && isGcmServiceRegistered(context) == ConnectionResult.SUCCESS;
+        try {
+            return GCM_IN_CLASSPATH
+                    && GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
+                    && isGcmServiceRegistered(context) == ConnectionResult.SUCCESS;
+        } catch (Exception e) {
+            // seeing sometimes a DeadObjectException, return false, we can't do anything in this case
+            Cat.w(e);
+            return false;
+        }
     }
 
     private static int isGcmServiceRegistered(Context context) {
