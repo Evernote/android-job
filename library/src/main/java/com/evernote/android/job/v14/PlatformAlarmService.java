@@ -29,6 +29,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 
+import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 
@@ -65,7 +66,8 @@ public class PlatformAlarmService extends IntentService {
 
         final JobProxy.Common common = new JobProxy.Common(this, jobId);
 
-        final JobRequest request = common.getPendingRequest();
+        // create the JobManager. Seeing sometimes exceptions, that it wasn't created, yet.
+        final JobRequest request = common.getPendingRequest(JobManager.create(this));
         if (request == null) {
             common.cleanUpOrphanedJob();
             return;

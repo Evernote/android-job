@@ -80,9 +80,13 @@ public interface JobProxy {
         }
 
         public JobRequest getPendingRequest() {
+            return getPendingRequest(JobManager.instance());
+        }
+
+        public JobRequest getPendingRequest(JobManager manager) {
             // order is important for logging purposes
-            JobRequest request = JobManager.instance().getJobRequest(mJobId);
-            Job job = JobManager.instance().getJob(mJobId);
+            JobRequest request = manager.getJobRequest(mJobId);
+            Job job = manager.getJob(mJobId);
             boolean periodic = request != null && request.isPeriodic();
 
             if (job != null && !job.isFinished()) {
