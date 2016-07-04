@@ -111,7 +111,7 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected PendingIntent getPendingIntent(int jobId, int flags) {
-        Intent intent = PlatformAlarmReceiver.createIntent(jobId);
+        Intent intent = PlatformAlarmReceiver.createIntent(mContext, jobId);
 
         // repeating PendingIntent with service seams to have problems
         try {
