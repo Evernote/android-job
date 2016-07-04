@@ -483,6 +483,13 @@ public final class JobRequest {
          * {@link #setPeriodic(long)} or {@link #setExact(long)}. For those types jobs it doesn't
          * make sense to have a time window.
          *
+         * <br>
+         * <br>
+         *
+         * The window specified is treated as offset from now, e.g. the job will run between
+         * {@code System.currentTimeMillis() + startMs} and
+         * {@code System.currentTimeMillis() + endMs}.
+         *
          * @param startMs Earliest point from which your task is eligible to run.
          * @param endMs Latest point at which your task must be run.
          */
@@ -616,6 +623,12 @@ public final class JobRequest {
          *
          * The default value is set to {@code false}. Internally an exact job is always using the
          * {@link AlarmManager}.
+         *
+         * <br>
+         * <br>
+         *
+         * The milliseconds specified are treated as offset from now, e.g. the job will run at
+         * {@code System.currentTimeMillis() + exactMs}.
          *
          * @param exactMs The exact offset when the job should run from when the job was scheduled.
          * @see AlarmManager#setExact(int, long, android.app.PendingIntent)
