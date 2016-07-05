@@ -77,6 +77,7 @@ public final class JobRequest {
 
     private int mNumFailures;
     private long mScheduledAt;
+    private boolean mTransient;
 
     private JobRequest(Builder builder) {
         mBuilder = builder;
@@ -253,6 +254,10 @@ public final class JobRequest {
         return mNumFailures;
     }
 
+    /*package*/ boolean isTransient() {
+        return mTransient;
+    }
+
     /**
      * Convenience method. Internally it calls {@link JobManager#schedule(JobRequest)}
      * and {@link #getJobId()} for this request.
@@ -275,6 +280,7 @@ public final class JobRequest {
     public Builder cancelAndEdit() {
         JobManager.instance().cancel(getJobId());
         Builder builder = new Builder(this, false);
+        mTransient = false;
 
         if (!isPeriodic()) {
             long offset = System.currentTimeMillis() - mScheduledAt;
@@ -300,11 +306,19 @@ public final class JobRequest {
         JobManager.instance().getJobStorage().update(this, contentValues);
     }
 
+    /*package*/ void setTransient(boolean isTransient) {
+        mTransient = isTransient;
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(JobStorage.COLUMN_TRANSIENT, mTransient);
+        JobManager.instance().getJobStorage().update(this, contentValues);
+    }
+
     /*package*/ ContentValues toContentValues() {
         ContentValues contentValues = new ContentValues();
         mBuilder.fillContentValues(contentValues);
         contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mNumFailures);
         contentValues.put(JobStorage.COLUMN_SCHEDULED_AT, mScheduledAt);
+        contentValues.put(JobStorage.COLUMN_TRANSIENT, mTransient);
         return contentValues;
     }
 
@@ -312,6 +326,7 @@ public final class JobRequest {
         JobRequest request = new Builder(cursor).build();
         request.mNumFailures = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_NUM_FAILURES));
         request.mScheduledAt = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_SCHEDULED_AT));
+        request.mTransient = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_TRANSIENT)) > 0;
 
         JobPreconditions.checkArgumentNonnegative(request.mNumFailures, "failure count can't be negative");
         JobPreconditions.checkArgumentNonnegative(request.mScheduledAt, "scheduled at can't be negative");

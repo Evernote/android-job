@@ -85,7 +85,7 @@ public interface JobProxy {
 
         public JobRequest getPendingRequest(JobManager manager) {
             // order is important for logging purposes
-            JobRequest request = manager.getJobRequest(mJobId);
+            JobRequest request = manager.getJobRequest(mJobId, true);
             Job job = manager.getJob(mJobId);
             boolean periodic = request != null && request.isPeriodic();
 
@@ -99,6 +99,10 @@ public interface JobProxy {
 
             } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < 2_000) {
                 mCat.d("Job %d is periodic and just finished, %s", mJobId, request);
+                return null;
+
+            } else if (request != null && request.isTransient()) {
+                mCat.d("Request %d is transient, %s", mJobId, request);
                 return null;
 
             } else if (request == null) {
@@ -129,11 +133,14 @@ public interface JobProxy {
             JobExecutor jobExecutor = manager.getJobExecutor();
 
             try {
+                // create job first before setting it transient, avoids a race condition while rescheduling jobs
+                Job job = manager.getJobCreatorHolder().createJob(request.getTag());
+
                 if (!request.isPeriodic()) {
-                    manager.getJobStorage().remove(request);
+                    request.setTransient(true);
                 }
 
-                Future<Job.Result> future = jobExecutor.execute(mContext, request, manager.getJobCreatorHolder());
+                Future<Job.Result> future = jobExecutor.execute(mContext, request, job);
                 if (future == null) {
                     return Job.Result.FAILURE;
                 }
@@ -153,6 +160,11 @@ public interface JobProxy {
                 }
 
                 return Job.Result.FAILURE;
+
+            } finally {
+                if (!request.isPeriodic()) {
+                    manager.getJobStorage().remove(request);
+                }
             }
         }
 

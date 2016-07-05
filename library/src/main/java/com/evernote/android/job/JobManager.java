@@ -218,7 +218,16 @@ public final class JobManager {
      * @return The {@link JobRequest} if it's pending or {@code null} otherwise.
      */
     public JobRequest getJobRequest(int jobId) {
-        return mJobStorage.get(jobId);
+        return getJobRequest(jobId, false);
+    }
+
+    /*package*/ JobRequest getJobRequest(int jobId, boolean includeTransient) {
+        JobRequest jobRequest = mJobStorage.get(jobId);
+        if (!includeTransient && jobRequest.isTransient()) {
+            return null;
+        } else {
+            return jobRequest;
+        }
     }
 
     /**
@@ -229,7 +238,7 @@ public final class JobManager {
      */
     @NonNull
     public Set<JobRequest> getAllJobRequests() {
-        return mJobStorage.getAllJobRequests();
+        return mJobStorage.getAllJobRequests(null, false);
     }
 
     /**
@@ -239,7 +248,7 @@ public final class JobManager {
      * direct effects to the actual backing store.
      */
     public Set<JobRequest> getAllJobRequestsForTag(@NonNull String tag) {
-        return mJobStorage.getAllJobRequestsForTag(tag);
+        return mJobStorage.getAllJobRequests(tag, false);
     }
 
     /**
@@ -310,7 +319,7 @@ public final class JobManager {
      */
     public boolean cancel(int jobId) {
         // call both methods
-        boolean result = cancelInner(getJobRequest(jobId)) | cancelInner(getJob(jobId));
+        boolean result = cancelInner(getJobRequest(jobId, true)) | cancelInner(getJob(jobId));
         JobProxy.Common.cleanUpOrphanedJob(mContext, jobId); // do this as well, just in case
         return result;
     }
@@ -358,7 +367,7 @@ public final class JobManager {
     private int cancelAllInner(@Nullable String tag) {
         int canceled = 0;
 
-        Set<JobRequest> requests = TextUtils.isEmpty(tag) ? getAllJobRequests() : getAllJobRequestsForTag(tag);
+        Set<JobRequest> requests = mJobStorage.getAllJobRequests(tag, true);
         for (JobRequest request : requests) {
             if (cancelInner(request)) {
                 canceled++;
@@ -442,11 +451,19 @@ public final class JobManager {
                      */
                     SystemClock.sleep(10_000L);
 
-                    Set<JobRequest> requests = JobManager.instance().getAllJobRequests();
+                    Set<JobRequest> requests = mJobStorage.getAllJobRequests(null, true);
 
                     int rescheduledCount = 0;
                     for (JobRequest request : requests) {
-                        if (!getJobProxy(request).isPlatformJobScheduled(request)) {
+                        boolean reschedule;
+                        if (request.isTransient()) {
+                            Job job = getJob(request.getJobId());
+                            reschedule = job == null;
+                        } else {
+                            reschedule = !getJobProxy(request).isPlatformJobScheduled(request);
+                        }
+
+                        if (reschedule) {
                             // update execution window
                             request.cancelAndEdit()
                                     .build()

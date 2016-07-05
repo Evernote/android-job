@@ -28,6 +28,7 @@ package com.evernote.android.job;
 import android.content.Context;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
 import com.evernote.android.job.util.JobCat;
@@ -58,8 +59,7 @@ import java.util.concurrent.TimeUnit;
         mJobs = new SparseArray<>();
     }
 
-    public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @NonNull JobCreatorHolder jobCreatorHolder) {
-        Job job = jobCreatorHolder.createJob(request.getTag());
+    public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @Nullable Job job) {
         if (job == null) {
             CAT.w("JobCreator returned null for tag %s", request.getTag());
             return null;
