@@ -325,7 +325,7 @@ public abstract class Job {
     }
 
     /**
-     * Holds several parameters for the executing {@link Job}.
+     * Holds several parameters for the {@link Job} execution.
      */
     protected static final class Params {
 
@@ -334,11 +334,11 @@ public abstract class Job {
 
         private Params(@NonNull JobRequest request) {
             mRequest = request;
-            mExtras = request.getExtras();
         }
 
         /**
          * @return The unique ID for this {@link Job}.
+         * @see JobRequest#getJobId()
          */
         public int getId() {
             return mRequest.getJobId();
@@ -346,6 +346,7 @@ public abstract class Job {
 
         /**
          * @return The tag for this {@link Job} which was passed in the constructor of the {@link JobRequest.Builder}.
+         * @see JobRequest#getTag()
          */
         public String getTag() {
             return mRequest.getTag();
@@ -354,9 +355,116 @@ public abstract class Job {
         /**
          * @return Whether this {@link Job} is periodic or not. If this {@link Job} is periodic, then
          * you shouldn't return {@link Result#RESCHEDULE} as result.
+         * @see JobRequest#isPeriodic()
          */
         public boolean isPeriodic() {
             return mRequest.isPeriodic();
+        }
+
+        /**
+         * @return {@code true} if this job was scheduled at an exact time by calling {@link JobRequest.Builder#setExact(long)}.
+         * @see JobRequest#isExact()
+         */
+        public boolean isExact() {
+            return mRequest.isExact();
+        }
+
+        /**
+         * @return If {@code true}, then the job persists across reboots.
+         * @see JobRequest#isPersisted()
+         */
+        public boolean isPersisted() {
+            return mRequest.isPersisted();
+        }
+
+        /**
+         * Only valid if the job isn't periodic.
+         *
+         * @return The start of the time frame when the job will run after it's been scheduled.
+         * @see JobRequest#getStartMs()
+         */
+        public long getStartMs() {
+            return mRequest.getStartMs();
+        }
+
+        /**
+         * Only valid if the job isn't periodic.
+         *
+         * @return The end of the time frame when the job will run after it's been scheduled.
+         * @see JobRequest#getEndMs()
+         */
+        public long getEndMs() {
+            return mRequest.getEndMs();
+        }
+
+        /**
+         * Only valid if the job is periodic.
+         *
+         * @return The interval in which the job runs once.
+         * @see JobRequest#getIntervalMs()
+         */
+        public long getIntervalMs() {
+            return mRequest.getIntervalMs();
+        }
+
+        /**
+         * Only valid if the job isn't periodic.
+         *
+         * @return The initial back-off time which is increasing depending on the {@link #getBackoffPolicy()}
+         * if the job fails multiple times.
+         * @see JobRequest#getBackoffMs()
+         */
+        public long getBackoffMs() {
+            return mRequest.getBackoffMs();
+        }
+
+        /**
+         * Only valid if the job isn't periodic.
+         *
+         * @return The back-off policy if a job failed and is rescheduled.
+         * @see JobRequest#getBackoffPolicy()
+         */
+        public JobRequest.BackoffPolicy getBackoffPolicy() {
+            return mRequest.getBackoffPolicy();
+        }
+
+        /**
+         * Call {@link #isRequirementChargingMet()} to check whether this requirement is fulfilled.
+         *
+         * @return If {@code true}, then the job should only run if the device is charging.
+         * @see JobRequest#requiresCharging()
+         */
+        public boolean requiresCharging() {
+            return mRequest.requiresCharging();
+        }
+
+        /**
+         * Call {@link #isRequirementDeviceIdleMet()} to check whether this requirement is fulfilled.
+         *
+         * @return If {@code true}, then job should only run if the device is idle.
+         * @see JobRequest#requiresDeviceIdle()
+         */
+        public boolean requiresDeviceIdle() {
+            return mRequest.requiresDeviceIdle();
+        }
+
+        /**
+         * Call {@link #isRequirementNetworkTypeMet()} to check whether this requirement is fulfilled.
+         *
+         * @return The network state which is required to run the job.
+         * @see JobRequest#requiredNetworkType()
+         */
+        public JobRequest.NetworkType requiredNetworkType() {
+            return mRequest.requiredNetworkType();
+        }
+
+        /**
+         * @return If {@code true}, then all requirements are checked before the job runs. If one requirement
+         * isn't met, then the job is rescheduled right away.
+         * @see JobRequest#requirementsEnforced()
+         */
+        public boolean requirementsEnforced() {
+            return mRequest.requirementsEnforced();
         }
 
         /**
@@ -375,7 +483,10 @@ public abstract class Job {
         @NonNull
         public PersistableBundleCompat getExtras() {
             if (mExtras == null) {
-                mExtras = new PersistableBundleCompat();
+                mExtras = mRequest.getExtras();
+                if (mExtras == null) {
+                    mExtras = new PersistableBundleCompat();
+                }
             }
             return mExtras;
         }
