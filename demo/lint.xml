@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="GoogleAppIndexingWarning">
+        <ignore path="src/main/AndroidManifest.xml"/>
+        <ignore path="src/gcm/AndroidManifest.xml"/>
+    </issue>
+    <issue id="GradleDependency" severity="ignore"/>
+</lint>
