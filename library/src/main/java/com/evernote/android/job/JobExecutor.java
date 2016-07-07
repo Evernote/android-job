@@ -29,6 +29,7 @@ import android.content.Context;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.LruCache;
 import android.util.SparseArray;
 
 import com.evernote.android.job.util.JobCat;
@@ -37,6 +38,7 @@ import com.evernote.android.job.util.JobUtil;
 import net.vrallev.android.cat.CatLog;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -52,11 +54,14 @@ import java.util.concurrent.TimeUnit;
     private static final CatLog CAT = new JobCat("JobExecutor");
 
     private final ExecutorService mExecutorService;
+
     private final SparseArray<Job> mJobs; // only cached in memory, that's fine
+    private final LruCache<Integer, Job> mFinishedJobsCache;
 
     public JobExecutor() {
         mExecutorService = Executors.newCachedThreadPool();
         mJobs = new SparseArray<>();
+        mFinishedJobsCache = new LruCache<>(20);
     }
 
     public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @Nullable Job job) {
@@ -77,7 +82,8 @@ import java.util.concurrent.TimeUnit;
     }
 
     public synchronized Job getJob(int jobId) {
-        return mJobs.get(jobId);
+        Job job = mJobs.get(jobId);
+        return job != null ? job : mFinishedJobsCache.get(jobId);
     }
 
     public synchronized Set<Job> getAllJobs() {
@@ -92,7 +98,21 @@ import java.util.concurrent.TimeUnit;
                 result.add(job);
             }
         }
+
+        Map<Integer, Job> snapshot = mFinishedJobsCache.snapshot();
+        for (Job job : snapshot.values()) {
+            if (tag == null || tag.equals(job.getParams().getTag())) {
+                result.add(job);
+            }
+        }
+
         return result;
+    }
+
+    private synchronized void markJobAsFinished(Job job) {
+        int id = job.getParams().getId();
+        mJobs.remove(id);
+        mFinishedJobsCache.put(id, job);
     }
 
     private final class JobCallable implements Callable<Job.Result> {
@@ -130,6 +150,8 @@ import java.util.concurrent.TimeUnit;
                 } else {
                     CAT.w("Wake lock was not held after job %s was done. The job took too long to complete. This could have unintended side effects on your app.", mJob);
                 }
+
+                markJobAsFinished(mJob);
             }
         }
 

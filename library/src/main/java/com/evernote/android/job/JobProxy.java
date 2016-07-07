@@ -131,10 +131,11 @@ public interface JobProxy {
             mCat.d("Run job, %s, waited %s, %s", request, JobUtil.timeToString(waited), timeWindow);
             JobManager manager = JobManager.instance();
             JobExecutor jobExecutor = manager.getJobExecutor();
+            Job job = null;
 
             try {
                 // create job first before setting it transient, avoids a race condition while rescheduling jobs
-                Job job = manager.getJobCreatorHolder().createJob(request.getTag());
+                job = manager.getJobCreatorHolder().createJob(request.getTag());
 
                 if (!request.isPeriodic()) {
                     request.setTransient(true);
@@ -153,7 +154,6 @@ public interface JobProxy {
             } catch (InterruptedException | ExecutionException e) {
                 mCat.e(e);
 
-                Job job = jobExecutor.getJob(mJobId);
                 if (job != null) {
                     job.cancel();
                     mCat.e("Canceled %s", request);

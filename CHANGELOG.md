@@ -3,6 +3,7 @@
 * Make PlatformAlarmReceiver intent explicit, fixes #56
 * Delete a job after it has finished, otherwise reschedule if app is crashing while job is running, fixes #55
 * Extend Params class with more parameters from the job request, fixes #52
+* Cache only 20 finished jobs to free up memory, fixes #57
 
 ## 1.0.7 (2016-06-03)
 
