@@ -40,9 +40,10 @@ import java.util.List;
             return GCM_IN_CLASSPATH
                     && GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
                     && isGcmServiceRegistered(context) == ConnectionResult.SUCCESS;
-        } catch (Exception e) {
+        } catch (Throwable t) {
             // seeing sometimes a DeadObjectException, return false, we can't do anything in this case
-            Cat.w(e);
+            // still sometimes seeing a NoClassDefFoundError here
+            Cat.w(t);
             return false;
         }
     }
