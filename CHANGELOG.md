@@ -1,3 +1,7 @@
+## 1.0.9 (2016-07-18)
+
+* Bug fixes
+
 ## 1.0.8 (2016-07-05)
 
 * Make PlatformAlarmReceiver intent explicit, fixes #56
