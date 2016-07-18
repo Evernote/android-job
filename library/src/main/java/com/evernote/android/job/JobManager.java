@@ -223,7 +223,7 @@ public final class JobManager {
 
     /*package*/ JobRequest getJobRequest(int jobId, boolean includeTransient) {
         JobRequest jobRequest = mJobStorage.get(jobId);
-        if (!includeTransient && jobRequest.isTransient()) {
+        if (!includeTransient && jobRequest != null && jobRequest.isTransient()) {
             return null;
         } else {
             return jobRequest;
