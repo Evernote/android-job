@@ -73,20 +73,20 @@ public interface JobProxy {
         private final int mJobId;
         private final CatLog mCat;
 
+        private final JobManager mJobManager;
+
         public Common(Service service, int jobId) {
             mContext = service;
             mJobId = jobId;
             mCat = new JobCat(service.getClass());
+
+            mJobManager = JobManager.create(service);
         }
 
         public JobRequest getPendingRequest() {
-            return getPendingRequest(JobManager.instance());
-        }
-
-        public JobRequest getPendingRequest(JobManager manager) {
             // order is important for logging purposes
-            JobRequest request = manager.getJobRequest(mJobId, true);
-            Job job = manager.getJob(mJobId);
+            JobRequest request = mJobManager.getJobRequest(mJobId, true);
+            Job job = mJobManager.getJob(mJobId);
             boolean periodic = request != null && request.isPeriodic();
 
             if (job != null && !job.isFinished()) {
@@ -129,13 +129,12 @@ public interface JobProxy {
             }
 
             mCat.d("Run job, %s, waited %s, %s", request, JobUtil.timeToString(waited), timeWindow);
-            JobManager manager = JobManager.instance();
-            JobExecutor jobExecutor = manager.getJobExecutor();
+            JobExecutor jobExecutor = mJobManager.getJobExecutor();
             Job job = null;
 
             try {
                 // create job first before setting it transient, avoids a race condition while rescheduling jobs
-                job = manager.getJobCreatorHolder().createJob(request.getTag());
+                job = mJobManager.getJobCreatorHolder().createJob(request.getTag());
 
                 if (!request.isPeriodic()) {
                     request.setTransient(true);
@@ -163,7 +162,7 @@ public interface JobProxy {
 
             } finally {
                 if (!request.isPeriodic()) {
-                    manager.getJobStorage().remove(request);
+                    mJobManager.getJobStorage().remove(request);
                 }
             }
         }

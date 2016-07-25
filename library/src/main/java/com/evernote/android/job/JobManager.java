@@ -25,6 +25,7 @@
  */
 package com.evernote.android.job;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.job.JobScheduler;
@@ -82,6 +83,7 @@ public final class JobManager {
     private static final String PACKAGE = JobManager.class.getPackage().getName();
     private static final CatLog CAT = new JobCat("JobManager");
 
+    @SuppressLint("StaticFieldLeak")
     private static volatile JobManager instance;
 
     /**
@@ -91,7 +93,7 @@ public final class JobManager {
      * @param context Any {@link Context} to instantiate the singleton object.
      * @return The new or existing singleton object.
      */
-    public static JobManager create(Context context) {
+    public static JobManager create(@NonNull Context context) {
         if (instance == null) {
             synchronized (JobManager.class) {
                 if (instance == null) {

@@ -1,3 +1,7 @@
+## 1.0.10 (2016-07-25)
+
+* Create the JobManager in all API services
+
 ## 1.0.9 (2016-07-18)
 
 * Bug fixes

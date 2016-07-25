@@ -10,7 +10,7 @@ Download [the latest version][2] or grab via Gradle:
 
 ```groovy
 dependencies {
-    compile 'com.evernote:android-job:1.0.9'
+    compile 'com.evernote:android-job:1.0.10'
 }
 ```
 
@@ -191,7 +191,7 @@ See [here](FAQ.md).
 License
 -------
 
-    Copyright (c) 2007-2015 by Evernote Corporation, All rights reserved.
+    Copyright (c) 2007-2016 by Evernote Corporation, All rights reserved.
 
     Use of the source code and binary libraries included in this package
     is permitted under the following terms:
