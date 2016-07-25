@@ -19,9 +19,12 @@ ext {
     targetSdkVersion = compileSdkVersion
     minSdkVersion = 14
 
-    buildToolsVersion = "24.0.0"
+    buildToolsVersion = "24.0.1"
 
     supportLibVersion = '23.4.0'
     playServicesVersion = '9.2.0'
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.14.1'
+}
