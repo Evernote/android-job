@@ -117,7 +117,9 @@ public interface JobProxy {
         public Job.Result executeJobRequest(@NonNull JobRequest request) {
             long waited = System.currentTimeMillis() - request.getScheduledAt();
             String timeWindow;
-            if (JobApi.V_14.equals(request.getJobApi())) {
+            if (request.isPeriodic()) {
+                timeWindow = "interval " + JobUtil.timeToString(request.getIntervalMs());
+            } else if (JobApi.V_14.equals(request.getJobApi())) {
                 timeWindow = "delay " + JobUtil.timeToString(getAverageDelayMs(request));
             } else {
                 timeWindow = String.format(Locale.US, "start %s, end %s", JobUtil.timeToString(getStartMs(request)),
