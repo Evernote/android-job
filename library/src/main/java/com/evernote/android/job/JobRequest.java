@@ -38,6 +38,7 @@ import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.JobUtil;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
+import net.vrallev.android.cat.Cat;
 import net.vrallev.android.cat.CatLog;
 
 import java.util.concurrent.TimeUnit;
@@ -69,6 +70,9 @@ public final class JobRequest {
      * @see Builder#setRequirementsEnforced(boolean)
      */
     public static final NetworkType DEFAULT_NETWORK_TYPE = NetworkType.ANY;
+
+    private static final long WINDOW_THRESHOLD_WARNING = Long.MAX_VALUE / 3;
+    private static final long WINDOW_THRESHOLD_MAX = (Long.MAX_VALUE / 3) * 2;
 
     private static final CatLog CAT = new JobCat("JobRequest");
 
@@ -505,12 +509,37 @@ public final class JobRequest {
          * {@code System.currentTimeMillis() + startMs} and
          * {@code System.currentTimeMillis() + endMs}.
          *
+         * <br>
+         * <br>
+         *
+         * The maximum value for each argument is {@code Long.MAX_VALUE / 3 * 2} (about 53_375_995_583 days).
+         * Otherwise some APIs schedule the job immediately. No exception is thrown if an argument is greater
+         * then the maximum value, the arguments are silently being reduced.
+         *
+         * <br>
+         * <br>
+         *
+         * <b>NOTE:</b> It's not recommended to have such big execution windows. The {@code AlarmManager} used
+         * as fallback API doesn't allow setting a start date. Although being inexact, the execution time is
+         * the arithmetic average of {@code startMs} and {@code endMs}. The result could be that your job never
+         * runs on pre Android 5.0 devices, if one argument is too big.
+         *
          * @param startMs Earliest point from which your task is eligible to run.
          * @param endMs Latest point at which your task must be run.
          */
         public Builder setExecutionWindow(long startMs, long endMs) {
             mStartMs = JobPreconditions.checkArgumentPositive(startMs, "startMs must be greater than 0");
             mEndMs = JobPreconditions.checkArgumentInRange(endMs, startMs, Long.MAX_VALUE, "endMs");
+
+            if (mStartMs > WINDOW_THRESHOLD_MAX) {
+                Cat.i("startMs reduced from %d days to %d days", TimeUnit.MILLISECONDS.toDays(mStartMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
+                mStartMs = WINDOW_THRESHOLD_MAX;
+            }
+            if (mEndMs > WINDOW_THRESHOLD_MAX) {
+                Cat.i("endMs reduced from %d days to %d days", TimeUnit.MILLISECONDS.toDays(mEndMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
+                mEndMs = WINDOW_THRESHOLD_MAX;
+            }
+
             return this;
         }
 
@@ -645,12 +674,24 @@ public final class JobRequest {
          * The milliseconds specified are treated as offset from now, e.g. the job will run at
          * {@code System.currentTimeMillis() + exactMs}.
          *
+         * <br>
+         * <br>
+         *
+         * The maximum value of the argument is {@code Long.MAX_VALUE / 3 * 2} (about 53_375_995_583 days).
+         * No exception is thrown if the argument is greater then the maximum value, the argument is
+         * silently being reduced.
+         *
          * @param exactMs The exact offset when the job should run from when the job was scheduled.
          * @see AlarmManager#setExact(int, long, android.app.PendingIntent)
          * @see AlarmManager#setExactAndAllowWhileIdle(int, long, android.app.PendingIntent)
          */
         public Builder setExact(long exactMs) {
             mExact = true;
+            if (exactMs > WINDOW_THRESHOLD_MAX) {
+                Cat.i("exactMs reduced from %d days to %d days", TimeUnit.MILLISECONDS.toDays(exactMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
+                exactMs = WINDOW_THRESHOLD_MAX;
+            }
+
             return setExecutionWindow(exactMs, exactMs);
         }
 
@@ -754,6 +795,10 @@ public final class JobRequest {
             if (mIntervalMs > 0 && (mBackoffMs != DEFAULT_BACKOFF_MS || !DEFAULT_BACKOFF_POLICY.equals(mBackoffPolicy))) {
                 throw new IllegalArgumentException("A periodic job will not respect any back-off policy, so calling "
                         + "setBackoffCriteria() with setPeriodic() is an error.");
+            }
+
+            if (mIntervalMs <= 0 && (mStartMs > WINDOW_THRESHOLD_WARNING || mEndMs > WINDOW_THRESHOLD_WARNING)) {
+                Cat.w("Attention: your execution window is too big. This could result in undesired behavior, see https://github.com/evernote/android-job/blob/master/FAQ.md");
             }
 
             return new JobRequest(this);

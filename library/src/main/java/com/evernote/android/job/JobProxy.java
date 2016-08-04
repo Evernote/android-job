@@ -57,16 +57,26 @@ public interface JobProxy {
 
     /*package*/ final class Common {
 
+        // see Google Guava: https://github.com/google/guava/blob/master/guava/src/com/google/common/math/LongMath.java
+        private static long checkedAdd(long a, long b) {
+            long result = a + b;
+            return checkNoOverflow(result, (a ^ b) < 0 | (a ^ result) >= 0);
+        }
+
+        private static long checkNoOverflow(long result, boolean condition) {
+            return condition ? result : Long.MAX_VALUE;
+        }
+
         public static long getStartMs(JobRequest request) {
-            return request.getStartMs() + request.getBackoffOffset();
+            return checkedAdd(request.getStartMs(), request.getBackoffOffset());
         }
 
         public static long getEndMs(JobRequest request) {
-            return request.getEndMs() + request.getBackoffOffset();
+            return checkedAdd(request.getEndMs(), request.getBackoffOffset());
         }
 
         public static long getAverageDelayMs(JobRequest request) {
-            return getStartMs(request) + (getEndMs(request) - getStartMs(request)) / 2;
+            return checkedAdd(getStartMs(request), (getEndMs(request) - getStartMs(request)) / 2);
         }
 
         private final Context mContext;
