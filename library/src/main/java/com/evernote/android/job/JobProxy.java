@@ -129,11 +129,11 @@ public interface JobProxy {
             String timeWindow;
             if (request.isPeriodic()) {
                 timeWindow = "interval " + JobUtil.timeToString(request.getIntervalMs());
-            } else if (JobApi.V_14.equals(request.getJobApi())) {
-                timeWindow = "delay " + JobUtil.timeToString(getAverageDelayMs(request));
-            } else {
+            } else if (request.getJobApi().supportsExecutionWindow()) {
                 timeWindow = String.format(Locale.US, "start %s, end %s", JobUtil.timeToString(getStartMs(request)),
                         JobUtil.timeToString(getEndMs(request)));
+            } else {
+                timeWindow = "delay " + JobUtil.timeToString(getAverageDelayMs(request));
             }
 
             if (Looper.myLooper() == Looper.getMainLooper()) {

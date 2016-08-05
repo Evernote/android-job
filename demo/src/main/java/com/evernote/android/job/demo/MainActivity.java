@@ -79,6 +79,11 @@ public class MainActivity extends Activity {
         } else {
             menu.findItem(R.id.action_force_21).setVisible(false);
         }
+        if (JobApi.V_19.isSupported(this)) {
+            menu.findItem(R.id.action_force_19).setChecked(false);
+        } else {
+            menu.findItem(R.id.action_force_19).setVisible(false);
+        }
         if (JobApi.V_14.isSupported(this)) {
             menu.findItem(R.id.action_force_14).setChecked(false);
         } else {
@@ -96,6 +101,9 @@ public class MainActivity extends Activity {
                 break;
             case V_21:
                 menu.findItem(R.id.action_force_21).setChecked(true);
+                break;
+            case V_19:
+                menu.findItem(R.id.action_force_19).setChecked(true);
                 break;
             case V_14:
                 menu.findItem(R.id.action_force_14).setChecked(true);
@@ -118,6 +126,9 @@ public class MainActivity extends Activity {
                 return true;
             case R.id.action_force_21:
                 mJobManager.forceApi(JobApi.V_21);
+                return true;
+            case R.id.action_force_19:
+                mJobManager.forceApi(JobApi.V_19);
                 return true;
             case R.id.action_force_14:
                 mJobManager.forceApi(JobApi.V_14);
