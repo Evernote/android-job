@@ -1,3 +1,7 @@
+## 1.1.0 (TODO: 2016-08-09)
+
+* TODO: N support
+
 ## 1.0.11 (2016-08-09)
 
 * Fix overflow for too large execution windows
