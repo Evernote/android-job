@@ -69,15 +69,20 @@ public class MainActivity extends Activity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
-        if (JobApi.V_14.isSupported(this)) {
-            menu.findItem(R.id.action_force_14).setChecked(false);
+        if (JobApi.V_24.isSupported(this)) {
+            menu.findItem(R.id.action_force_24).setChecked(false);
         } else {
-            menu.findItem(R.id.action_force_14).setVisible(false);
+            menu.findItem(R.id.action_force_24).setVisible(false);
         }
         if (JobApi.V_21.isSupported(this)) {
             menu.findItem(R.id.action_force_21).setChecked(false);
         } else {
             menu.findItem(R.id.action_force_21).setVisible(false);
+        }
+        if (JobApi.V_14.isSupported(this)) {
+            menu.findItem(R.id.action_force_14).setChecked(false);
+        } else {
+            menu.findItem(R.id.action_force_14).setVisible(false);
         }
         if (JobApi.GCM.isSupported(this)) {
             menu.findItem(R.id.action_force_gcm).setChecked(false);
@@ -86,6 +91,9 @@ public class MainActivity extends Activity {
         }
 
         switch (mJobManager.getApi()) {
+            case V_24:
+                menu.findItem(R.id.action_force_24).setChecked(true);
+                break;
             case V_21:
                 menu.findItem(R.id.action_force_21).setChecked(true);
                 break;
@@ -105,6 +113,9 @@ public class MainActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_force_24:
+                mJobManager.forceApi(JobApi.V_24);
+                return true;
             case R.id.action_force_21:
                 mJobManager.forceApi(JobApi.V_21);
                 return true;

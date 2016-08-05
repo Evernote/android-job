@@ -34,6 +34,7 @@ import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.v14.JobProxy14;
 import com.evernote.android.job.v21.JobProxy21;
+import com.evernote.android.job.v24.JobProxy24;
 import com.google.android.gms.gcm.GcmNetworkManager;
 
 /**
@@ -42,6 +43,10 @@ import com.google.android.gms.gcm.GcmNetworkManager;
  * @author rwondratschek
  */
 public enum JobApi {
+    /**
+     * Uses the {@link JobScheduler} for scheduling jobs.
+     */
+    V_24,
     /**
      * Uses the {@link JobScheduler} for scheduling jobs.
      */
@@ -59,6 +64,8 @@ public enum JobApi {
 
     public boolean isSupported(Context context) {
         switch (this) {
+            case V_24:
+                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
             case V_21:
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
             case V_14:
@@ -72,6 +79,8 @@ public enum JobApi {
 
     public JobProxy createProxy(Context context) {
         switch (this) {
+            case V_24:
+                return new JobProxy24(context);
             case V_21:
                 return new JobProxy21(context);
             case V_14:
@@ -91,7 +100,9 @@ public enum JobApi {
     }
 
     public static JobApi getDefault(Context context) {
-        if (V_21.isSupported(context)) {
+        if (V_24.isSupported(context)) {
+            return V_24;
+        } else if (V_21.isSupported(context)) {
             return V_21;
         } else if (GCM.isSupported(context)) {
             return GCM;

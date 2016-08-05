@@ -49,12 +49,18 @@ import java.util.List;
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class JobProxy21 implements JobProxy {
 
-    private static final CatLog CAT = new JobCat("JobProxy21");
+    private static final String TAG = "JobProxy21";
 
-    private final Context mContext;
+    protected final Context mContext;
+    protected final CatLog mCat;
 
     public JobProxy21(Context context) {
+        this(context, TAG);
+    }
+
+    protected JobProxy21(Context context, String logTag) {
         mContext = context;
+        mCat = new JobCat(logTag);
     }
 
     @Override
@@ -72,11 +78,11 @@ public class JobProxy21 implements JobProxy {
         try {
             scheduleResult = getJobScheduler().schedule(jobInfo);
         } catch (Exception e) {
-            CAT.e(e);
+            mCat.e(e);
             scheduleResult = JobScheduler.RESULT_FAILURE;
         }
 
-        CAT.d("Schedule one-off jobInfo %s, %s, start %s, end %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
+        mCat.d("Schedule one-off jobInfo %s, %s, start %s, end %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
                 request, JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
     }
 
@@ -94,11 +100,11 @@ public class JobProxy21 implements JobProxy {
         try {
             scheduleResult = getJobScheduler().schedule(jobInfo);
         } catch (Exception e) {
-            CAT.e(e);
+            mCat.e(e);
             scheduleResult = JobScheduler.RESULT_FAILURE;
         }
 
-        CAT.d("Schedule periodic jobInfo %s, %s, interval %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
+        mCat.d("Schedule periodic jobInfo %s, %s, interval %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
                 request, JobUtil.timeToString(request.getIntervalMs()));
     }
 
@@ -108,7 +114,7 @@ public class JobProxy21 implements JobProxy {
             getJobScheduler().cancel(jobId);
         } catch (Exception e) {
             // https://gist.github.com/vRallev/5d48a4a8e8d05067834e
-            CAT.e(e);
+            mCat.e(e);
         }
     }
 
@@ -119,10 +125,11 @@ public class JobProxy21 implements JobProxy {
             pendingJobs = getJobScheduler().getAllPendingJobs();
         } catch (Exception e) {
             // it's possible that this throws an exception, see https://gist.github.com/vRallev/a59947dd3932d2642641
-            CAT.e(e);
+            mCat.e(e);
             return false;
         }
 
+        //noinspection ConstantConditions
         if (pendingJobs == null || pendingJobs.isEmpty()) {
             return false;
         }

@@ -6,6 +6,10 @@
 
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/action_force_24"
+            android:title="v24"
+            app:showAsAction="never"/>
+        <item
             android:id="@+id/action_force_21"
             android:title="v21"
             app:showAsAction="never"/>
