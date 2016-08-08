@@ -175,15 +175,19 @@ public abstract class Job {
      */
     protected boolean isRequirementNetworkTypeMet() {
         JobRequest.NetworkType requirement = getParams().getRequest().requiredNetworkType();
+        if (requirement == JobRequest.NetworkType.ANY) {
+            return true;
+        }
+
+        JobRequest.NetworkType current = Device.getNetworkType(getContext());
+
         switch (requirement) {
-            case ANY:
-                return true;
-            case UNMETERED:
-                JobRequest.NetworkType current = Device.getNetworkType(getContext());
-                return JobRequest.NetworkType.UNMETERED.equals(current);
             case CONNECTED:
-                current = Device.getNetworkType(getContext());
-                return !JobRequest.NetworkType.ANY.equals(current);
+                return current != JobRequest.NetworkType.ANY;
+            case NOT_ROAMING:
+                return current == JobRequest.NetworkType.NOT_ROAMING || current == JobRequest.NetworkType.UNMETERED;
+            case UNMETERED:
+                return current == JobRequest.NetworkType.UNMETERED;
             default:
                 throw new IllegalStateException("not implemented");
         }

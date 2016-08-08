@@ -34,7 +34,9 @@ import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.PowerManager;
+import android.support.annotation.NonNull;
 import android.support.v4.net.ConnectivityManagerCompat;
+import android.telephony.TelephonyManager;
 
 import com.evernote.android.job.JobRequest;
 
@@ -81,6 +83,7 @@ public final class Device {
         }
     }
 
+    @NonNull
     public static JobRequest.NetworkType getNetworkType(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
@@ -88,7 +91,12 @@ public final class Device {
             return JobRequest.NetworkType.ANY;
         }
 
+        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        if (telephonyManager != null && telephonyManager.isNetworkRoaming()) {
+            return JobRequest.NetworkType.CONNECTED;
+        }
+
         boolean metered = ConnectivityManagerCompat.isActiveNetworkMetered(connectivityManager);
-        return metered ? JobRequest.NetworkType.CONNECTED : JobRequest.NetworkType.UNMETERED;
+        return metered ? JobRequest.NetworkType.NOT_ROAMING : JobRequest.NetworkType.UNMETERED;
     }
 }

@@ -139,6 +139,8 @@ public class JobProxyGcm implements JobProxy {
                 return Task.NETWORK_STATE_CONNECTED;
             case UNMETERED:
                 return Task.NETWORK_STATE_UNMETERED;
+            case NOT_ROAMING:
+                return Task.NETWORK_STATE_UNMETERED; // use as fallback, NOT_ROAMING not supported
             default:
                 throw new IllegalStateException("not implemented");
         }

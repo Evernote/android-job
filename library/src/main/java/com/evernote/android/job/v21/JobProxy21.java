@@ -159,6 +159,8 @@ public class JobProxy21 implements JobProxy {
                 return JobInfo.NETWORK_TYPE_ANY;
             case UNMETERED:
                 return JobInfo.NETWORK_TYPE_UNMETERED;
+            case NOT_ROAMING:
+                return JobInfo.NETWORK_TYPE_UNMETERED; // use unmetered here, is overwritten in v24
             default:
                 throw new IllegalStateException("not implemented");
         }

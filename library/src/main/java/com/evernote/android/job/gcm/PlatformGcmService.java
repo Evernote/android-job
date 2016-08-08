@@ -25,13 +25,12 @@
  */
 package com.evernote.android.job.gcm;
 
-import com.google.android.gms.gcm.GcmNetworkManager;
-import com.google.android.gms.gcm.GcmTaskService;
-import com.google.android.gms.gcm.TaskParams;
-
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
+import com.google.android.gms.gcm.GcmNetworkManager;
+import com.google.android.gms.gcm.GcmTaskService;
+import com.google.android.gms.gcm.TaskParams;
 
 /**
  * @author rwondratschek

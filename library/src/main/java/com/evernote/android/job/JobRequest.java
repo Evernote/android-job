@@ -908,6 +908,10 @@ public final class JobRequest {
         /**
          * Network must be connected and unmetered.
          */
-        UNMETERED
+        UNMETERED,
+        /**
+         * Network must be connected and not roaming, but can be metered.
+         */
+        NOT_ROAMING
     }
 }

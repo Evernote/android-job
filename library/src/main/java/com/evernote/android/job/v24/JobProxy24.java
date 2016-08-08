@@ -29,6 +29,7 @@ import android.annotation.TargetApi;
 import android.app.job.JobInfo;
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.NonNull;
 
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.v21.JobProxy21;
@@ -65,5 +66,15 @@ public class JobProxy24 extends JobProxy21 {
     @Override
     protected JobInfo.Builder createBuilderPeriodic(JobInfo.Builder builder, long intervalMs, long flexMs) {
         return builder.setPeriodic(intervalMs, flexMs);
+    }
+
+    @Override
+    protected int convertNetworkType(@NonNull JobRequest.NetworkType networkType) {
+        switch (networkType) {
+            case NOT_ROAMING:
+                return JobInfo.NETWORK_TYPE_NOT_ROAMING;
+            default:
+                return super.convertNetworkType(networkType);
+        }
     }
 }
