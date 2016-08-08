@@ -42,9 +42,10 @@ public final class JobBootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         /*
-         * We don't need to do anything. This receiver causes the app to be loaded. In the onCreate()
-         * method of the Application object we initialize the JobManager. There we reschedule tasks
-         * if necessary.
+         * Create the job manager. We may need to reschedule jobs and some applications aren't initializing the
+         * manager in Application.onCreate(). It may happen that some jobs can't be created if the JobCreator
+         * wasn't registered, yet. Apps / Libraries need to figure out how to solve this themselves.
          */
+        JobManager.create(context);
     }
 }
