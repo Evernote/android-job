@@ -73,18 +73,32 @@ public final class JobRequest {
 
     /**
      * The minimum interval of a periodic job. Specifying a smaller interval will result in an exception.
+     *
+     * <br>
+     * <br>
+     *
+     * This limit comes from the {@code JobScheduler} starting with Android Nougat. You can read
+     * <a href="https://github.com/evernote/android-job/blob/master/FAQ.md">here</a> more about
+     * the limit.
+     *
      * @see Builder#setPeriodic(long)
      * @see Builder#setPeriodic(long, long)
      */
-    public static final long MIN_INTERVAL = 60_000L;
-    // TODO: double check values with final N release, JobInfo.getMinPeriodMillis() returns 15min, kinda eh
-    // JobInfo.getMinFlexMillis() returns 5min, more eh
+    public static final long MIN_INTERVAL = TimeUnit.MINUTES.toMillis(15);
 
     /**
      * The minimum flex of a periodic job. Specifying a smaller flex will result in an exception.
+     *
+     * <br>
+     * <br>
+     *
+     * This limit comes from the {@code JobScheduler} starting with Android Nougat. You can read
+     * <a href="https://github.com/evernote/android-job/blob/master/FAQ.md">here</a> more about
+     * the limit.
+     *
      * @see Builder#setPeriodic(long, long)
      */
-    public static final long MIN_FLEX = 5_000L;
+    public static final long MIN_FLEX = TimeUnit.MINUTES.toMillis(5);
 
     private static final long WINDOW_THRESHOLD_WARNING = Long.MAX_VALUE / 3;
     private static final long WINDOW_THRESHOLD_MAX = (Long.MAX_VALUE / 3) * 2;
@@ -746,7 +760,7 @@ public final class JobRequest {
          * with this function. Since {@link Job.Result#RESCHEDULE} is ignored for periodic jobs,
          * setting a back-off criteria is illegal as well.
          *
-         * @param intervalMs The job should run at most once every {@code intervalMs}. The minimum value is {@code 60,000ms}.
+         * @param intervalMs The job should run at most once every {@code intervalMs}. The minimum value is {@code 15min}.
          */
         public Builder setPeriodic(long intervalMs) {
             return setPeriodic(intervalMs, intervalMs);
@@ -765,8 +779,8 @@ public final class JobRequest {
          * Instead you set an interval with this function. Since {@link Job.Result#RESCHEDULE} is ignored for
          * periodic jobs, setting a back-off criteria is illegal as well.
          *
-         * @param intervalMs The job should run at most once every {@code intervalMs}. The minimum value is {@code 60,000ms}.
-         * @param flexMs How close to the end of the period the job should run. The minimum value is {@code 5,000ms}.
+         * @param intervalMs The job should run at most once every {@code intervalMs}. The minimum value is {@code 15min}.
+         * @param flexMs How close to the end of the period the job should run. The minimum value is {@code 5min}.
          * @see #MIN_INTERVAL
          * @see #MIN_FLEX
          */

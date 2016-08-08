@@ -209,7 +209,7 @@ public class MainActivity extends Activity {
 
     private void testPeriodic() {
         mLastJobId = new JobRequest.Builder(DemoJob.TAG)
-                .setPeriodic(60_000L, 20_000L)
+                .setPeriodic(JobRequest.MIN_INTERVAL, JobRequest.MIN_FLEX)
                 .setRequiresCharging(mRequiresCharging.isChecked())
                 .setRequiresDeviceIdle(mRequiresDeviceIdle.isChecked())
                 .setRequiredNetworkType(JobRequest.NetworkType.values()[mNetworkTypeSpinner.getSelectedItemPosition()])
