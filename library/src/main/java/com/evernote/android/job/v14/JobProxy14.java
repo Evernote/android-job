@@ -98,6 +98,14 @@ public class JobProxy14 implements JobProxy {
         logScheduled(request);
     }
 
+    protected void plantOneOffFlexSupport(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
+        long triggerAtMs = System.currentTimeMillis() + Common.getAverageDelayMsSupportFlex(request);
+        alarmManager.set(AlarmManager.RTC, triggerAtMs, pendingIntent);
+
+        mCat.d("Scheduled repeating alarm (flex support), %s, interval %s, flex %s", request,
+                JobUtil.timeToString(request.getIntervalMs()), JobUtil.timeToString(request.getFlexMs()));
+    }
+
     protected long getTriggerAtMillis(JobRequest request) {
         return System.currentTimeMillis() + Common.getAverageDelayMs(request);
     }
@@ -116,6 +124,23 @@ public class JobProxy14 implements JobProxy {
         }
 
         mCat.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
+    }
+
+    @Override
+    public void plantPeriodicFlexSupport(JobRequest request) {
+        PendingIntent pendingIntent = getPendingIntent(request, false);
+
+        AlarmManager alarmManager = getAlarmManager();
+        if (alarmManager == null) {
+            return;
+        }
+
+        try {
+            plantOneOffFlexSupport(request, alarmManager, pendingIntent);
+        } catch (Exception e) {
+            // https://gist.github.com/vRallev/621b0b76a14ddde8691c
+            mCat.e(e);
+        }
     }
 
     @Override

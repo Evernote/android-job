@@ -53,9 +53,22 @@ public class JobProxy19 extends JobProxy14 {
         long startMs = currentTime + Common.getStartMs(request);
         long lengthMs = Common.getEndMs(request) - Common.getStartMs(request);
 
-        alarmManager.setWindow(AlarmManager.RTC, startMs ,lengthMs, pendingIntent);
+        alarmManager.setWindow(AlarmManager.RTC, startMs, lengthMs, pendingIntent);
 
         mCat.d("Schedule alarm, %s, start %s, end %s", request,
                 JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
+    }
+
+    @Override
+    protected void plantOneOffFlexSupport(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
+        long currentTime = System.currentTimeMillis();
+        long startMs = currentTime + Common.getStartMsSupportFlex(request);
+        long lengthMs = Common.getEndMsSupportFlex(request) - Common.getStartMsSupportFlex(request);
+
+        alarmManager.setWindow(AlarmManager.RTC, startMs, lengthMs, pendingIntent);
+
+        mCat.d("Scheduled repeating alarm (flex support), %s, start %s, end %s, flex %s", request,
+                JobUtil.timeToString(Common.getStartMsSupportFlex(request)), JobUtil.timeToString(Common.getEndMsSupportFlex(request)),
+                JobUtil.timeToString(request.getFlexMs()));
     }
 }

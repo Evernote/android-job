@@ -65,47 +65,38 @@ public class JobProxy21 implements JobProxy {
 
     @Override
     public void plantOneOff(JobRequest request) {
-        JobInfo jobInfo = createBaseBuilder(request)
-                .setMinimumLatency(Common.getStartMs(request))
-                .setOverrideDeadline(Common.getEndMs(request))
-                .setRequiresCharging(request.requiresCharging())
-                .setRequiresDeviceIdle(request.requiresDeviceIdle())
-                .setRequiredNetworkType(convertNetworkType(request.requiredNetworkType()))
-                .setPersisted(request.isPersisted())
-                .build();
+        long startMs = Common.getStartMs(request);
+        long endMs = Common.getEndMs(request);
 
-        int scheduleResult;
-        try {
-            scheduleResult = getJobScheduler().schedule(jobInfo);
-        } catch (Exception e) {
-            mCat.e(e);
-            scheduleResult = JobScheduler.RESULT_FAILURE;
-        }
+        JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request), startMs, endMs).build();
+        int scheduleResult = schedule(jobInfo);
 
-        mCat.d("Schedule one-off jobInfo %s, %s, start %s, end %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
-                request, JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
+        mCat.d("Schedule one-off jobInfo %s, %s, start %s, end %s", scheduleResultToString(scheduleResult),
+                request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs));
     }
 
     @Override
     public void plantPeriodic(JobRequest request) {
-        JobInfo jobInfo = createBaseBuilder(request)
-                .setPeriodic(request.getIntervalMs())
-                .setRequiresCharging(request.requiresCharging())
-                .setRequiresDeviceIdle(request.requiresDeviceIdle())
-                .setRequiredNetworkType(convertNetworkType(request.requiredNetworkType()))
-                .setPersisted(request.isPersisted())
-                .build();
+        long intervalMs = request.getIntervalMs();
+        long flexMs = request.getFlexMs();
 
-        int scheduleResult;
-        try {
-            scheduleResult = getJobScheduler().schedule(jobInfo);
-        } catch (Exception e) {
-            mCat.e(e);
-            scheduleResult = JobScheduler.RESULT_FAILURE;
-        }
+        JobInfo jobInfo = createBuilderPeriodic(createBaseBuilder(request), intervalMs, flexMs).build();
+        int scheduleResult = schedule(jobInfo);
 
-        mCat.d("Schedule periodic jobInfo %s, %s, interval %s", scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure",
-                request, JobUtil.timeToString(request.getIntervalMs()));
+        mCat.d("Schedule periodic jobInfo %s, %s, interval %s, flex %s", scheduleResultToString(scheduleResult),
+                request, JobUtil.timeToString(intervalMs), JobUtil.timeToString(flexMs));
+    }
+
+    @Override
+    public void plantPeriodicFlexSupport(JobRequest request) {
+        long startMs = Common.getStartMsSupportFlex(request);
+        long endMs = Common.getEndMsSupportFlex(request);
+
+        JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request), startMs, endMs).build();
+        int scheduleResult = schedule(jobInfo);
+
+        mCat.d("Schedule periodic (flex support) jobInfo %s, %s, start %s, end %s, flex %s", scheduleResultToString(scheduleResult),
+                request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs), JobUtil.timeToString(request.getFlexMs()));
     }
 
     @Override
@@ -145,7 +136,19 @@ public class JobProxy21 implements JobProxy {
     }
 
     protected JobInfo.Builder createBaseBuilder(JobRequest request) {
-        return new JobInfo.Builder(request.getJobId(), new ComponentName(mContext, PlatformJobService.class));
+        return new JobInfo.Builder(request.getJobId(), new ComponentName(mContext, PlatformJobService.class))
+                .setRequiresCharging(request.requiresCharging())
+                .setRequiresDeviceIdle(request.requiresDeviceIdle())
+                .setRequiredNetworkType(convertNetworkType(request.requiredNetworkType()))
+                .setPersisted(request.isPersisted());
+    }
+
+    protected JobInfo.Builder createBuilderOneOff(JobInfo.Builder builder, long startMs, long endMs) {
+        return builder.setMinimumLatency(startMs).setOverrideDeadline(endMs);
+    }
+
+    protected JobInfo.Builder createBuilderPeriodic(JobInfo.Builder builder, long intervalMs, long flexMs) {
+        return builder.setPeriodic(intervalMs);
     }
 
     protected int convertNetworkType(@NonNull JobRequest.NetworkType networkType) {
@@ -163,5 +166,18 @@ public class JobProxy21 implements JobProxy {
 
     protected final JobScheduler getJobScheduler() {
         return (JobScheduler) mContext.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+    }
+
+    protected final int schedule(JobInfo jobInfo) {
+        try {
+            return getJobScheduler().schedule(jobInfo);
+        } catch (Exception e) {
+            mCat.e(e);
+            return JobScheduler.RESULT_FAILURE;
+        }
+    }
+
+    protected static String scheduleResultToString(int scheduleResult) {
+        return scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure";
     }
 }

@@ -198,7 +198,7 @@ public class MainActivity extends Activity {
         for (JobApi api : JobApi.values()) {
             if (api.isSupported(this)) {
                 mJobManager.forceApi(api);
-                testSimple();
+                testPeriodic();
             } else {
                 Cat.w("%s is not supported", api);
             }
@@ -209,7 +209,7 @@ public class MainActivity extends Activity {
 
     private void testPeriodic() {
         mLastJobId = new JobRequest.Builder(DemoJob.TAG)
-                .setPeriodic(60_000L)
+                .setPeriodic(60_000L, 20_000L)
                 .setRequiresCharging(mRequiresCharging.isChecked())
                 .setRequiresDeviceIdle(mRequiresDeviceIdle.isChecked())
                 .setRequiredNetworkType(JobRequest.NetworkType.values()[mNetworkTypeSpinner.getSelectedItemPosition()])

@@ -48,33 +48,40 @@ public enum JobApi {
     /**
      * Uses the {@link JobScheduler} for scheduling jobs.
      */
-    V_24(true),
+    V_24(true, false),
     /**
      * Uses the {@link JobScheduler} for scheduling jobs.
      */
-    V_21(true),
+    V_21(true, true),
     /**
      * Uses the {@link AlarmManager} for scheduling jobs.
      */
-    V_19(true),
+    V_19(true, true),
     /**
      * Uses the {@link AlarmManager} for scheduling jobs.
      */
-    V_14(false),
+    V_14(false, true),
     /**
      * Uses the {@link GcmNetworkManager} for scheduling jobs.
      */
-    GCM(true);
+    GCM(true, false);
 
     private JobProxy mCachedProxy;
-    private final boolean mSupportsExecutionWindow;
 
-    JobApi(boolean supportsExecutionWindow) {
+    private final boolean mSupportsExecutionWindow;
+    private final boolean mFlexSupport;
+
+    JobApi(boolean supportsExecutionWindow, boolean flexSupport) {
         mSupportsExecutionWindow = supportsExecutionWindow;
+        mFlexSupport = flexSupport;
     }
 
     public boolean supportsExecutionWindow() {
         return mSupportsExecutionWindow;
+    }
+
+    public boolean isFlexSupport() {
+        return mFlexSupport;
     }
 
     public boolean isSupported(Context context) {

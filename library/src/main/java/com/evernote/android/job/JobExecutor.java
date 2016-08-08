@@ -174,7 +174,7 @@ import java.util.concurrent.TimeUnit;
         private void handleResult(Job.Result result) {
             JobRequest request = mJob.getParams().getRequest();
             if (!request.isPeriodic() && Job.Result.RESCHEDULE.equals(result)) {
-                int newJobId = request.reschedule(true);
+                int newJobId = request.reschedule(true, true);
                 mJob.onReschedule(newJobId);
             } else if (request.isPeriodic() && !Job.Result.SUCCESS.equals(result)) {
                 request.incNumFailures();

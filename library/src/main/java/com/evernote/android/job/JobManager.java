@@ -193,7 +193,7 @@ public final class JobManager {
      *
      * @param request The {@link JobRequest} which will be run in the future.
      */
-    public void schedule(JobRequest request) {
+    public void schedule(@NonNull JobRequest request) {
         if (mJobCreatorHolder.isEmpty()) {
             CAT.w("you haven't registered a JobCreator with addJobCreator(), it's likely that your job never will be executed");
         }
@@ -204,12 +204,21 @@ public final class JobManager {
 
         JobProxy.Common.cleanUpOrphanedJob(mContext, request.getJobId());
 
+        JobApi jobApi = request.getJobApi();
+        boolean periodic = request.isPeriodic();
+        boolean flexSupport = periodic && jobApi.isFlexSupport() && request.getFlexMs() < request.getIntervalMs();
+
         request.setScheduledAt(System.currentTimeMillis());
+        request.setFlexSupport(flexSupport);
         mJobStorage.put(request);
 
-        JobProxy proxy = getJobProxy(request);
-        if (request.isPeriodic()) {
-            proxy.plantPeriodic(request);
+        JobProxy proxy = getJobProxy(jobApi);
+        if (periodic) {
+            if (flexSupport) {
+                proxy.plantPeriodicFlexSupport(request);
+            } else {
+                proxy.plantPeriodic(request);
+            }
         } else {
             proxy.plantOneOff(request);
         }
@@ -430,7 +439,11 @@ public final class JobManager {
     }
 
     private JobProxy getJobProxy(JobRequest request) {
-        return request.getJobApi().getCachedProxy(mContext);
+        return getJobProxy(request.getJobApi());
+    }
+
+    private JobProxy getJobProxy(JobApi api) {
+        return api.getCachedProxy(mContext);
     }
 
     private void rescheduleTasksIfNecessary() {

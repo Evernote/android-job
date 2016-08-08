@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     public static final String PREF_FILE_NAME = "evernote_jobs";
     public static final String DATABASE_NAME = PREF_FILE_NAME + ".db";
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
 
     public static final String JOB_TABLE_NAME = "jobs";
 
@@ -77,6 +77,8 @@ import java.util.concurrent.atomic.AtomicInteger;
     public static final String COLUMN_NUM_FAILURES = "numFailures";
     public static final String COLUMN_SCHEDULED_AT = "scheduledAt";
     public static final String COLUMN_TRANSIENT = "isTransient";
+    public static final String COLUMN_FLEX_MS = "flexMs";
+    public static final String COLUMN_FLEX_SUPPORT = "flexSupport";
 
     private static final int CACHE_SIZE = 30;
 
@@ -252,9 +254,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            // with newer versions there should be a smarter way
-            if (oldVersion == 1 && newVersion == 2) {
-                upgradeFrom1To2(db);
+            while (oldVersion < newVersion) {
+                switch (oldVersion) {
+                    case 1:
+                        upgradeFrom1To2(db);
+                        oldVersion++;
+                        break;
+                    case 2:
+                        upgradeFrom2To3(db);
+                        oldVersion++;
+                        break;
+                    default:
+                        throw new IllegalStateException("not implemented");
+                }
             }
         }
 
@@ -276,11 +288,18 @@ import java.util.concurrent.atomic.AtomicInteger;
                     + COLUMN_PERSISTED + " integer, "
                     + COLUMN_NUM_FAILURES + " integer, "
                     + COLUMN_SCHEDULED_AT + " integer, "
-                    + COLUMN_TRANSIENT + " integer);");
+                    + COLUMN_TRANSIENT + " integer, "
+                    + COLUMN_FLEX_MS + " integer, "
+                    + COLUMN_FLEX_SUPPORT + " integer);");
         }
 
         private void upgradeFrom1To2(SQLiteDatabase db) {
             db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_TRANSIENT + " integer;");
+        }
+
+        private void upgradeFrom2To3(SQLiteDatabase db) {
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_FLEX_MS + " integer;");
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_FLEX_SUPPORT + " integer;");
         }
     }
 }

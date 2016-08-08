@@ -408,6 +408,17 @@ public abstract class Job {
         }
 
         /**
+         * Flex time for this job. Only valid if this is a periodic job. The job can execute
+         * at any time in a window of flex length at the end of the period.
+         *
+         * @return How close to the end of an interval a periodic job is allowed to run.
+         * @see JobRequest#getFlexMs()
+         */
+        public long getFlexMs() {
+            return mRequest.getFlexMs();
+        }
+
+        /**
          * Only valid if the job isn't periodic.
          *
          * @return The initial back-off time which is increasing depending on the {@link #getBackoffPolicy()}

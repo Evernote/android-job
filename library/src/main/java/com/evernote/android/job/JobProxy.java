@@ -51,6 +51,8 @@ public interface JobProxy {
 
     void plantPeriodic(JobRequest request);
 
+    void plantPeriodicFlexSupport(JobRequest request);
+
     void cancel(int jobId);
 
     boolean isPlatformJobScheduled(JobRequest request);
@@ -77,6 +79,18 @@ public interface JobProxy {
 
         public static long getAverageDelayMs(JobRequest request) {
             return checkedAdd(getStartMs(request), (getEndMs(request) - getStartMs(request)) / 2);
+        }
+
+        public static long getStartMsSupportFlex(JobRequest request) {
+            return Math.max(1, request.getIntervalMs() - request.getFlexMs());
+        }
+
+        public static long getEndMsSupportFlex(JobRequest request) {
+            return request.getIntervalMs();
+        }
+
+        public static long getAverageDelayMsSupportFlex(JobRequest request) {
+            return checkedAdd(getStartMsSupportFlex(request), (getEndMsSupportFlex(request) - getStartMsSupportFlex(request)) / 2);
         }
 
         private final Context mContext;
@@ -107,7 +121,7 @@ public interface JobProxy {
                 mCat.d("Job %d already finished, %s", mJobId, request);
                 return null;
 
-            } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < 2_000) {
+            } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < JobRequest.MIN_INTERVAL / 2) {
                 mCat.d("Job %d is periodic and just finished, %s", mJobId, request);
                 return null;
 
@@ -128,7 +142,8 @@ public interface JobProxy {
             long waited = System.currentTimeMillis() - request.getScheduledAt();
             String timeWindow;
             if (request.isPeriodic()) {
-                timeWindow = "interval " + JobUtil.timeToString(request.getIntervalMs());
+                timeWindow = String.format(Locale.US, "interval %s, flex %s", JobUtil.timeToString(request.getIntervalMs()),
+                        JobUtil.timeToString(request.getFlexMs()));
             } else if (request.getJobApi().supportsExecutionWindow()) {
                 timeWindow = String.format(Locale.US, "start %s, end %s", JobUtil.timeToString(getStartMs(request)),
                         JobUtil.timeToString(getEndMs(request)));
@@ -175,6 +190,10 @@ public interface JobProxy {
             } finally {
                 if (!request.isPeriodic()) {
                     mJobManager.getJobStorage().remove(request);
+
+                } else if (request.isFlexSupport()) {
+                    mJobManager.getJobStorage().remove(request); // remove, we store the new job in JobManager.schedule()
+                    request.reschedule(false, false);
                 }
             }
         }

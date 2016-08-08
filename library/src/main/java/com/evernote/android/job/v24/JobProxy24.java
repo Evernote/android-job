@@ -26,6 +26,7 @@
 package com.evernote.android.job.v24;
 
 import android.annotation.TargetApi;
+import android.app.job.JobInfo;
 import android.content.Context;
 import android.os.Build;
 
@@ -46,6 +47,12 @@ public class JobProxy24 extends JobProxy21 {
     }
 
     @Override
+    public void plantPeriodicFlexSupport(JobRequest request) {
+        mCat.w("plantPeriodicFlexSupport called although flex is supported");
+        super.plantPeriodicFlexSupport(request);
+    }
+
+    @Override
     public boolean isPlatformJobScheduled(JobRequest request) {
         try {
             return getJobScheduler().getPendingJob(request.getJobId()) != null;
@@ -53,5 +60,10 @@ public class JobProxy24 extends JobProxy21 {
             mCat.e(e);
             return false;
         }
+    }
+
+    @Override
+    protected JobInfo.Builder createBuilderPeriodic(JobInfo.Builder builder, long intervalMs, long flexMs) {
+        return builder.setPeriodic(intervalMs, flexMs);
     }
 }

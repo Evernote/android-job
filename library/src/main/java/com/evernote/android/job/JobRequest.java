@@ -71,6 +71,21 @@ public final class JobRequest {
      */
     public static final NetworkType DEFAULT_NETWORK_TYPE = NetworkType.ANY;
 
+    /**
+     * The minimum interval of a periodic job. Specifying a smaller interval will result in an exception.
+     * @see Builder#setPeriodic(long)
+     * @see Builder#setPeriodic(long, long)
+     */
+    public static final long MIN_INTERVAL = 60_000L;
+    // TODO: double check values with final N release, JobInfo.getMinPeriodMillis() returns 15min, kinda eh
+    // JobInfo.getMinFlexMillis() returns 5min, more eh
+
+    /**
+     * The minimum flex of a periodic job. Specifying a smaller flex will result in an exception.
+     * @see Builder#setPeriodic(long, long)
+     */
+    public static final long MIN_FLEX = 5_000L;
+
     private static final long WINDOW_THRESHOLD_WARNING = Long.MAX_VALUE / 3;
     private static final long WINDOW_THRESHOLD_MAX = (Long.MAX_VALUE / 3) * 2;
 
@@ -82,6 +97,7 @@ public final class JobRequest {
     private int mNumFailures;
     private long mScheduledAt;
     private boolean mTransient;
+    private boolean mFlexSupport;
 
     private JobRequest(Builder builder) {
         mBuilder = builder;
@@ -154,6 +170,16 @@ public final class JobRequest {
      */
     public long getIntervalMs() {
         return mBuilder.mIntervalMs;
+    }
+
+    /**
+     * Flex time for this job. Only valid if this is a periodic job. The job can execute
+     * at any time in a window of flex length at the end of the period.
+     *
+     * @return How close to the end of an interval a periodic job is allowed to run.
+     */
+    public long getFlexMs() {
+        return mBuilder.mFlexMs;
     }
 
     /**
@@ -262,6 +288,14 @@ public final class JobRequest {
         return mTransient;
     }
 
+    /*package*/ boolean isFlexSupport() {
+        return mFlexSupport;
+    }
+
+    /*package*/ void setFlexSupport(boolean flexSupport) {
+        mFlexSupport = flexSupport;
+    }
+
     /**
      * Convenience method. Internally it calls {@link JobManager#schedule(JobRequest)}
      * and {@link #getJobId()} for this request.
@@ -295,8 +329,8 @@ public final class JobRequest {
         return builder;
     }
 
-    /*package*/ int reschedule(boolean failure) {
-        JobRequest newRequest = new Builder(this, true).build();
+    /*package*/ int reschedule(boolean failure, boolean newJob) {
+        JobRequest newRequest = new Builder(this, newJob).build();
         if (failure) {
             newRequest.mNumFailures = mNumFailures + 1;
         }
@@ -323,6 +357,7 @@ public final class JobRequest {
         contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mNumFailures);
         contentValues.put(JobStorage.COLUMN_SCHEDULED_AT, mScheduledAt);
         contentValues.put(JobStorage.COLUMN_TRANSIENT, mTransient);
+        contentValues.put(JobStorage.COLUMN_FLEX_SUPPORT, mFlexSupport);
         return contentValues;
     }
 
@@ -331,6 +366,7 @@ public final class JobRequest {
         request.mNumFailures = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_NUM_FAILURES));
         request.mScheduledAt = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_SCHEDULED_AT));
         request.mTransient = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_TRANSIENT)) > 0;
+        request.mFlexSupport = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_FLEX_SUPPORT)) > 0;
 
         JobPreconditions.checkArgumentNonnegative(request.mNumFailures, "failure count can't be negative");
         JobPreconditions.checkArgumentNonnegative(request.mScheduledAt, "scheduled at can't be negative");
@@ -373,6 +409,7 @@ public final class JobRequest {
         private BackoffPolicy mBackoffPolicy;
 
         private long mIntervalMs;
+        private long mFlexMs;
 
         private boolean mRequirementsEnforced;
         private boolean mRequiresCharging;
@@ -424,6 +461,7 @@ public final class JobRequest {
             mBackoffPolicy = request.getBackoffPolicy();
 
             mIntervalMs = request.getIntervalMs();
+            mFlexMs = request.getFlexMs();
 
             mRequirementsEnforced = request.requirementsEnforced();
             mRequiresCharging = request.requiresCharging();
@@ -453,6 +491,7 @@ public final class JobRequest {
             }
 
             mIntervalMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_INTERVAL_MS));
+            mFlexMs = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_FLEX_MS));
 
             mRequirementsEnforced = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIREMENTS_ENFORCED)) > 0;
             mRequiresCharging = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIRES_CHARGING)) > 0;
@@ -481,6 +520,7 @@ public final class JobRequest {
             contentValues.put(JobStorage.COLUMN_BACKOFF_POLICY, mBackoffPolicy.toString());
 
             contentValues.put(JobStorage.COLUMN_INTERVAL_MS, mIntervalMs);
+            contentValues.put(JobStorage.COLUMN_FLEX_MS, mFlexMs);
 
             contentValues.put(JobStorage.COLUMN_REQUIREMENTS_ENFORCED, mRequirementsEnforced);
             contentValues.put(JobStorage.COLUMN_REQUIRES_CHARGING, mRequiresCharging);
@@ -696,7 +736,8 @@ public final class JobRequest {
         }
 
         /**
-         * This job should run one time during each interval. As default a job isn't periodic.
+         * Specify that this job should recur with the provided interval, not more than once per period. As
+         * default a job isn't periodic.
          *
          * <br>
          * <br>
@@ -705,10 +746,33 @@ public final class JobRequest {
          * with this function. Since {@link Job.Result#RESCHEDULE} is ignored for periodic jobs,
          * setting a back-off criteria is illegal as well.
          *
-         * @param intervalMs The job should at most once every {@code intervalMs}.
+         * @param intervalMs The job should run at most once every {@code intervalMs}. The minimum value is {@code 60,000ms}.
          */
         public Builder setPeriodic(long intervalMs) {
-            mIntervalMs = JobPreconditions.checkArgumentInRange(intervalMs, 60_000L, Long.MAX_VALUE, "intervalMs");
+            return setPeriodic(intervalMs, intervalMs);
+        }
+
+        /**
+         * Specify that this job should recur with the provided interval and flex, not more than once per period.
+         * The flex controls how close to the end of a period the job can run. For example, specifying an interval
+         * of 60 seconds and a flex of 15 seconds will allow the scheduler to determine the best moment between
+         * the 45th and 60th second at which to execute your job.
+         *
+         * <br>
+         * <br>
+         *
+         * As default a job isn't periodic. It isn't allowed to specify a time window for a periodic job.
+         * Instead you set an interval with this function. Since {@link Job.Result#RESCHEDULE} is ignored for
+         * periodic jobs, setting a back-off criteria is illegal as well.
+         *
+         * @param intervalMs The job should run at most once every {@code intervalMs}. The minimum value is {@code 60,000ms}.
+         * @param flexMs How close to the end of the period the job should run. The minimum value is {@code 5,000ms}.
+         * @see #MIN_INTERVAL
+         * @see #MIN_FLEX
+         */
+        public Builder setPeriodic(long intervalMs, long flexMs) {
+            mIntervalMs = JobPreconditions.checkArgumentInRange(intervalMs, MIN_INTERVAL, Long.MAX_VALUE, "intervalMs");
+            mFlexMs = JobPreconditions.checkArgumentInRange(flexMs, MIN_FLEX, mIntervalMs, "flexMs");
             return this;
         }
 
@@ -773,7 +837,8 @@ public final class JobRequest {
             JobPreconditions.checkNotNull(mNetworkType);
 
             if (mIntervalMs > 0) {
-                JobPreconditions.checkArgumentInRange(mIntervalMs, 60_000L, Long.MAX_VALUE, "intervalMs");
+                JobPreconditions.checkArgumentInRange(mIntervalMs, MIN_INTERVAL, Long.MAX_VALUE, "intervalMs");
+                JobPreconditions.checkArgumentInRange(mFlexMs, MIN_FLEX, mIntervalMs, "flexMs");
             }
 
             if (mExact && mIntervalMs > 0) {
