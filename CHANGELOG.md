@@ -1,6 +1,13 @@
-## 1.1.0 (TODO: 2016-08-09)
+## 1.1.0-SNAPSHOT (2016-08-09)
 
-* TODO: N support
+* Bump SDK version to 24
+* Add option to specify flex parameter for periodic jobs
+** Add support for flex parameter with GCM proxy
+** Add API 24 proxy with support for flex parameter
+** Add a flex support mode for all other APIs
+* Add API 19 proxy supporting an execution window
+* Add NOT_ROAMING network type
+* Adjust minimum interval for periodic jobs
 
 ## 1.0.11 (2016-08-09)
 

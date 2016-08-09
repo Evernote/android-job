@@ -1,10 +1,8 @@
-Android-Job
-============
+# Android-Job
 
 An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post][1] why you should prefer this library than each separate API.
 
-Download
---------
+## Download
 
 Download [the latest version][2] or grab via Gradle:
 
@@ -18,8 +16,22 @@ If you didn't turn off the manifest merger from the Gradle build tools, then no 
 
 You can read the [JavaDoc here][4].
 
-Usage
------
+#### Android Nougat compatible preview
+
+Please give the latest N compatible version a try and share your feedback or create an issue. You find all changes [here](CHANGELOG.md). **Warning:** Don't publish your app with the snapshot build, yet. The database of the jobs has changed and can't be reverted.
+
+```groovy
+repositories {
+    maven {
+        url "https://oss.sonatype.org/content/groups/public/"
+    }
+}
+
+dependencies {
+    compile 'com.evernote:android-job:1.1.0-SNAPSHOT'
+}
+
+## Usage
 
 The class `JobManager` serves as entry point. Your jobs need to extend the class `Job`. Create a `JobRequest` with the corresponding builder class and schedule this request with the `JobManager`.
 
@@ -74,8 +86,7 @@ public static void scheduleJob() {
 }
 ```
 
-Advanced
---------
+## Advanced
 
 The `JobRequest.Builder` class has many extra options, e.g. you can specify a required network connection, make the job periodic, pass some extras with a bundle, restore the job after a reboot or run the job at an exact time.
 
@@ -164,7 +175,7 @@ By default the API for the `GcmNetworkManager` is disabled. In order to use it f
 
 ```groovy
 dependencies {
-    compile 'com.google.android.gms:play-services-gcm:8.4.0' // or newer
+    compile 'com.google.android.gms:play-services-gcm:9.4.0' // or newer
 }
 ```
 
@@ -183,13 +194,11 @@ dependencies {
 
 The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules][5] in your configuration.
 
-FAQ
----
+## FAQ
 
 See [here](FAQ.md).
 
-License
--------
+## License
 
     Copyright (c) 2007-2016 by Evernote Corporation, All rights reserved.
 
