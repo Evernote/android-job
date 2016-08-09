@@ -438,6 +438,12 @@ public final class JobManager {
         return mContext;
     }
 
+    /*package*/ void destroy() {
+        synchronized (JobManager.class) {
+            instance = null;
+        }
+    }
+
     private JobProxy getJobProxy(JobRequest request) {
         return getJobProxy(request.getJobApi());
     }

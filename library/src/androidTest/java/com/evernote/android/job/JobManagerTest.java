@@ -1,17 +1,14 @@
-package com.evernote.android.job.test;
+package com.evernote.android.job;
 
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 
-import com.evernote.android.job.Job;
-import com.evernote.android.job.JobCreator;
-import com.evernote.android.job.JobManager;
-import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobApi;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,13 +23,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JobManagerTest {
 
     @BeforeClass
-    public static void createJobManager() {
+    public static void beforeClass() {
         JobManager.create(InstrumentationRegistry.getContext()).addJobCreator(new JobCreator() {
             @Override
             public Job create(String tag) {
                 return new TestJob();
             }
         });
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        JobManager.instance().destroy();
     }
 
     @Test

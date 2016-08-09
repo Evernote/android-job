@@ -1,16 +1,16 @@
-package com.evernote.android.job.test;
+package com.evernote.android.job;
 
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 
-import com.evernote.android.job.Job;
-import com.evernote.android.job.JobCreator;
-import com.evernote.android.job.JobManager;
-import com.evernote.android.job.JobRequest;
+import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,13 +25,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JobRequestTest {
 
     @BeforeClass
-    public static void createJobManager() {
+    public static void beforeClass() {
         JobManager.create(InstrumentationRegistry.getContext()).addJobCreator(new JobCreator() {
             @Override
             public Job create(String tag) {
                 return new TestJob();
             }
         });
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        JobManager.instance().destroy();
+    }
+
+    @Before
+    public void beforeTest() {
+        JobManager.instance().cancelAll();
+    }
+
+    @After
+    public void afterTest() {
+        JobManager.instance().cancelAll();
     }
 
     @Test
@@ -63,8 +78,9 @@ public class JobRequestTest {
 
     @Test
     public void testPeriodic() {
+        long interval = JobRequest.MIN_INTERVAL * 5;
         JobRequest request = getBuilder()
-                .setPeriodic(60_000L)
+                .setPeriodic(interval)
                 .setExtras(new PersistableBundleCompat())
                 .setPersisted(true)
                 .build();
@@ -72,8 +88,10 @@ public class JobRequestTest {
         assertThat(request.getJobId()).isGreaterThan(0);
         assertThat(request.getTag()).isEqualTo(TestJob.TAG);
         assertThat(request.isPersisted()).isTrue();
-        assertThat(request.getIntervalMs()).isEqualTo(60_000L);
+        assertThat(request.getIntervalMs()).isEqualTo(interval);
+        assertThat(request.getFlexMs()).isEqualTo(interval);
         assertThat(request.isPeriodic()).isTrue();
+        assertThat(request.isFlexSupport()).isFalse();
 
         assertThat(request.getStartMs()).isNegative();
         assertThat(request.getEndMs()).isNegative();
@@ -85,6 +103,25 @@ public class JobRequestTest {
         assertThat(request.requirementsEnforced()).isFalse();
         assertThat(request.requiresCharging()).isFalse();
         assertThat(request.requiresDeviceIdle()).isFalse();
+    }
+
+    @Test
+    public void testFlex() {
+        long interval = JobRequest.MIN_INTERVAL * 5;
+        long flex = JobRequest.MIN_FLEX * 5;
+        JobRequest request = getBuilder()
+                .setPeriodic(interval, flex)
+                .build();
+
+        JobManager.instance().forceApi(JobApi.V_14);
+        JobManager.instance().schedule(request);
+
+        assertThat(request.getJobId()).isGreaterThan(0);
+        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
+        assertThat(request.getIntervalMs()).isEqualTo(interval);
+        assertThat(request.getFlexMs()).isEqualTo(flex);
+        assertThat(request.isPeriodic()).isTrue();
+        assertThat(request.isFlexSupport()).isTrue();
     }
 
     @Test
@@ -129,7 +166,14 @@ public class JobRequestTest {
     @Test(expected = Exception.class)
     public void testPeriodicTooLittleInterval() {
         getBuilder()
-                .setPeriodic(59_999L)
+                .setPeriodic(JobRequest.MIN_INTERVAL - 1)
+                .build();
+    }
+
+    @Test(expected = Exception.class)
+    public void testPeriodicTooLittleFlex() {
+        getBuilder()
+                .setPeriodic(JobRequest.MIN_FLEX - 1)
                 .build();
     }
 
