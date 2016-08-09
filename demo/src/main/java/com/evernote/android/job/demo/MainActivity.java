@@ -158,7 +158,7 @@ public class MainActivity extends Activity {
         extras.putString("key", "Hello world");
 
         mLastJobId = new JobRequest.Builder(DemoJob.TAG)
-                .setExecutionWindow(3_000L, 4_000L)
+                .setExecutionWindow(Long.MAX_VALUE / 2, Long.MAX_VALUE / 3 * 2)
                 .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.LINEAR)
                 .setRequiresCharging(mRequiresCharging.isChecked())
                 .setRequiresDeviceIdle(mRequiresDeviceIdle.isChecked())

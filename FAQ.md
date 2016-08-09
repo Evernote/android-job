@@ -67,3 +67,23 @@ public class JobSample extends Job {
     }
 }
 ```
+
+### Do NOT use `Long.MAX_VALUE` as argument!
+
+Don't use `Long.MAX_VALUE` as argument for the execution window. The `AlarmManager` doesn't allow setting a start date, instead the execution time is the arithmetic average between start and end date.
+
+Your job might work as expected on Android 5+, but maybe won't run at all on older devices.
+
+```java
+// bad, execution time on Android 4.X = startMs + (endMs - startMs) / 2
+new JobRequest.Builder(TAG)
+        .setExecutionWindow(3_000L, Long.MAX_VALUE)
+        .build()
+        .schedule();
+
+// better, execution time on Android 4.X is 2 days
+new JobRequest.Builder(TAG)
+        .setExecutionWindow(TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS.toMillis(3))
+        .build()
+        .schedule();
+```
