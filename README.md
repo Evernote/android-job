@@ -30,6 +30,7 @@ repositories {
 dependencies {
     compile 'com.evernote:android-job:1.1.0-SNAPSHOT'
 }
+```
 
 ## Usage
 
@@ -113,7 +114,7 @@ private void scheduleAdvancedJob() {
 
 private void schedulePeriodicJob() {
     int jobId = new JobRequest.Builder(DemoJob.TAG)
-            .setPeriodic(60_000L)
+            .setPeriodic(TimeUnit.MINUTES.toMillis(15), TimeUnit.MINUTES.toMillis(5))
             .setPersisted(true)
             .build()
             .schedule();
