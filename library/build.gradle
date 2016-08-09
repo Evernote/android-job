@@ -14,6 +14,8 @@ dependencies {
     androidTestCompile 'com.android.support.test:rules:0.5'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
     androidTestCompile 'com.squareup.assertj:assertj-android:1.1.1'
+
+    androidTestCompile 'com.facebook.stetho:stetho:1.3.1'
 }
 
 android {

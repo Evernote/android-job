@@ -82,6 +82,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     private static final int CACHE_SIZE = 30;
 
+    private static final String WHERE_NOT_TRANSIENT = "ifnull(" + COLUMN_TRANSIENT + ", 0)<=0";
+
     private final SharedPreferences mPreferences;
     private final JobCacheId mCacheId;
 
@@ -132,10 +134,10 @@ import java.util.concurrent.atomic.AtomicInteger;
             String where; // filter transient requests
             String[] args;
             if (TextUtils.isEmpty(tag)) {
-                where = includeTransient ? null : (COLUMN_TRANSIENT + "<=0");
+                where = includeTransient ? null : WHERE_NOT_TRANSIENT;
                 args = null;
             } else {
-                where = includeTransient ? "" : (COLUMN_TRANSIENT + "<=0 AND ");
+                where = includeTransient ? "" : (WHERE_NOT_TRANSIENT + " AND ");
                 where += COLUMN_TAG + "=?";
                 args = new String[]{tag};
             }
@@ -300,6 +302,14 @@ import java.util.concurrent.atomic.AtomicInteger;
         private void upgradeFrom2To3(SQLiteDatabase db) {
             db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_FLEX_MS + " integer;");
             db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_FLEX_SUPPORT + " integer;");
+
+            // adjust interval to minimum value if necessary
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COLUMN_INTERVAL_MS, JobRequest.MIN_INTERVAL);
+            db.update(JOB_TABLE_NAME, contentValues, COLUMN_INTERVAL_MS + ">0 AND " + COLUMN_INTERVAL_MS + "<" + JobRequest.MIN_INTERVAL, new String[0]);
+
+            // copy interval into flex column, that's the default value and the flex support mode is not required
+            db.execSQL("update " + JOB_TABLE_NAME + " set " + COLUMN_FLEX_MS + " = " + COLUMN_INTERVAL_MS + ";");
         }
     }
 }

@@ -6,6 +6,7 @@ import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 
 import com.evernote.android.job.util.JobApi;
+import com.facebook.stetho.Stetho;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -24,6 +25,8 @@ public class JobManagerTest {
 
     @BeforeClass
     public static void beforeClass() {
+        Stetho.initializeWithDefaults(InstrumentationRegistry.getContext());
+
         JobManager.create(InstrumentationRegistry.getContext()).addJobCreator(new JobCreator() {
             @Override
             public Job create(String tag) {
