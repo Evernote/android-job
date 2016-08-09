@@ -514,7 +514,7 @@ public final class JobRequest {
          *
          * The maximum value for each argument is {@code Long.MAX_VALUE / 3 * 2} (about 53_375_995_583 days).
          * Otherwise some APIs schedule the job immediately. No exception is thrown if an argument is greater
-         * then the maximum value, the arguments are silently being reduced.
+         * than the maximum value, the arguments are silently being clamped.
          *
          * <br>
          * <br>
@@ -522,7 +522,7 @@ public final class JobRequest {
          * <b>NOTE:</b> It's not recommended to have such big execution windows. The {@code AlarmManager} used
          * as fallback API doesn't allow setting a start date. Although being inexact, the execution time is
          * the arithmetic average of {@code startMs} and {@code endMs}. The result could be that your job never
-         * runs on pre Android 5.0 devices, if one argument is too big.
+         * runs on pre Android 5.0 devices, if one argument is too large.
          *
          * @param startMs Earliest point from which your task is eligible to run.
          * @param endMs Latest point at which your task must be run.
@@ -678,8 +678,8 @@ public final class JobRequest {
          * <br>
          *
          * The maximum value of the argument is {@code Long.MAX_VALUE / 3 * 2} (about 53_375_995_583 days).
-         * No exception is thrown if the argument is greater then the maximum value, the argument is
-         * silently being reduced.
+         * No exception is thrown if the argument is greater than the maximum value, the argument is
+         * silently being clamped.
          *
          * @param exactMs The exact offset when the job should run from when the job was scheduled.
          * @see AlarmManager#setExact(int, long, android.app.PendingIntent)
@@ -688,7 +688,7 @@ public final class JobRequest {
         public Builder setExact(long exactMs) {
             mExact = true;
             if (exactMs > WINDOW_THRESHOLD_MAX) {
-                Cat.i("exactMs reduced from %d days to %d days", TimeUnit.MILLISECONDS.toDays(exactMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
+                Cat.i("exactMs clamped from %d days to %d days", TimeUnit.MILLISECONDS.toDays(exactMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
                 exactMs = WINDOW_THRESHOLD_MAX;
             }
 
@@ -798,7 +798,7 @@ public final class JobRequest {
             }
 
             if (mIntervalMs <= 0 && (mStartMs > WINDOW_THRESHOLD_WARNING || mEndMs > WINDOW_THRESHOLD_WARNING)) {
-                Cat.w("Attention: your execution window is too big. This could result in undesired behavior, see https://github.com/evernote/android-job/blob/master/FAQ.md");
+                Cat.w("Attention: your execution window is too large. This could result in undesired behavior, see https://github.com/evernote/android-job/blob/master/FAQ.md");
             }
 
             return new JobRequest(this);

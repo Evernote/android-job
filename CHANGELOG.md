@@ -1,3 +1,8 @@
+## 1.0.11 (2016-08-09)
+
+* Fix overflow for too large execution windows
+* Fix immediately starting jobs with JobScheduler if the execution window is too large
+
 ## 1.0.10 (2016-07-25)
 
 * Create the JobManager in all API services
