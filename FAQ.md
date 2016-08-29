@@ -10,12 +10,14 @@ public class DemoSyncJob extends Job {
     @Override
     @NonNull
     protected Result onRunJob(final Params params) {
-        boolean success = new DemoSyncEngine(getContext()).sync();
+        boolean success = new DemoSyncEngine().sync();
         return success ? Result.SUCCESS : Result.FAILURE;
     }
 }
 
 public class DemoSyncEngine {
+
+    @WorkerThread
     public boolean sync() {
         // do something fancy
         return true;
@@ -36,7 +38,7 @@ public class SyncHistoryActivity extends Activity {
         new AsyncTask<Void, Void, Boolean>() {
             @Override
             protected Boolean doInBackground(Void... params) {
-                return new DemoSyncEngine(SyncHistoryActivity.this).sync();
+                return new DemoSyncEngine().sync();
             }
 
             @Override

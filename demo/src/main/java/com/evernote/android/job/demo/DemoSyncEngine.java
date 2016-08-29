@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.os.NetworkOnMainThreadException;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.WorkerThread;
 
 import net.vrallev.android.cat.Cat;
 
@@ -27,6 +28,7 @@ public class DemoSyncEngine {
         mContext = context;
     }
 
+    @WorkerThread
     public boolean sync() {
         // do something fancy
 
