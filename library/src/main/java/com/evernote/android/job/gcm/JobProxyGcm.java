@@ -61,10 +61,13 @@ public class JobProxyGcm implements JobProxy {
     @Override
     public void plantOneOff(JobRequest request) {
         long startMs = Common.getStartMs(request);
+        long startSeconds = startMs / 1_000;
+
         long endMs = Common.getEndMs(request);
+        long endSeconds = Math.max(endMs / 1_000, startSeconds + 1); // endSeconds must be greater than startSeconds
 
         OneoffTask task = prepareBuilder(new OneoffTask.Builder(), request)
-                .setExecutionWindow(startMs / 1_000, endMs / 1_000)
+                .setExecutionWindow(startSeconds, endSeconds)
                 .build();
 
         mGcmNetworkManager.schedule(task);
