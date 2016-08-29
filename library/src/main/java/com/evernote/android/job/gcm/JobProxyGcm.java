@@ -60,11 +60,14 @@ public class JobProxyGcm implements JobProxy {
 
     @Override
     public void plantOneOff(JobRequest request) {
+        long startSeconds = Common.getStartMs(request) / 1_000;
+        long endSeconds = Math.max(Common.getEndMs(request) / 1_000, startSeconds + 1);
+
         OneoffTask task = new OneoffTask.Builder()
                 .setTag(createTag(request))
                 .setService(PlatformGcmService.class)
                 .setUpdateCurrent(true)
-                .setExecutionWindow(Common.getStartMs(request) / 1_000, Common.getEndMs(request) / 1_000)
+                .setExecutionWindow(startSeconds, endSeconds)
                 .setRequiredNetwork(convertNetworkType(request.requiredNetworkType()))
                 .setPersisted(request.isPersisted())
                 .setRequiresCharging(request.requiresCharging())
