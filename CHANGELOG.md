@@ -1,3 +1,7 @@
+## 1.0.12 (2016-08-29)
+
+* Fix IllegalArgumentException with GCM API, see #72
+
 ## 1.0.11 (2016-08-09)
 
 * Fix overflow for too large execution windows
