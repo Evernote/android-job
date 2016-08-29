@@ -1,9 +1,12 @@
 package com.evernote.android.job.util;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
+import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.gcm.PlatformGcmService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -23,6 +26,7 @@ import java.util.List;
     private static final boolean GCM_IN_CLASSPATH;
 
     private static int gcmServiceAvailable = -1;
+    private static boolean checkedServiceEnabled;
 
     static {
         boolean gcmInClasspath;
@@ -37,6 +41,11 @@ import java.util.List;
 
     public static boolean isGcmApiSupported(Context context) {
         try {
+            if (!checkedServiceEnabled) {
+                checkedServiceEnabled = true;
+                setServiceEnabled(context, GCM_IN_CLASSPATH);
+            }
+
             return GCM_IN_CLASSPATH
                     && GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
                     && isGcmServiceRegistered(context) == ConnectionResult.SUCCESS;
@@ -85,6 +94,38 @@ import java.util.List;
             }
         }
         return false;
+    }
+
+    private static void setServiceEnabled(Context context, boolean enabled) {
+        try {
+            PackageManager packageManager = context.getPackageManager();
+
+            // use a string, the class object probably cannot be instantiated
+            String className = JobProxyGcm.class.getPackage().getName() + ".PlatformGcmService";
+            ComponentName component = new ComponentName(context, className);
+
+            int componentEnabled = packageManager.getComponentEnabledSetting(component);
+            switch (componentEnabled) {
+                case PackageManager.COMPONENT_ENABLED_STATE_ENABLED:
+                    if (!enabled) {
+                        packageManager.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+                        Cat.i("GCM service disabled");
+                    }
+                    break;
+
+                case PackageManager.COMPONENT_ENABLED_STATE_DEFAULT: // default is disable
+                case PackageManager.COMPONENT_ENABLED_STATE_DISABLED:
+                    if (enabled) {
+                        packageManager.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+                        Cat.i("GCM service enabled");
+                    }
+                    break;
+            }
+
+        } catch (Throwable t) {
+            // just in case, don't let the app crash with each restart
+            Cat.e(t);
+        }
     }
 
     private GcmAvailableHelper() {

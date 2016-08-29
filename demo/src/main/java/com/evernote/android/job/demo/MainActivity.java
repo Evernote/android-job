@@ -27,6 +27,7 @@ public class MainActivity extends Activity {
 
     private int mLastJobId;
 
+    private CompoundButton mEnableGcm;
     private CompoundButton mRequiresCharging;
     private CompoundButton mRequiresDeviceIdle;
     private Spinner mNetworkTypeSpinner;
@@ -44,6 +45,7 @@ public class MainActivity extends Activity {
             mLastJobId = savedInstanceState.getInt(LAST_JOB_ID, 0);
         }
 
+        mEnableGcm = (CompoundButton) findViewById(R.id.enable_gcm);
         mRequiresCharging = (CompoundButton) findViewById(R.id.check_requires_charging);
         mRequiresDeviceIdle = (CompoundButton) findViewById(R.id.check_requires_device_idle);
         mNetworkTypeSpinner = (Spinner) findViewById(R.id.spinner_network_type);
@@ -51,6 +53,15 @@ public class MainActivity extends Activity {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getNetworkTypesAsString());
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mNetworkTypeSpinner.setAdapter(adapter);
+
+        mEnableGcm.setChecked(mJobManager.getConfig().isGcmApiEnabled());
+        mEnableGcm.setEnabled(JobApi.GCM.isSupported(this));
+        mEnableGcm.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mJobManager.getConfig().setGcmApiEnabled(isChecked);
+            }
+        });
     }
 
     @Override

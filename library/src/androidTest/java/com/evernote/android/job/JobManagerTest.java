@@ -42,7 +42,8 @@ public class JobManagerTest {
 
     @Test
     public void testScheduleAndCancel() {
-        assertThat(getManager().getApi()).isEqualTo(JobApi.getDefault(InstrumentationRegistry.getContext()));
+        JobApi defaultApi = JobApi.getDefault(InstrumentationRegistry.getContext(), getManager().getConfig().isGcmApiEnabled());
+        assertThat(getManager().getApi()).isEqualTo(defaultApi);
 
         JobRequest request = getJobRequest();
         int id = request.schedule();

@@ -31,6 +31,7 @@ import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
+import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.v14.JobProxy14;
@@ -127,13 +128,23 @@ public enum JobApi {
         return mCachedProxy;
     }
 
+    /**
+     * @deprecated Use {@link #getDefault(Context, boolean)} instead.
+     */
+    @SuppressWarnings("unused")
     @NonNull
+    @Deprecated
     public static JobApi getDefault(Context context) {
+        return getDefault(context, JobManager.instance().getConfig().isGcmApiEnabled());
+    }
+
+    @NonNull
+    public static JobApi getDefault(Context context, boolean gcmEnabled) {
         if (V_24.isSupported(context)) {
             return V_24;
         } else if (V_21.isSupported(context)) {
             return V_21;
-        } else if (GCM.isSupported(context)) {
+        } else if (gcmEnabled && GCM.isSupported(context)) {
             return GCM;
         } else if (V_19.isSupported(context)) {
             return V_19;

@@ -178,7 +178,7 @@ public final class JobManager {
         mJobExecutor = new JobExecutor();
         mConfig = new Config();
 
-        setJobProxy(JobApi.getDefault(mContext));
+        setJobProxy(JobApi.getDefault(mContext, mConfig.isGcmApiEnabled()));
 
         rescheduleTasksIfNecessary();
     }
@@ -216,6 +216,11 @@ public final class JobManager {
         JobApi jobApi = request.getJobApi();
         boolean periodic = request.isPeriodic();
         boolean flexSupport = periodic && jobApi.isFlexSupport() && request.getFlexMs() < request.getIntervalMs();
+
+        if (jobApi == JobApi.GCM && !mConfig.isGcmApiEnabled()) {
+            // shouldn't happen
+            CAT.w("GCM API disabled, but used nonetheless");
+        }
 
         request.setScheduledAt(System.currentTimeMillis());
         request.setFlexSupport(flexSupport);
@@ -524,9 +529,11 @@ public final class JobManager {
     public final class Config {
 
         private boolean mVerbose;
+        private boolean mGcmEnabled;
 
         private Config() {
             mVerbose = true;
+            mGcmEnabled = true;
         }
 
         /**
@@ -542,8 +549,48 @@ public final class JobManager {
          * @param verbose Whether or not to print all log messages. The default value is {@code true}.
          */
         public void setVerbose(boolean verbose) {
-            mVerbose = verbose;
-            CatGlobal.setPackageEnabled(PACKAGE, verbose);
+            if (mVerbose != verbose) {
+                mVerbose = verbose;
+                CatGlobal.setPackageEnabled(PACKAGE, verbose);
+            }
+        }
+
+        /**
+         * @return Whether the GCM API is enabled. The API is only used if the required class dependency
+         * is found, the Google Play Services are available and this setting is {@code true}. The default
+         * value is {@code true}.
+         */
+        public boolean isGcmApiEnabled() {
+            return mGcmEnabled;
+        }
+
+        /**
+         * Programmatic switch to disable the GCM API. If {@code false}, then the {@link AlarmManager} will
+         * be used for Android 4 devices in all cases.
+         *
+         * @param enabled Whether the GCM API should be enabled or disabled. Note that the API is only used,
+         *                if the required class dependency is found, the Google Play Services are available
+         *                and this setting is {@code true}. The default value is {@code true}.
+         */
+        public void setGcmApiEnabled(boolean enabled) {
+            if (enabled == mGcmEnabled) {
+                return;
+            }
+
+            mGcmEnabled = enabled;
+            if (enabled) {
+                JobApi defaultApi = JobApi.getDefault(mContext, true);
+                if (!defaultApi.equals(getApi())) {
+                    setJobProxy(defaultApi);
+                    CAT.i("Changed default proxy to %s after enabled the GCM API", defaultApi);
+                }
+            } else {
+                JobApi defaultApi = JobApi.getDefault(mContext, false);
+                if (JobApi.GCM == getApi()) {
+                    setJobProxy(defaultApi);
+                    CAT.i("Changed default proxy to %s after disabling the GCM API", defaultApi);
+                }
+            }
         }
     }
 }
