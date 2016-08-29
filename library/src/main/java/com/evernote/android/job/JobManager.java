@@ -124,7 +124,7 @@ public final class JobManager {
      * Initializes the singleton. It's necessary to call this function before using the {@code JobManager}.
      * Calling it multiple times has not effect.
      *
-     * @param context Any {@link Context} to instantiate the singleton object.
+     * @param context    Any {@link Context} to instantiate the singleton object.
      * @param jobCreator The mapping between a specific job tag and the job class.
      * @return The new or existing singleton object.
      * @deprecated Use {@link #create(Context)} instead and call {@link #addJobCreator(JobCreator)} after that.
@@ -167,6 +167,7 @@ public final class JobManager {
     private final JobCreatorHolder mJobCreatorHolder;
     private final JobStorage mJobStorage;
     private final JobExecutor mJobExecutor;
+    private final Config mConfig;
 
     private JobApi mApi;
 
@@ -175,10 +176,18 @@ public final class JobManager {
         mJobCreatorHolder = new JobCreatorHolder();
         mJobStorage = new JobStorage(context);
         mJobExecutor = new JobExecutor();
+        mConfig = new Config();
 
         setJobProxy(JobApi.getDefault(mContext));
 
         rescheduleTasksIfNecessary();
+    }
+
+    /**
+     * @return The current configuration for the job manager.
+     */
+    public Config getConfig() {
+        return mConfig;
     }
 
     protected void setJobProxy(JobApi api) {
@@ -398,9 +407,11 @@ public final class JobManager {
      * Global switch to enable or disable logging.
      *
      * @param verbose Whether or not to print log messages.
+     * @deprecated Use {@link Config#setVerbose(boolean)} instead.
      */
+    @Deprecated
     public void setVerbose(boolean verbose) {
-        CatGlobal.setPackageEnabled(PACKAGE, verbose);
+        mConfig.setVerbose(verbose);
     }
 
     /**
@@ -508,5 +519,31 @@ public final class JobManager {
                 }
             }
         }.start();
+    }
+
+    public final class Config {
+
+        private boolean mVerbose;
+
+        private Config() {
+            mVerbose = true;
+        }
+
+        /**
+         * @return Whether logging is enabled for this library. The default value is {@code true}.
+         */
+        public boolean isVerbose() {
+            return mVerbose;
+        }
+
+        /**
+         * Global switch to enable or disable logging.
+         *
+         * @param verbose Whether or not to print all log messages. The default value is {@code true}.
+         */
+        public void setVerbose(boolean verbose) {
+            mVerbose = verbose;
+            CatGlobal.setPackageEnabled(PACKAGE, verbose);
+        }
     }
 }
