@@ -24,7 +24,7 @@
         </activity>
 
         <activity
-            android:name=".FileActivity"
+            android:name=".SyncHistoryActivity"
             android:label="@string/demo"/>
 
     </application>

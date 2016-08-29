@@ -11,8 +11,8 @@ public class DemoJobCreator implements JobCreator {
     @Override
     public Job create(String tag) {
         switch (tag) {
-            case DemoJob.TAG:
-                return new DemoJob();
+            case DemoSyncJob.TAG:
+                return new DemoSyncJob();
             default:
                 return null;
         }

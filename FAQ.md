@@ -3,23 +3,47 @@
 No, it's recommended to extract the logic from your job instead and to reuse it in a background thread.
 
 ```java
-public class JobSample extends Job {
+public class DemoSyncJob extends Job {
 
-    @NonNull
+    public static final String TAG = "job_demo_tag";
+
     @Override
-    protected Result onRunJob(Params params) {
-        runNow();
-        return Result.SUCCESS;
+    @NonNull
+    protected Result onRunJob(final Params params) {
+        boolean success = new DemoSyncEngine(getContext()).sync();
+        return success ? Result.SUCCESS : Result.FAILURE;
+    }
+}
+
+public class DemoSyncEngine {
+    public boolean sync() {
+        // do something fancy
+        return true;
+    }
+}
+
+public class SyncHistoryActivity extends Activity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_sync_history);
+
+        syncAsynchronously();
     }
 
-    public static void runNow() {
-        new MyAwesomeTask().run();
-    }
+    private void syncAsynchronously() {
+        new AsyncTask<Void, Void, Boolean>() {
+            @Override
+            protected Boolean doInBackground(Void... params) {
+                return new DemoSyncEngine(SyncHistoryActivity.this).sync();
+            }
 
-    public static class MyAwesomeTask {
-        public void run() {
-            // do stuff here
-        }
+            @Override
+            protected void onPostExecute(Boolean aBoolean) {
+                refreshView();
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 }
 ```

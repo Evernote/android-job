@@ -180,8 +180,8 @@ public class MainActivity extends Activity {
                 }
                 break;
 
-            case R.id.button_file_activity:
-                startActivity(new Intent(this, FileActivity.class));
+            case R.id.button_sync_history:
+                startActivity(new Intent(this, SyncHistoryActivity.class));
                 break;
         }
     }
@@ -190,7 +190,7 @@ public class MainActivity extends Activity {
         PersistableBundleCompat extras = new PersistableBundleCompat();
         extras.putString("key", "Hello world");
 
-        mLastJobId = new JobRequest.Builder(DemoJob.TAG)
+        mLastJobId = new JobRequest.Builder(DemoSyncJob.TAG)
                 .setExecutionWindow(3_000L, 4_000L)
                 .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.LINEAR)
                 .setRequiresCharging(mRequiresCharging.isChecked())
@@ -209,7 +209,7 @@ public class MainActivity extends Activity {
         for (JobApi api : JobApi.values()) {
             if (api.isSupported(this)) {
                 mJobManager.forceApi(api);
-                testPeriodic();
+                testSimple();
             } else {
                 Cat.w("%s is not supported", api);
             }
@@ -219,7 +219,7 @@ public class MainActivity extends Activity {
     }
 
     private void testPeriodic() {
-        mLastJobId = new JobRequest.Builder(DemoJob.TAG)
+        mLastJobId = new JobRequest.Builder(DemoSyncJob.TAG)
                 .setPeriodic(JobRequest.MIN_INTERVAL, JobRequest.MIN_FLEX)
                 .setRequiresCharging(mRequiresCharging.isChecked())
                 .setRequiresDeviceIdle(mRequiresDeviceIdle.isChecked())
@@ -233,7 +233,7 @@ public class MainActivity extends Activity {
         PersistableBundleCompat extras = new PersistableBundleCompat();
         extras.putString("key", "Hello world");
 
-        mLastJobId = new JobRequest.Builder(DemoJob.TAG)
+        mLastJobId = new JobRequest.Builder(DemoSyncJob.TAG)
                 .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.EXPONENTIAL)
                 .setExtras(extras)
                 .setExact(20_000L)
