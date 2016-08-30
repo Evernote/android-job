@@ -2,9 +2,9 @@
 
 * Bump SDK version to 24
 * Add option to specify flex parameter for periodic jobs
-** Add support for flex parameter with GCM proxy
-** Add API 24 proxy with support for flex parameter
-** Add a flex support mode for all other APIs
+ * Add support for flex parameter with GCM proxy
+ * Add API 24 proxy with support for flex parameter
+ * Add a flex support mode for all other APIs
 * Add API 19 proxy supporting an execution window
 * Add NOT_ROAMING network type
 * Adjust minimum interval for periodic jobs
