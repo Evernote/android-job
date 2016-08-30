@@ -33,7 +33,6 @@ import android.support.v4.util.LruCache;
 import android.util.SparseArray;
 
 import com.evernote.android.job.util.JobCat;
-import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
 
@@ -52,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 /*package*/ class JobExecutor {
 
     private static final CatLog CAT = new JobCat("JobExecutor");
+    private static final long WAKE_LOCK_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
 
     private final ExecutorService mExecutorService;
 
@@ -124,34 +124,23 @@ import java.util.concurrent.TimeUnit;
             mJob = job;
 
             Context context = mJob.getContext();
-            PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-
-            mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "JobExecutor");
-            mWakeLock.setReferenceCounted(false);
-            acquireWakeLock();
+            mWakeLock = WakeLockUtil.acquireWakeLock(context, "JobExecutor", WAKE_LOCK_TIMEOUT);
         }
 
         @Override
         public Job.Result call() throws Exception {
             try {
                 // just in case something was blocking and the wake lock is no longer acquired
-                acquireWakeLock();
-
+                WakeLockUtil.acquireWakeLock(mJob.getContext(), mWakeLock, WAKE_LOCK_TIMEOUT);
                 return runJob();
 
             } finally {
-                if (mWakeLock.isHeld()) {
-                    try {
-                        mWakeLock.release();
-                    } catch (Exception e) {
-                        // just to make sure if the PowerManager crashes while acquiring a wake lock
-                        CAT.e(e);
-                    }
-                } else {
+                markJobAsFinished(mJob);
+
+                if (mWakeLock == null || !mWakeLock.isHeld()) {
                     CAT.w("Wake lock was not held after job %s was done. The job took too long to complete. This could have unintended side effects on your app.", mJob);
                 }
-
-                markJobAsFinished(mJob);
+                WakeLockUtil.releaseWakeLock(mWakeLock);
             }
         }
 
@@ -178,18 +167,6 @@ import java.util.concurrent.TimeUnit;
                 mJob.onReschedule(newJobId);
             } else if (request.isPeriodic() && !Job.Result.SUCCESS.equals(result)) {
                 request.incNumFailures();
-            }
-        }
-
-        private void acquireWakeLock() {
-            if (!mWakeLock.isHeld() && JobUtil.hasWakeLockPermission(mJob.getContext())) {
-                try {
-                    mWakeLock.acquire(TimeUnit.MINUTES.toMillis(3));
-                } catch (Exception e) {
-                    // saw an NPE on rooted Galaxy Nexus Android 4.1.1
-                    // android.os.IPowerManager$Stub$Proxy.acquireWakeLock(IPowerManager.java:288)
-                    CAT.e(e);
-                }
             }
         }
     }

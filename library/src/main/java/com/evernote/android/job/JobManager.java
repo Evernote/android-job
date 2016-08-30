@@ -434,12 +434,7 @@ public final class JobManager {
     }
 
     private void rescheduleTasksIfNecessary() {
-        PowerManager powerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-        final PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, JobManager.class.getName());
-        if (JobUtil.hasWakeLockPermission(mContext)) {
-            wakeLock.setReferenceCounted(false);
-            wakeLock.acquire(TimeUnit.SECONDS.toMillis(3));
-        }
+        final PowerManager.WakeLock wakeLock = WakeLockUtil.acquireWakeLock(mContext, JobManager.class.getName(), TimeUnit.MINUTES.toMillis(1));
 
         new Thread() {
             @Override
@@ -478,14 +473,7 @@ public final class JobManager {
                     CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
 
                 } finally {
-                    try {
-                        if (wakeLock.isHeld()) {
-                            wakeLock.release();
-                        }
-                    } catch (Exception e) {
-                        // just to make sure if the PowerManager crashes while acquiring a wake lock
-                        CAT.e(e);
-                    }
+                    WakeLockUtil.releaseWakeLock(wakeLock);
                 }
             }
         }.start();
