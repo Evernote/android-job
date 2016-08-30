@@ -8,6 +8,7 @@
 * Add API 19 proxy supporting an execution window
 * Add NOT_ROAMING network type
 * Adjust minimum interval for periodic jobs
+* Add GCM service declaration in library manifest
 
 ## 1.0.12 (2016-08-29)
 

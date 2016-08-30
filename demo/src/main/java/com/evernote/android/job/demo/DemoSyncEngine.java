@@ -37,7 +37,7 @@ public class DemoSyncEngine {
         }
 
         SystemClock.sleep(1_000);
-        boolean success = Math.random() > 0.1;// successful 90% of the time
+        boolean success = Math.random() > 0.1; // successful 90% of the time
         saveSuccess(success);
         return success;
     }
