@@ -820,7 +820,7 @@ public final class JobRequest {
          * @param persisted If {@code true} the job is scheduled after a reboot.
          */
         public Builder setPersisted(boolean persisted) {
-            if (!JobUtil.hasBootPermission(JobManager.instance().getContext())) {
+            if (persisted && !JobUtil.hasBootPermission(JobManager.instance().getContext())) {
                 throw new IllegalStateException("Does not have RECEIVE_BOOT_COMPLETED permission, which is mandatory for this feature");
             }
             mPersisted = persisted;
