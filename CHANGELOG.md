@@ -1,3 +1,8 @@
+## 1.0.13 (2016-09-12)
+
+* Fix crash while acquiring wake lock
+* Check boot permission only when persisted flag is set to true
+
 ## 1.0.12 (2016-08-29)
 
 * Fix IllegalArgumentException with GCM API, see #72
