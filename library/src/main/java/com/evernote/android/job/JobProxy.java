@@ -210,7 +210,11 @@ public interface JobProxy {
              */
             for (JobApi jobApi : JobApi.values()) {
                 if (jobApi.isSupported(context)) {
-                    jobApi.getCachedProxy(context).cancel(jobId);
+                    try {
+                        jobApi.getCachedProxy(context).cancel(jobId);
+                    } catch (Exception ignored) {
+                        // GCM API could crash if it's disabled, ignore crashes at this point and continue
+                    }
                 }
             }
         }
