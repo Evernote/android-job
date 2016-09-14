@@ -8,7 +8,7 @@ dependencies {
 
     //noinspection GradleDependency
     compile "com.android.support:support-annotations:$rootProject.ext.supportLibVersion"
-    compile 'net.vrallev.android:cat:1.0.4'
+    compile 'net.vrallev.android:cat:1.0.5'
 
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test:rules:0.5'

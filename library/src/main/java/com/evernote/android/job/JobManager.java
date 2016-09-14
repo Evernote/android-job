@@ -80,7 +80,7 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("unused")
 public final class JobManager {
 
-    private static final String PACKAGE = JobManager.class.getPackage().getName();
+    private static final Package PACKAGE = JobManager.class.getPackage();
     private static final CatLog CAT = new JobCat("JobManager");
 
     @SuppressLint("StaticFieldLeak")
@@ -98,7 +98,11 @@ public final class JobManager {
             synchronized (JobManager.class) {
                 if (instance == null) {
                     JobPreconditions.checkNotNull(context, "Context cannot be null");
-                    CatGlobal.setDefaultCatLogPackage(PACKAGE, new JobCat());
+
+                    if (PACKAGE != null) {
+                        // package can be null when class is repackaged, then ignore this
+                        CatGlobal.setDefaultCatLogPackage(PACKAGE.getName(), new JobCat());
+                    }
 
                     if (context.getApplicationContext() != null) {
                         // could be null in unit tests
@@ -537,9 +541,9 @@ public final class JobManager {
          * @param verbose Whether or not to print all log messages. The default value is {@code true}.
          */
         public void setVerbose(boolean verbose) {
-            if (mVerbose != verbose) {
+            if (mVerbose != verbose && PACKAGE != null) {
                 mVerbose = verbose;
-                CatGlobal.setPackageEnabled(PACKAGE, verbose);
+                CatGlobal.setPackageEnabled(PACKAGE.getName(), verbose);
             }
         }
 
