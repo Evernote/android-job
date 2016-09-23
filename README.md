@@ -1,6 +1,6 @@
 # Android-Job
 
-An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post][1] why you should prefer this library than each separate API.
+An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post][1] why you should prefer this library than each separate API. All features from Android Nougat are backward compatible.
 
 ## Download
 
@@ -8,29 +8,13 @@ Download [the latest version][2] or grab via Gradle:
 
 ```groovy
 dependencies {
-    compile 'com.evernote:android-job:1.0.13'
+    compile 'com.evernote:android-job:1.1.0'
 }
 ```
 
 If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest][3].
 
 You can read the [JavaDoc here][4].
-
-#### Android Nougat compatible preview
-
-Please give the latest N compatible version a try and share your feedback or create an issue. You find all changes [here](CHANGELOG.md). **Warning:** Don't publish your app with the snapshot build, yet. The database of the jobs has changed and can't be reverted.
-
-```groovy
-repositories {
-    maven {
-        url "https://oss.sonatype.org/content/groups/public/"
-    }
-}
-
-dependencies {
-    compile 'com.evernote:android-job:1.1.0-SNAPSHOT'
-}
-```
 
 ## Usage
 
@@ -168,27 +152,6 @@ And then referring to it in your application tag in `AndroidManifest.xml`:
 
 ```xml
 <application ...  android:fullBackupContent="@xml/backup_config">
-```
-
-#### Using the GcmNetworkManager
-
-By default the API for the `GcmNetworkManager` is disabled. In order to use it for pre Lollipop devices you must add the GCM dependency in your `build.gradle` and then add the service in your `AndroidManifest.xml` manually.
-
-```groovy
-dependencies {
-    compile 'com.google.android.gms:play-services-gcm:9.4.0' // or newer
-}
-```
-
-```xml
-<service
-    android:name="com.evernote.android.job.gcm.PlatformGcmService"
-    android:exported="true"
-    android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE">
-    <intent-filter>
-        <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY"/>
-    </intent-filter>
-</service>
 ```
 
 #### Proguard

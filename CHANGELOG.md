@@ -1,4 +1,4 @@
-## 1.1.0-SNAPSHOT (2016-08-09)
+## 1.1.0 (2016-09-23)
 
 * Bump SDK version to 24
 * Add option to specify flex parameter for periodic jobs
