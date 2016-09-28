@@ -116,6 +116,6 @@ new JobRequest.Builder(TAG)
 
 ### Why can't an interval be smaller than 15 minutes for periodic jobs?
 
-This library is a subset of 3 different APIs. Since Android Nougat the minimum interval of periodic jobs is 15 minutes. Although pre Nougat devices support a smaller intervals, the least common was chosen as minimum for this library so that all devices behave the same for all APIs.
+This library is a subset of 3 different APIs. Since Android Nougat the minimum interval of periodic jobs is 15 minutes. Although pre Nougat devices support smaller intervals, the least common was chosen as minimum for this library so that periodic jobs run with the same frequency on all devices.
 
 The `JobScheduler` with Android Nougat allows setting a smaller interval, but the value is silently adjusted and a warning is being logged. This library throws an exception instead, so that misbehaving jobs are caught early. You can read more about it [here](https://developer.android.com/reference/android/app/job/JobInfo.html#getMinPeriodMillis()).
