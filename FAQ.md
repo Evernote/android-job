@@ -119,3 +119,35 @@ new JobRequest.Builder(TAG)
 This library is a subset of 3 different APIs. Since Android Nougat the minimum interval of periodic jobs is 15 minutes. Although pre Nougat devices support smaller intervals, the least common was chosen as minimum for this library so that periodic jobs run with the same frequency on all devices.
 
 The `JobScheduler` with Android Nougat allows setting a smaller interval, but the value is silently adjusted and a warning is being logged. This library throws an exception instead, so that misbehaving jobs are caught early. You can read more about it [here](https://developer.android.com/reference/android/app/job/JobInfo.html#getMinPeriodMillis()).
+
+### How can I run async operations in a job?
+
+This library automatically creates a wake lock for you so that the system stays on until your job finished. When your job returns a result, then this wakelock is being released and async operations may not finish. The easiest solution is to not return a result until the async operation finished. Don't forget that your job is already executed on a background thread!
+
+```java
+public class AsyncJob extends Job {
+
+    @NonNull
+    @Override
+    protected Result onRunJob(Params params) {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        new Thread() {
+            @Override
+            public void run() {
+                // do async operation here
+
+                SystemClock.sleep(3_000L);
+                countDownLatch.countDown();
+            }
+        }.start();
+
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException ignored) {
+        }
+
+        return Result.SUCCESS;
+    }
+}
+```
