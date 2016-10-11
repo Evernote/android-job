@@ -30,6 +30,7 @@ import android.app.AlarmManager;
 import android.app.Application;
 import android.app.job.JobScheduler;
 import android.content.Context;
+import android.os.Build;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
@@ -522,10 +523,12 @@ public final class JobManager {
 
         private boolean mVerbose;
         private boolean mGcmEnabled;
+        private boolean mAllowSmallerIntervals;
 
         private Config() {
             mVerbose = true;
             mGcmEnabled = true;
+            mAllowSmallerIntervals = false;
         }
 
         /**
@@ -583,6 +586,31 @@ public final class JobManager {
                     CAT.i("Changed default proxy to %s after disabling the GCM API", defaultApi);
                 }
             }
+        }
+
+        /**
+         * Checks whether a smaller interval and flex are allowed for periodic jobs. That's helpful
+         * for testing purposes.
+         *
+         * @return Whether a smaller interval and flex than the minimum values are allowed for periodic jobs
+         * are allowed. The default value is {@code false}.
+         */
+        public boolean isAllowSmallerIntervalsForMarshmallow() {
+            return mAllowSmallerIntervals && Build.VERSION.SDK_INT < Build.VERSION_CODES.N;
+        }
+
+        /**
+         * Option to override the minimum period and minimum flex for periodic jobs. This is useful for testing
+         * purposes. This method only works for Android M and earlier. Later versions throw an exception.
+         *
+         * @param allowSmallerIntervals Whether a smaller interval and flex than the minimum values are allowed
+         *                              for periodic jobs are allowed. The default value is {@code false}.
+         */
+        public void setAllowSmallerIntervalsForMarshmallow(boolean allowSmallerIntervals) {
+            if (allowSmallerIntervals && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                throw new IllegalStateException("This method is only allowed to call on Android M or earlier");
+            }
+            mAllowSmallerIntervals = allowSmallerIntervals;
         }
     }
 }

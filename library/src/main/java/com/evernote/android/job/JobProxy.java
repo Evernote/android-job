@@ -121,7 +121,7 @@ public interface JobProxy {
                 mCat.d("Job %d already finished, %s", mJobId, request);
                 return null;
 
-            } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < JobRequest.MIN_INTERVAL / 2) {
+            } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < JobRequest.getMinInterval() / 2) {
                 mCat.d("Job %d is periodic and just finished, %s", mJobId, request);
                 return null;
 

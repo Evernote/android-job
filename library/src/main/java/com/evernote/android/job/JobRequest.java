@@ -105,6 +105,14 @@ public final class JobRequest {
 
     private static final CatLog CAT = new JobCat("JobRequest");
 
+    /*package*/ static long getMinInterval() {
+        return JobManager.instance().getConfig().isAllowSmallerIntervalsForMarshmallow() ? TimeUnit.MINUTES.toMillis(1) : MIN_INTERVAL;
+    }
+
+    /*package*/ static long getMinFlex() {
+        return JobManager.instance().getConfig().isAllowSmallerIntervalsForMarshmallow() ? TimeUnit.SECONDS.toMillis(30) : MIN_FLEX;
+    }
+
     private final Builder mBuilder;
     private final JobApi mJobApi;
 
@@ -785,8 +793,8 @@ public final class JobRequest {
          * @see #MIN_FLEX
          */
         public Builder setPeriodic(long intervalMs, long flexMs) {
-            mIntervalMs = JobPreconditions.checkArgumentInRange(intervalMs, MIN_INTERVAL, Long.MAX_VALUE, "intervalMs");
-            mFlexMs = JobPreconditions.checkArgumentInRange(flexMs, MIN_FLEX, mIntervalMs, "flexMs");
+            mIntervalMs = JobPreconditions.checkArgumentInRange(intervalMs, getMinInterval(), Long.MAX_VALUE, "intervalMs");
+            mFlexMs = JobPreconditions.checkArgumentInRange(flexMs, getMinFlex(), mIntervalMs, "flexMs");
             return this;
         }
 
@@ -851,8 +859,14 @@ public final class JobRequest {
             JobPreconditions.checkNotNull(mNetworkType);
 
             if (mIntervalMs > 0) {
-                JobPreconditions.checkArgumentInRange(mIntervalMs, MIN_INTERVAL, Long.MAX_VALUE, "intervalMs");
-                JobPreconditions.checkArgumentInRange(mFlexMs, MIN_FLEX, mIntervalMs, "flexMs");
+                JobPreconditions.checkArgumentInRange(mIntervalMs, getMinInterval(), Long.MAX_VALUE, "intervalMs");
+                JobPreconditions.checkArgumentInRange(mFlexMs, getMinFlex(), mIntervalMs, "flexMs");
+
+                if (mIntervalMs < MIN_INTERVAL || mFlexMs < MIN_FLEX) {
+                    // this means the debug flag is set to true
+                    CAT.w("AllowSmallerIntervals enabled, this will crash on Android N and later, interval %d (minimum is %d), flex %d (minimum is %d)",
+                            mIntervalMs, MIN_INTERVAL, mFlexMs, MIN_FLEX);
+                }
             }
 
             if (mExact && mIntervalMs > 0) {

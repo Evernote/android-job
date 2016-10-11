@@ -1,3 +1,7 @@
+## 1.1.1 (2016-10-11)
+
+* Add test option to override minimum interval and flex for testing purposes
+
 ## 1.1.0 (2016-09-23)
 
 * Bump SDK version to 24
