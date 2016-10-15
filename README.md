@@ -113,7 +113,7 @@ private void scheduleExactJob() {
 }
 
 private void cancelJob(int jobId) {
-    JobManger.instance().cancel(jobId);
+    JobManager.instance().cancel(jobId);
 }
 ```
 
