@@ -65,9 +65,8 @@ public class PlatformAlarmService extends IntentService {
         final JobProxy.Common common = new JobProxy.Common(this, jobId);
 
         // create the JobManager. Seeing sometimes exceptions, that it wasn't created, yet.
-        final JobRequest request = common.getPendingRequest();
+        final JobRequest request = common.getPendingRequest(true);
         if (request == null) {
-            common.cleanUpOrphanedJob();
             return;
         }
 

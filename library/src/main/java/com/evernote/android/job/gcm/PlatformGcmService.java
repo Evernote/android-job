@@ -42,9 +42,8 @@ public class PlatformGcmService extends GcmTaskService {
         int jobId = Integer.parseInt(taskParams.getTag());
         JobProxy.Common common = new JobProxy.Common(this, jobId);
 
-        JobRequest request = common.getPendingRequest();
+        JobRequest request = common.getPendingRequest(true);
         if (request == null) {
-            common.cleanUpOrphanedJob();
             return GcmNetworkManager.RESULT_FAILURE;
         }
 

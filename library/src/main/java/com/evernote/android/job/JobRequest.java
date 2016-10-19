@@ -306,6 +306,15 @@ public final class JobRequest {
         return mNumFailures;
     }
 
+    /**
+     * Only non-periodic jobs can be in a transient state. The transient state means, that
+     * the job is running and is about to be removed. A job can get stuck in a transient state,
+     * if the app terminates while the job is running. Then the job isn't scheduled anymore, but
+     * entry is still in the database. Since the job didn't finish successfully, reschedule
+     * the job if necessary and treat it as it wouldn't have run, yet.
+     *
+     * @return Whether the job is in a transient state.
+     */
     /*package*/ boolean isTransient() {
         return mTransient;
     }

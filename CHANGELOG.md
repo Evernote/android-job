@@ -2,6 +2,10 @@
 
 * Add test option to override minimum interval and flex for testing purposes
 
+## 1.0.14 (2016-10-19)
+
+* Fix issue that periodic jobs were accidentally canceled
+
 ## 1.1.0 (2016-09-23)
 
 * Bump SDK version to 24
