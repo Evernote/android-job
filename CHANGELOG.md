@@ -1,3 +1,7 @@
+## 1.0.15 (2016-10-19)
+
+* Remove packaged `R.txt` file
+
 ## 1.1.1 (2016-10-19)
 
 * Add test option to override minimum interval and flex for testing purposes
