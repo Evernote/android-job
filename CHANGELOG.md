@@ -1,3 +1,7 @@
+## 1.0.14 (2016-10-19)
+
+* Fix issue that periodic jobs were accidentally canceled
+
 ## 1.0.13 (2016-09-12)
 
 * Fix crash while acquiring wake lock

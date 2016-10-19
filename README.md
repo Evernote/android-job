@@ -10,7 +10,7 @@ Download [the latest version][2] or grab via Gradle:
 
 ```groovy
 dependencies {
-    compile 'com.evernote:android-job:1.0.13'
+    compile 'com.evernote:android-job:1.0.14'
 }
 ```
 
