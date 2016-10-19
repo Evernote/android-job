@@ -59,9 +59,8 @@ public class PlatformJobService extends JobService {
         final int jobId = params.getJobId();
         final JobProxy.Common common = new JobProxy.Common(this, jobId);
 
-        final JobRequest request = common.getPendingRequest();
+        final JobRequest request = common.getPendingRequest(true);
         if (request == null) {
-            common.cleanUpOrphanedJob();
             return false;
         }
 

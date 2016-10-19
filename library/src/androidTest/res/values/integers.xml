@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- required to make test project compile with provided dependency -->
-    <integer name="google_play_services_version">7895000</integer>
+    <integer name="google_play_services_version">9683000</integer>
 </resources>
