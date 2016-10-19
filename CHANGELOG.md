@@ -1,3 +1,7 @@
+## 1.0.15 (2016-10-19)
+
+* Remove packaged `R.txt` file
+
 ## 1.0.14 (2016-10-19)
 
 * Fix issue that periodic jobs were accidentally canceled
