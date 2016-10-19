@@ -1,6 +1,7 @@
-## 1.1.1 (2016-10-11)
+## 1.1.1 (2016-10-19)
 
 * Add test option to override minimum interval and flex for testing purposes
+* Fix issue that periodic jobs were accidentally canceled
 
 ## 1.0.14 (2016-10-19)
 
