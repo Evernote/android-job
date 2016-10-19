@@ -2,8 +2,8 @@ package com.evernote.android.job;
 
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.suitebuilder.annotation.LargeTest;
 
 import com.evernote.android.job.util.JobApi;
 import com.facebook.stetho.Stetho;

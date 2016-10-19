@@ -7,6 +7,8 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.facebook.stetho.Stetho;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,6 +33,8 @@ public class JobExecutionTest {
 
     @BeforeClass
     public static void beforeClass() {
+        Stetho.initializeWithDefaults(InstrumentationRegistry.getContext());
+
         JobManager.create(InstrumentationRegistry.getContext()).addJobCreator(new JobCreator() {
             @Override
             public Job create(String tag) {
@@ -46,6 +50,8 @@ public class JobExecutionTest {
         for (Integer jobId : cachedJobIds) {
             JobManager.instance().getApi().getCachedProxy(context).cancel(jobId);
         }
+
+        JobManager.instance().destroy();
     }
 
     @Before
@@ -115,7 +121,7 @@ public class JobExecutionTest {
 
         assertThat(JobManager.instance().getAllJobRequestsForTag(TestJob.TAG)).hasSize(1);
 
-        SystemClock.sleep(15_000);
+        SystemClock.sleep(3_000);
 
         pendingRequest = common.getPendingRequest(true);
         assertThat(pendingRequest).isNotNull();

@@ -1,7 +1,7 @@
 package com.evernote.android.job.test;
 
+import android.support.test.filters.SmallTest;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.suitebuilder.annotation.SmallTest;
 
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
