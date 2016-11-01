@@ -1,6 +1,6 @@
 # Android-Job
 
-An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post](https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/) or [this presentation](https://speakerdeck.com/vrallev/scheduling-background-job-on-android-at-the-right-time) why you should prefer this library than each separate API. All features from Android Nougat are backward compatible.
+An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post](https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/) or in [these slides](https://speakerdeck.com/vrallev/scheduling-background-job-on-android-at-the-right-time) why you should prefer this library than each separate API. All features from Android Nougat are backward compatible.
 
 ## Download
 
@@ -12,7 +12,7 @@ dependencies {
 }
 ```
 
-If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest](blob/master/library/src/main/AndroidManifest.xml).
+If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest](library/src/main/AndroidManifest.xml).
 
 You can read the [JavaDoc here](https://evernote.github.io/android-job/javadoc/).
 
@@ -156,7 +156,7 @@ And then referring to it in your application tag in `AndroidManifest.xml`:
 
 #### Proguard
 
-The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules](blob/master/library/proguard.txt) in your configuration.
+The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules](library/proguard.txt) in your configuration.
 
 ## FAQ
 
