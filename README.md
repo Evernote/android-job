@@ -1,10 +1,10 @@
 # Android-Job
 
-An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post][1] why you should prefer this library than each separate API. All features from Android Nougat are backward compatible.
+An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post](https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/) or [this presentation](https://speakerdeck.com/vrallev/scheduling-background-job-on-android-at-the-right-time) why you should prefer this library than each separate API. All features from Android Nougat are backward compatible.
 
 ## Download
 
-Download [the latest version][2] or grab via Gradle:
+Download [the latest version](http://search.maven.org/#search|gav|1|g:"com.evernote"%20AND%20a:"android-job") or grab via Gradle:
 
 ```groovy
 dependencies {
@@ -12,9 +12,9 @@ dependencies {
 }
 ```
 
-If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest][3].
+If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest](blob/master/library/src/main/AndroidManifest.xml).
 
-You can read the [JavaDoc here][4].
+You can read the [JavaDoc here](https://evernote.github.io/android-job/javadoc/).
 
 ## Usage
 
@@ -156,7 +156,7 @@ And then referring to it in your application tag in `AndroidManifest.xml`:
 
 #### Proguard
 
-The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules][5] in your configuration.
+The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules](blob/master/library/proguard.txt) in your configuration.
 
 ## FAQ
 
@@ -189,9 +189,3 @@ See [here](FAQ.md).
     THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
     THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-[1]: https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/
-[2]: http://search.maven.org/#search|gav|1|g:"com.evernote"%20AND%20a:"android-job"
-[3]: https://github.com/evernote/android-job/blob/master/library/src/main/AndroidManifest.xml
-[4]: http://evernote.github.io/android-job/javadoc/
-[5]: https://github.com/evernote/android-job/blob/master/library/proguard.txt
