@@ -1,3 +1,7 @@
+## 1.1.3 (2016-11-09)
+
+* Add an alternative to register a `JobCreator`, if you don't have access to the `Application` class
+
 ## 1.1.2 (2016-10-19)
 
 * Remove packaged `R.txt` file
