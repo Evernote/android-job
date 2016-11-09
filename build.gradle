@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.1'
+        classpath 'com.android.tools.build:gradle:2.2.2'
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
     }
 }
@@ -15,14 +15,14 @@ allprojects {
 }
 
 ext {
-    compileSdkVersion = 24
+    compileSdkVersion = 25
     targetSdkVersion = compileSdkVersion
     minSdkVersion = 14
 
-    buildToolsVersion = '24.0.3'
+    buildToolsVersion = '25.0.0'
 
-    supportLibVersion = '24.2.1'
-    playServicesVersion = '9.6.1'
+    supportLibVersion = '25.0.0'
+    playServicesVersion = '9.8.0'
     stethoVersion = '1.4.1'
 }
 
