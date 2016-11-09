@@ -151,3 +151,32 @@ public class AsyncJob extends Job {
     }
 }
 ```
+
+### How can I remove the GCM dependency from my app?
+
+You need to be careful, if you remove this dependency after it has been already used for a while.
+
+```groovy
+dependencies {
+    compile 'com.google.android.gms:play-services-gcm:9.8.0'
+}
+```
+
+The reason is that jobs probably were scheduled with the GCM API on Android 4.X and after removing the dependency, the Play Services still look for the platform service, but can't find the class anymore. The result is that your app will crash with a runtime exception similar like this:
+
+```
+java.lang.RuntimeException: Unable to instantiate service com.evernote.android.job.gcm.PlatformGcmService: java.lang.ClassNotFoundException: Didn't find class "com.evernote.android.job.gcm.PlatformGcmService" on path: DexPathList[[zip file "/data/app/com.evernote.android.job.demo-2/base.apk"],nativeLibraryDirectories=[/vendor/lib, /system/lib]]
+```
+
+Fortunately, there is a workaround to prevent the crash. You need to remove the GCM service declaration from the manifest like this and then the Play Services won't try to instantiate the missing class.
+
+```xml
+<application
+    ...>
+
+    <service
+        android:name="com.evernote.android.job.gcm.PlatformGcmService"
+        tools:node="remove"/>
+
+</application>
+```
