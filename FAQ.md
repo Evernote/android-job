@@ -194,3 +194,25 @@ new JobRequest.Builder(DemoSyncJob.TAG)
         .build()
         .schedule();
 ```
+
+### I cannot override the Application class. How can I add my `JobCreator`?
+
+There is an alternative. You can register a `BroadcastReceiver` to get notified that you should add your `JobCreator` like the following:
+
+```xml
+<receiver
+    android:name=".AddReceiver"
+    android:exported="false">
+        <intent-filter>
+            <action android:name="com.evernote.android.job.ADD_JOB_CREATOR"/>
+        </intent-filter>
+</receiver>
+```
+```java
+public final class AddReceiver extends AddJobCreatorReceiver {
+    @Override
+    protected void addJobCreator(@NonNull Context context, @NonNull JobManager manager) {
+        manager.addJobCreator(new DemoJobCreator());
+    }
+}
+```

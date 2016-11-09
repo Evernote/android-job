@@ -1,5 +1,10 @@
 package com.evernote.android.job;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.support.annotation.NonNull;
+
 /**
  * A {@code JobCreator} maps a tag to a specific {@link Job} class. You need to pass the tag in the
  * {@link JobRequest.Builder} constructor.
@@ -27,4 +32,33 @@ public interface JobCreator {
      * @see JobRequest.Builder#Builder(String)
      */
     Job create(String tag);
+
+    /**
+     * Action to notify receives that the application was instantiated and {@link JobCreator}s should be added.
+     */
+    String ACTION_ADD_JOB_CREATOR = "com.evernote.android.job.ADD_JOB_CREATOR";
+
+    /**
+     * Abstract receiver to get notified about when {@link JobCreator}s need to be added.
+     */
+    abstract class AddJobCreatorReceiver extends BroadcastReceiver {
+
+        @Override
+        public final void onReceive(Context context, Intent intent) {
+            if (context ==  null || intent == null || !ACTION_ADD_JOB_CREATOR.equals(intent.getAction())) {
+                return;
+            }
+
+            addJobCreator(context, JobManager.create(context));
+        }
+
+        /**
+         * Called to add a {@link JobCreator} to this manager instance by calling {@link JobManager#addJobCreator(JobCreator)}.
+         *
+         * @param context Any context.
+         * @param manager The manager instance.
+         */
+        protected abstract void addJobCreator(@NonNull Context context, @NonNull JobManager manager);
+    }
+
 }
