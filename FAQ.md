@@ -180,3 +180,17 @@ Fortunately, there is a workaround to prevent the crash. You need to remove the 
 
 </application>
 ```
+
+### Why does my job run while the device is offline, although I've requested a network connection?
+
+That's expected. The job should run once during a period or within the specified execution window. The timing is a higher requirement than the network type, which is more like a hint when it's best to run your job. To make sure that all requirements are met, you can call `.setRequirementsEnforced(true)`. This will make sure that your job won't run, if one checks fail, e.g.
+
+```java
+new JobRequest.Builder(DemoSyncJob.TAG)
+        .setExecutionWindow(60_000L, 90_000L)
+        .setRequiresCharging(true)
+        .setRequiredNetworkType(JobRequest.NetworkType.UNMETERED)
+        .setRequirementsEnforced(true)
+        .build()
+        .schedule();
+```
