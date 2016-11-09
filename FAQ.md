@@ -183,7 +183,7 @@ Fortunately, there is a workaround to prevent the crash. You need to remove the 
 
 ### Why does my job run while the device is offline, although I've requested a network connection?
 
-That's expected. The job should run once during a period or within the specified execution window. The timing is a higher requirement than the network type, which is more like a hint when it's best to run your job. To make sure that all requirements are met, you can call `.setRequirementsEnforced(true)`. This will make sure that your job won't run, if one checks fail, e.g.
+That's expected. The job should run once during a period or within the specified execution window. The timing is a higher requirement than the network type, which is more like a hint when it's best to run your job. To make sure that all requirements are met, you can call `.setRequirementsEnforced(true)`. This will make sure that your job won't run, if one check fails, e.g.
 
 ```java
 new JobRequest.Builder(DemoSyncJob.TAG)
@@ -197,7 +197,7 @@ new JobRequest.Builder(DemoSyncJob.TAG)
 
 ### I cannot override the Application class. How can I add my `JobCreator`?
 
-There is an alternative. You can register a `BroadcastReceiver` to get notified that you should add your `JobCreator` like the following:
+There is an alternative. You can register a `BroadcastReceiver` to get notified about that you should add your `JobCreator`, e.g.
 
 ```xml
 <receiver
