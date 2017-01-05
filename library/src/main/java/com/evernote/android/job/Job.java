@@ -423,6 +423,22 @@ public abstract class Job {
         }
 
         /**
+         * Returns the time when this job was scheduled.
+         * <br>
+         * <br>
+         * <b>Note</b> that this value is only useful for non-periodic jobs. The time for periodic
+         * jobs is inconsistent. Sometimes it will return the value when the periodic job was scheduled
+         * for the first time and sometimes it will be updated after each period. The reason for this
+         * limitation is the flex parameter, which was backported to older Android versions. You can
+         * only rely on this value during the first interval of the periodic job.
+         *
+         * @return The time when the job was scheduled.
+         */
+        public long getScheduledAt() {
+            return mRequest.getScheduledAt();
+        }
+
+        /**
          * Only valid if the job isn't periodic.
          *
          * @return The initial back-off time which is increasing depending on the {@link #getBackoffPolicy()}
