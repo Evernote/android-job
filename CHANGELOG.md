@@ -1,3 +1,7 @@
+## 1.1.4 (2017-01-05)
+
+* Expose schedule time of a job
+
 ## 1.1.3 (2016-11-09)
 
 * Add an alternative to register a `JobCreator`, if you don't have access to the `Application` class
