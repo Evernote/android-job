@@ -1,3 +1,7 @@
+## 1.1.5 (2017-01-25)
+
+* Use only back-off criteria when rescheduling jobs, see #134
+
 ## 1.1.4 (2017-01-05)
 
 * Expose schedule time of a job
