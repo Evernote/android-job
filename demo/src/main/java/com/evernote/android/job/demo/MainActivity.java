@@ -175,9 +175,7 @@ public class MainActivity extends Activity {
                 break;
 
             case R.id.button_exact:
-                for (int i = 0; i < 5; i++) {
-                    testExact();
-                }
+                testExact();
                 break;
 
             case R.id.button_sync_history:

@@ -111,8 +111,8 @@ public class JobProxy14 implements JobProxy {
     }
 
     private void logScheduled(JobRequest request) {
-        mCat.d("Scheduled alarm, %s, delay %s, exact %b", request,
-                JobUtil.timeToString(Common.getAverageDelayMs(request)), request.isExact());
+        mCat.d("Scheduled alarm, %s, delay %s, exact %b, reschedule count %d", request,
+                JobUtil.timeToString(Common.getAverageDelayMs(request)), request.isExact(), Common.getRescheduleCount(request));
     }
 
     @Override

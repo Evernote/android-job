@@ -72,7 +72,8 @@ public class JobProxyGcm implements JobProxy {
 
         mGcmNetworkManager.schedule(task);
 
-        CAT.d("Scheduled OneoffTask, %s, start %s, end %s", request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs));
+        CAT.d("Scheduled OneoffTask, %s, start %s, end %s, reschedule count %d", request, JobUtil.timeToString(startMs),
+                JobUtil.timeToString(endMs), Common.getRescheduleCount(request));
     }
 
     @Override

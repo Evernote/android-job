@@ -70,11 +70,19 @@ public interface JobProxy {
         }
 
         public static long getStartMs(JobRequest request) {
-            return checkedAdd(request.getStartMs(), request.getBackoffOffset());
+            if (request.getNumFailures() > 0) {
+                return request.getBackoffOffset();
+            } else {
+                return request.getStartMs();
+            }
         }
 
         public static long getEndMs(JobRequest request) {
-            return checkedAdd(request.getEndMs(), request.getBackoffOffset());
+            if (request.getNumFailures() > 0) {
+                return request.getBackoffOffset();
+            } else {
+                return request.getEndMs();
+            }
         }
 
         public static long getAverageDelayMs(JobRequest request) {
@@ -91,6 +99,10 @@ public interface JobProxy {
 
         public static long getAverageDelayMsSupportFlex(JobRequest request) {
             return checkedAdd(getStartMsSupportFlex(request), (getEndMsSupportFlex(request) - getStartMsSupportFlex(request)) / 2);
+        }
+
+        public static int getRescheduleCount(JobRequest request) {
+            return request.getNumFailures();
         }
 
         private final Context mContext;
