@@ -26,6 +26,7 @@
 package com.evernote.android.job.gcm;
 
 import com.evernote.android.job.Job;
+import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.google.android.gms.gcm.GcmNetworkManager;
@@ -53,5 +54,17 @@ public class PlatformGcmService extends GcmTaskService {
         } else {
             return GcmNetworkManager.RESULT_FAILURE;
         }
+    }
+
+    @Override
+    public void onInitializeTasks() {
+        super.onInitializeTasks();
+
+        /*
+         * When the app is being updated, then all jobs are cleared in the GcmNetworkManager. The manager
+         * calls this method to reschedule. Let's initialize the JobManager here, which will reschedule
+         * jobs manually.
+         */
+        JobManager.create(getApplicationContext());
     }
 }
