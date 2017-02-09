@@ -216,3 +216,9 @@ public final class AddReceiver extends AddJobCreatorReceiver {
     }
 }
 ```
+
+### Why aren't my periodic jobs running as expected on Android 5 or higher?
+
+On Android Lollipop or above the `JobScheduler` is used for periodic jobs. Android optimizes apps for battery usage, meaning that it tries to save as much power as possible. If your jobs have a high frequency, then it's possible, that some periods are skipped, because the device is saving battery.
+
+You can read more about Doze and App Standby [in the official documentation](https://developer.android.com/training/monitoring-device-state/doze-standby.html) to understand how it works and its implications.
