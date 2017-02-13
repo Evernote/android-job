@@ -222,3 +222,11 @@ public final class AddReceiver extends AddJobCreatorReceiver {
 On Android Lollipop or above the `JobScheduler` is used for periodic jobs. Android optimizes apps for battery usage, meaning that it tries to save as much power as possible. If your jobs have a high frequency, then it's possible, that some periods are skipped, because the device is saving battery.
 
 You can read more about Doze and App Standby [in the official documentation](https://developer.android.com/training/monitoring-device-state/doze-standby.html) to understand how it works and its implications.
+
+### What happens with jobs after the app was forced killed?
+
+After the app was force killed (or swiped away from the recent list on some devices) Android clears all pending alarms from the `AlarmManager` for this app. This is problematic, because until the app is being relaunched alarms can't be rescheduled and jobs won't run. Unfortunately, there is no known workaround.
+
+When the app is being relaunched, this library automatically reschedules pending jobs if necessary. The library also register a [boot completed receiver](https://github.com/evernote/android-job/blob/master/library/src/main/java/com/evernote/android/job/JobBootReceiver.java), so that jobs are rescheduled after a reboot.
+
+Note that only the `AlarmManager` is affected. Jobs relying on the `JobScheduler` or `GcmNetworkManager` still work reliable.
