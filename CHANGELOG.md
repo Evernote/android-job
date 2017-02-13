@@ -1,3 +1,7 @@
+## 1.1.6 (2017-02-13)
+
+* Reschedule jobs after an app update occurred or the Google Play Services were updated, see #135
+
 ## 1.1.5 (2017-01-25)
 
 * Use only back-off criteria when rescheduling jobs, see #134
