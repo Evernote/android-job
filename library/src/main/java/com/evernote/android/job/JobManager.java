@@ -34,8 +34,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
-import android.os.PowerManager;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -52,7 +50,6 @@ import net.vrallev.android.cat.CatLog;
 
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Entry point for scheduling jobs. Depending on the platform and SDK version it uses different APIs
@@ -191,7 +188,7 @@ public final class JobManager {
 
         setJobProxy(JobApi.getDefault(mContext, mConfig.isGcmApiEnabled()));
 
-        rescheduleTasksIfNecessary();
+        JobRescheduleService.startService(mContext);
     }
 
     /**
@@ -471,58 +468,12 @@ public final class JobManager {
         }
     }
 
-    private JobProxy getJobProxy(JobRequest request) {
+    /*package*/ JobProxy getJobProxy(JobRequest request) {
         return getJobProxy(request.getJobApi());
     }
 
     private JobProxy getJobProxy(JobApi api) {
         return api.getCachedProxy(mContext);
-    }
-
-    private void rescheduleTasksIfNecessary() {
-        final PowerManager.WakeLock wakeLock = WakeLockUtil.acquireWakeLock(mContext, JobManager.class.getName(), TimeUnit.MINUTES.toMillis(1));
-
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    /*
-                     * Delay this slightly. This avoids a race condition if the app was launched by the
-                     * AlarmManager. Then the alarm was already removed, but the JobRequest might still
-                     * be available in the storage. We still catch this case, because we never execute
-                     * a job with the same ID twice. However, the still save resources with the delay.
-                     */
-                    SystemClock.sleep(10_000L);
-
-                    Set<JobRequest> requests = mJobStorage.getAllJobRequests(null, true);
-
-                    int rescheduledCount = 0;
-                    for (JobRequest request : requests) {
-                        boolean reschedule;
-                        if (request.isTransient()) {
-                            Job job = getJob(request.getJobId());
-                            reschedule = job == null;
-                        } else {
-                            reschedule = !getJobProxy(request).isPlatformJobScheduled(request);
-                        }
-
-                        if (reschedule) {
-                            // update execution window
-                            request.cancelAndEdit()
-                                    .build()
-                                    .schedule();
-
-                            rescheduledCount++;
-                        }
-                    }
-
-                    CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
-
-                } finally {
-                    WakeLockUtil.releaseWakeLock(wakeLock);
-                }
-            }
-        }.start();
     }
 
     public final class Config {

@@ -1,3 +1,7 @@
+## 1.1.7 (2017-02-21)
+
+* Use a service to reschedule jobs and prevent a too early process death, fixes #142
+
 ## 1.1.6 (2017-02-13)
 
 * Reschedule jobs after an app update occurred or the Google Play Services were updated, see #135
