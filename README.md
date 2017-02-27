@@ -8,7 +8,7 @@ Download [the latest version](http://search.maven.org/#search|gav|1|g:"com.evern
 
 ```groovy
 dependencies {
-    compile 'com.evernote:android-job:1.1.6'
+    compile 'com.evernote:android-job:1.1.7'
 }
 ```
 
