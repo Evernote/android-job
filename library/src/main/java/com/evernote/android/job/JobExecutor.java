@@ -37,6 +37,7 @@ import com.evernote.android.job.util.JobCat;
 import net.vrallev.android.cat.CatLog;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -70,7 +71,7 @@ import java.util.concurrent.TimeUnit;
             return null;
         }
         if (job.isFinished()) {
-            throw new IllegalStateException("Job for tag %s was already run, a creator should always create a new Job instance");
+            throw new IllegalStateException(String.format(Locale.ENGLISH, "Job for tag %s was already run, a creator should always create a new Job instance", request.getTag()));
         }
 
         job.setContext(context).setRequest(request);
