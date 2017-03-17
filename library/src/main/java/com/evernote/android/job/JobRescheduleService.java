@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
-import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.evernote.android.job.util.JobCat;
 
@@ -22,7 +21,7 @@ public final class JobRescheduleService extends IntentService {
 
     /*package*/ static void startService(Context context) {
         Intent intent = new Intent(context, JobRescheduleService.class);
-        WakefulBroadcastReceiver.startWakefulService(context, intent);
+        WakeLockUtil.startWakefulService(context, intent);
     }
 
     public JobRescheduleService() {
@@ -67,7 +66,7 @@ public final class JobRescheduleService extends IntentService {
             CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
 
         } finally {
-            WakefulBroadcastReceiver.completeWakefulIntent(intent);
+            WakeLockUtil.completeWakefulIntent(intent);
         }
 
     }

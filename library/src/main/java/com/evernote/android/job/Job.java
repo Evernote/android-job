@@ -255,7 +255,9 @@ public abstract class Job {
     }
 
     /**
-     * Delegates calls to {@link WakefulBroadcastReceiver#startWakefulService(Context, Intent)}.
+     * Similar call like {@link WakefulBroadcastReceiver#startWakefulService(Context, Intent)}.
+     * Compared to the original implementation it avoids crashes on some devices. Don't forget
+     * to call {@link #completeWakefulIntent(Intent)} on the Job class.
      *
      * <br>
      * <br>
@@ -274,11 +276,12 @@ public abstract class Job {
      * @see WakefulBroadcastReceiver
      */
     protected ComponentName startWakefulService(@NonNull Intent intent) {
-        return WakefulBroadcastReceiver.startWakefulService(getContext(), intent);
+        return WakeLockUtil.startWakefulService(getContext(), intent);
     }
 
     /**
-     * Delegates calls to {@link WakefulBroadcastReceiver#completeWakefulIntent(Intent)}.
+     * Similar call like {@link WakefulBroadcastReceiver#completeWakefulIntent(Intent)}.
+     * Compared to the original implementation it avoids crashes on some devices.
      *
      * <br>
      * <br>
@@ -293,7 +296,7 @@ public abstract class Job {
      */
     public static boolean completeWakefulIntent(@NonNull Intent intent) {
         try {
-            return WakefulBroadcastReceiver.completeWakefulIntent(intent);
+            return WakeLockUtil.completeWakefulIntent(intent);
         } catch (Exception e) {
             // could end in a NPE if the intent no wake lock was found
             return true;

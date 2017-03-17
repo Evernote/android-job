@@ -1,3 +1,7 @@
+## 1.1.8
+
+* Catch wake lock crashes in all cases, fixes #153
+
 ## 1.1.7 (2017-02-27)
 
 * Use a service to reschedule jobs and prevent a too early process death, fixes #142

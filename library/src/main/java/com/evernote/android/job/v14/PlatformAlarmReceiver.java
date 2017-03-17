@@ -29,8 +29,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
+import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.util.JobCat;
-import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
 
@@ -54,23 +54,6 @@ public class PlatformAlarmReceiver extends WakefulBroadcastReceiver {
         }
 
         Intent serviceIntent = PlatformAlarmService.createIntent(context, intent.getIntExtra(EXTRA_JOB_ID, -1));
-
-        if (JobUtil.hasWakeLockPermission(context)) {
-            try {
-                startWakefulService(context, serviceIntent);
-            } catch (Exception e) {
-                /*
-                 * Saw a SecurityException, although WAKE_LOCK permission is granted.
-                 * https://gist.github.com/vRallev/715777806e0abe3777bc
-                 *
-                 * The wake lock is acquired after the service was started, so it's not necessary
-                 * to start the service another time.
-                 */
-                CAT.e(e);
-            }
-
-        } else {
-            context.startService(serviceIntent);
-        }
+        JobProxy.Common.startWakefulService(context, serviceIntent);
     }
 }

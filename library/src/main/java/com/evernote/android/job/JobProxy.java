@@ -26,7 +26,9 @@
 package com.evernote.android.job;
 
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
@@ -242,6 +244,14 @@ public interface JobProxy {
                     }
                 }
             }
+        }
+
+        public static ComponentName startWakefulService(Context context, Intent intent) {
+            return WakeLockUtil.startWakefulService(context, intent);
+        }
+
+        public static boolean completeWakefulIntent(Intent intent) {
+            return WakeLockUtil.completeWakefulIntent(intent);
         }
     }
 }

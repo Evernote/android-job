@@ -77,11 +77,7 @@ public class PlatformAlarmService extends IntentService {
                 common.executeJobRequest(request);
 
                 // call here, our own wake lock could be acquired too late
-                try {
-                    PlatformAlarmReceiver.completeWakefulIntent(intent);
-                } catch (Exception e) {
-                    // could end in a NPE if the intent has no wake lock
-                }
+                JobProxy.Common.completeWakefulIntent(intent);
             }
         });
     }
