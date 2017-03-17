@@ -25,24 +25,26 @@
  */
 package com.evernote.android.job.v14;
 
-import android.app.IntentService;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 
 import net.vrallev.android.cat.Cat;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
  * @author rwondratschek
  */
-public class PlatformAlarmService extends IntentService {
-
-    private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
+public final class PlatformAlarmService extends Service {
 
     /*package*/ static Intent createIntent(Context context, int jobId) {
         Intent intent = new Intent(context, PlatformAlarmService.class);
@@ -50,12 +52,58 @@ public class PlatformAlarmService extends IntentService {
         return intent;
     }
 
-    public PlatformAlarmService() {
-        super(PlatformAlarmService.class.getSimpleName());
+    private final Object mMonitor = new Object();
+
+    private volatile ExecutorService mExecutorService;
+    private volatile Set<Integer> mStartIds;
+    private volatile int mLastStartId;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mExecutorService = Executors.newCachedThreadPool();
+        mStartIds = new HashSet<>();
     }
 
     @Override
-    protected void onHandleIntent(final Intent intent) {
+    public int onStartCommand(@Nullable final Intent intent, int flags, final int startId) {
+        synchronized (mMonitor) {
+            mStartIds.add(startId);
+            mLastStartId = startId;
+        }
+
+        mExecutorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    runJob(intent);
+                } finally {
+                    // call here, our own wake lock could be acquired too late
+                    JobProxy.Common.completeWakefulIntent(intent);
+                    stopSelfIfNecessary(startId);
+                }
+            }
+        });
+        return START_NOT_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        mExecutorService.shutdown();
+        mExecutorService = null;
+
+        synchronized (mMonitor) {
+            mStartIds = null;
+            mLastStartId = 0;
+        }
+    }
+
+    @Override
+    public final IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    private void runJob(Intent intent) {
         if (intent == null) {
             Cat.i("Delivered intent is null");
             return;
@@ -66,19 +114,21 @@ public class PlatformAlarmService extends IntentService {
 
         // create the JobManager. Seeing sometimes exceptions, that it wasn't created, yet.
         final JobRequest request = common.getPendingRequest(true);
-        if (request == null) {
-            return;
+        if (request != null) {
+            common.executeJobRequest(request);
         }
+    }
 
-        // parallel execution
-        EXECUTOR_SERVICE.execute(new Runnable() {
-            @Override
-            public void run() {
-                common.executeJobRequest(request);
-
-                // call here, our own wake lock could be acquired too late
-                JobProxy.Common.completeWakefulIntent(intent);
+    private void stopSelfIfNecessary(int startId) {
+        synchronized (mMonitor) {
+            Set<Integer> startIds = mStartIds;
+            if (startIds != null) {
+                // service not destroyed
+                startIds.remove(startId);
+                if (startIds.isEmpty()) {
+                    stopSelfResult(mLastStartId);
+                }
             }
-        });
+        }
     }
 }
