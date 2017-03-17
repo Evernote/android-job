@@ -230,3 +230,30 @@ After the app was force killed (or swiped away from the recent list on some devi
 When the app is being relaunched, this library automatically reschedules pending jobs if necessary. The library also register a [boot completed receiver](https://github.com/evernote/android-job/blob/master/library/src/main/java/com/evernote/android/job/JobBootReceiver.java), so that jobs are rescheduled after a reboot.
 
 Note that only the `AlarmManager` is affected. Jobs relying on the `JobScheduler` or `GcmNetworkManager` still work reliable.
+
+### Can I run a job in a different process?
+
+No, that's not possible. The library can't know your process name in advance to start all services in this process. The recommended way is to start your service in the other process from the job.
+
+```java
+public class SeparateProcessJob extends Job {
+    @Override
+    @NonNull
+    protected Result onRunJob(final Params params) {
+        Intent intent = new Intent(getContext(), SeparateProcessService.class);
+        startWakefulService(intent);
+        return Result.SUCCESS;
+    }
+}
+
+public class SeparateProcessService extends IntentService {
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        try {
+            // do work
+        } finally {
+            Job.completeWakefulIntent(intent);
+        }
+    }
+}
+```
