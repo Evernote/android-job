@@ -60,7 +60,7 @@ import java.util.concurrent.TimeUnit;
     private final LruCache<Integer, Job> mFinishedJobsCache;
 
     public JobExecutor() {
-        mExecutorService = Executors.newCachedThreadPool();
+        mExecutorService = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
         mJobs = new SparseArray<>();
         mFinishedJobsCache = new LruCache<>(20);
     }

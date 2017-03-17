@@ -1,6 +1,8 @@
 ## 1.1.8
 
 * Catch wake lock crashes in all cases, fixes #153
+* Use a better execution in parallel with the `AlarmManager`. This may prevent a process death.
+* Use better thread names
 
 ## 1.1.7 (2017-02-27)
 

@@ -52,7 +52,7 @@ public class PlatformJobService extends JobService {
      */
 
     private static final CatLog CAT = new JobCat("PlatformJobService");
-    private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
 
     @Override
     public boolean onStartJob(final JobParameters params) {

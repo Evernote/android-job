@@ -61,7 +61,7 @@ public final class PlatformAlarmService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mExecutorService = Executors.newCachedThreadPool();
+        mExecutorService = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
         mStartIds = new HashSet<>();
     }
 
