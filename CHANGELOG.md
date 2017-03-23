@@ -1,8 +1,9 @@
-## 1.1.8
+## 1.1.8 (2017-03-23)
 
 * Catch wake lock crashes in all cases, fixes #153
 * Use a better execution in parallel with the `AlarmManager`. This may prevent a process death.
 * Use better thread names
+* List for quick boot completed broad casts, see #157
 
 ## 1.1.7 (2017-02-27)
 
