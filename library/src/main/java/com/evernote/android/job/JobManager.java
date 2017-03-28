@@ -493,7 +493,7 @@ public final class JobManager {
         public void setVerbose(boolean verbose) {
             if (mVerbose != verbose) {
                 mVerbose = verbose;
-                CatGlobal.setPackageEnabled(JobManager.class.getPackage().toString(), verbose);
+                CatGlobal.setPackageEnabled(JobManager.class.getPackage().getName(), verbose);
             }
         }
 
