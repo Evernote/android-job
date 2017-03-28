@@ -33,10 +33,9 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.util.JobApi;
-import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
@@ -128,7 +127,6 @@ public interface JobProxy {
 
         private final Context mContext;
         private final int mJobId;
-        private final CatLog mCat;
 
         private final JobManager mJobManager;
 
@@ -139,7 +137,6 @@ public interface JobProxy {
         /*package*/ Common(@NonNull Context context, String loggingTag, int jobId) {
             mContext = context;
             mJobId = jobId;
-            mCat = new JobCat(loggingTag);
 
             mJobManager = JobManager.create(context);
         }
@@ -152,28 +149,28 @@ public interface JobProxy {
 
             if (job != null && !job.isFinished()) {
                 // that's probably a platform bug http://stackoverflow.com/questions/33235754/jobscheduler-posting-jobs-twice-not-expected
-                mCat.d("Job %d is already running, %s", mJobId, request);
+                Cat.d("Job %d is already running, %s", mJobId, request);
                 // not necessary to clean up, the running instance will do that
                 return null;
 
             } else if (job != null && !periodic) {
-                mCat.d("Job %d already finished, %s", mJobId, request);
+                Cat.d("Job %d already finished, %s", mJobId, request);
                 cleanUpOrphanedJob(cleanUpOrphanedJob);
                 return null;
 
             } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < 2_000) {
                 // that's probably a platform bug http://stackoverflow.com/questions/33235754/jobscheduler-posting-jobs-twice-not-expected
-                mCat.d("Job %d is periodic and just finished, %s", mJobId, request);
+                Cat.d("Job %d is periodic and just finished, %s", mJobId, request);
                 // don't clean up, periodic job
                 return null;
 
             } else if (request != null && request.isTransient()) {
-                mCat.d("Request %d is transient, %s", mJobId, request);
+                Cat.d("Request %d is transient, %s", mJobId, request);
                 // not necessary to clean up, the JobManager will do this for transient jobs
                 return null;
 
             } else if (request == null) {
-                mCat.d("Request for ID %d was null", mJobId);
+                Cat.d("Request for ID %d was null", mJobId);
                 cleanUpOrphanedJob(cleanUpOrphanedJob);
                 return null;
             }
@@ -196,10 +193,10 @@ public interface JobProxy {
             }
 
             if (Looper.myLooper() == Looper.getMainLooper()) {
-                mCat.w("Running JobRequest on a main thread, this could cause stutter or ANR in your app.");
+                Cat.w("Running JobRequest on a main thread, this could cause stutter or ANR in your app.");
             }
 
-            mCat.d("Run job, %s, waited %s, %s", request, JobUtil.timeToString(waited), timeWindow);
+            Cat.d("Run job, %s, waited %s, %s", request, JobUtil.timeToString(waited), timeWindow);
             JobExecutor jobExecutor = mJobManager.getJobExecutor();
             Job job = null;
 
@@ -218,15 +215,15 @@ public interface JobProxy {
 
                 // wait until done
                 Job.Result result = future.get();
-                mCat.d("Finished job, %s %s", request, result);
+                Cat.d("Finished job, %s %s", request, result);
                 return result;
 
             } catch (InterruptedException | ExecutionException e) {
-                mCat.e(e);
+                Cat.e(e);
 
                 if (job != null) {
                     job.cancel();
-                    mCat.e("Canceled %s", request);
+                    Cat.e("Canceled %s", request);
                 }
 
                 return Job.Result.FAILURE;

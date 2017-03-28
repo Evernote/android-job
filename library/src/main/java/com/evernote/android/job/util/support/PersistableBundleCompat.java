@@ -28,9 +28,7 @@ package com.evernote.android.job.util.support;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 
-import com.evernote.android.job.util.JobCat;
-
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -50,7 +48,6 @@ import java.util.Set;
 @SuppressWarnings("unused")
 public final class PersistableBundleCompat {
 
-    private static final CatLog CAT = new JobCat("PersistableBundleCompat");
     private static final String UTF_8 = "UTF-8";
 
     private final Map<String, Object> mValues;
@@ -238,13 +235,13 @@ public final class PersistableBundleCompat {
             return outputStream.toString(UTF_8);
 
         } catch (XmlPullParserException | IOException e) {
-            CAT.e(e);
+            Cat.e(e);
             // shouldn't happen
             return "";
 
         } catch (Error e) {
             // https://gist.github.com/vRallev/9444359f05259e4b6317 and other crashes on rooted devices
-            CAT.e(e);
+            Cat.e(e);
             return "";
 
         } finally {
@@ -265,12 +262,12 @@ public final class PersistableBundleCompat {
             return new PersistableBundleCompat((Map<String, Object>) map);
 
         } catch (XmlPullParserException | IOException e) {
-            CAT.e(e);
+            Cat.e(e);
             return new PersistableBundleCompat();
 
         } catch (VerifyError e) {
             // https://gist.github.com/vRallev/9444359f05259e4b6317
-            CAT.e(e);
+            Cat.e(e);
             return new PersistableBundleCompat();
 
         } finally {

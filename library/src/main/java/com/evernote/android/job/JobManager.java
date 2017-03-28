@@ -39,14 +39,12 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.evernote.android.job.util.JobApi;
-import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.JobUtil;
 import com.google.android.gms.gcm.GcmNetworkManager;
 
 import net.vrallev.android.cat.Cat;
 import net.vrallev.android.cat.CatGlobal;
-import net.vrallev.android.cat.CatLog;
 
 import java.util.List;
 import java.util.Set;
@@ -82,9 +80,6 @@ import java.util.Set;
 @SuppressWarnings("unused")
 public final class JobManager {
 
-    private static final Package PACKAGE = JobManager.class.getPackage();
-    private static final CatLog CAT = new JobCat("JobManager");
-
     @SuppressLint("StaticFieldLeak")
     private static volatile JobManager instance;
 
@@ -100,11 +95,6 @@ public final class JobManager {
             synchronized (JobManager.class) {
                 if (instance == null) {
                     JobPreconditions.checkNotNull(context, "Context cannot be null");
-
-                    if (PACKAGE != null) {
-                        // package can be null when class is repackaged, then ignore this
-                        CatGlobal.setDefaultCatLogPackage(PACKAGE.getName(), new JobCat());
-                    }
 
                     if (context.getApplicationContext() != null) {
                         // could be null in unit tests
@@ -212,7 +202,7 @@ public final class JobManager {
      */
     public void schedule(@NonNull JobRequest request) {
         if (mJobCreatorHolder.isEmpty()) {
-            CAT.w("you haven't registered a JobCreator with addJobCreator(), it's likely that your job never will be executed");
+            Cat.w("you haven't registered a JobCreator with addJobCreator(), it's likely that your job never will be executed");
         }
 
         if (request.isUpdateCurrent()) {
@@ -227,7 +217,7 @@ public final class JobManager {
 
         if (jobApi == JobApi.GCM && !mConfig.isGcmApiEnabled()) {
             // shouldn't happen
-            CAT.w("GCM API disabled, but used nonetheless");
+            Cat.w("GCM API disabled, but used nonetheless");
         }
 
         request.setScheduledAt(System.currentTimeMillis());
@@ -331,7 +321,7 @@ public final class JobManager {
      */
     public void forceApi(@NonNull JobApi api) {
         setJobProxy(JobPreconditions.checkNotNull(api));
-        CAT.w("Changed API to %s", api);
+        Cat.w("Changed API to %s", api);
     }
 
     /**
@@ -378,7 +368,7 @@ public final class JobManager {
 
     private boolean cancelInner(@Nullable JobRequest request) {
         if (request != null) {
-            CAT.i("Found pending job %s, canceling", request);
+            Cat.i("Found pending job %s, canceling", request);
             getJobProxy(request).cancel(request.getJobId());
             getJobStorage().remove(request);
             return true;
@@ -389,7 +379,7 @@ public final class JobManager {
 
     private boolean cancelInner(@Nullable Job job) {
         if (job != null && !job.isFinished() && !job.isCanceled()) {
-            CAT.i("Cancel running %s", job);
+            Cat.i("Cancel running %s", job);
             job.cancel();
             return true;
         } else {
@@ -501,9 +491,9 @@ public final class JobManager {
          * @param verbose Whether or not to print all log messages. The default value is {@code true}.
          */
         public void setVerbose(boolean verbose) {
-            if (mVerbose != verbose && PACKAGE != null) {
+            if (mVerbose != verbose) {
                 mVerbose = verbose;
-                CatGlobal.setPackageEnabled(PACKAGE.getName(), verbose);
+                CatGlobal.setPackageEnabled(JobManager.class.getPackage().getName(), verbose);
             }
         }
 
@@ -534,13 +524,13 @@ public final class JobManager {
                 JobApi defaultApi = JobApi.getDefault(mContext, true);
                 if (!defaultApi.equals(getApi())) {
                     setJobProxy(defaultApi);
-                    CAT.i("Changed default proxy to %s after enabled the GCM API", defaultApi);
+                    Cat.i("Changed default proxy to %s after enabled the GCM API", defaultApi);
                 }
             } else {
                 JobApi defaultApi = JobApi.getDefault(mContext, false);
                 if (JobApi.GCM == getApi()) {
                     setJobProxy(defaultApi);
-                    CAT.i("Changed default proxy to %s after disabling the GCM API", defaultApi);
+                    Cat.i("Changed default proxy to %s after disabling the GCM API", defaultApi);
                 }
             }
         }

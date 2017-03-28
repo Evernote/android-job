@@ -5,9 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
 
-import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import java.util.Set;
 
@@ -17,7 +16,6 @@ import java.util.Set;
 public final class JobRescheduleService extends IntentService {
 
     private static final String TAG = "JobRescheduleService";
-    private static final CatLog CAT = new JobCat(TAG);
 
     /*package*/ static void startService(Context context) {
         Intent intent = new Intent(context, JobRescheduleService.class);
@@ -37,7 +35,7 @@ public final class JobRescheduleService extends IntentService {
              * be available in the storage. We still catch this case, because we never execute
              * a job with the same ID twice. However, the still save resources with the delay.
              */
-            CAT.d("Reschedule service started");
+            Cat.d("Reschedule service started");
             SystemClock.sleep(10_000L);
 
             JobManager manager = JobManager.create(this);
@@ -63,7 +61,7 @@ public final class JobRescheduleService extends IntentService {
                 }
             }
 
-            CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
+            Cat.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
 
         } finally {
             WakeLockUtil.completeWakefulIntent(intent);

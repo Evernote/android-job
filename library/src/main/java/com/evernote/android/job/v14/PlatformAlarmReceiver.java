@@ -30,9 +30,7 @@ import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.evernote.android.job.JobProxy;
-import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
 
 /**
  * @author rwondratschek
@@ -40,8 +38,6 @@ import net.vrallev.android.cat.CatLog;
 public class PlatformAlarmReceiver extends WakefulBroadcastReceiver {
 
     /*package*/ static final String EXTRA_JOB_ID = "EXTRA_JOB_ID";
-
-    private static final CatLog CAT = new JobCat("PlatformAlarmReceiver");
 
     /*package*/ static Intent createIntent(Context context, int jobId) {
         return new Intent(context, PlatformAlarmReceiver.class).putExtra(EXTRA_JOB_ID, jobId);

@@ -35,16 +35,16 @@ import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobUtil;
 import com.evernote.android.job.v14.JobProxy14;
 
+import net.vrallev.android.cat.Cat;
+
 /**
  * @author rwondratschek
  */
 @TargetApi(Build.VERSION_CODES.KITKAT)
 public class JobProxy19 extends JobProxy14 {
 
-    private static final String TAG = "JobProxy19";
-
     public JobProxy19(Context context) {
-        super(context, TAG);
+        super(context);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class JobProxy19 extends JobProxy14 {
 
         alarmManager.setWindow(AlarmManager.RTC, startMs, lengthMs, pendingIntent);
 
-        mCat.d("Schedule alarm, %s, start %s, end %s", request,
+        Cat.d("Schedule alarm, %s, start %s, end %s", request,
                 JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
     }
 
@@ -67,7 +67,7 @@ public class JobProxy19 extends JobProxy14 {
 
         alarmManager.setWindow(AlarmManager.RTC, startMs, lengthMs, pendingIntent);
 
-        mCat.d("Scheduled repeating alarm (flex support), %s, start %s, end %s, flex %s", request,
+        Cat.d("Scheduled repeating alarm (flex support), %s, start %s, end %s, flex %s", request,
                 JobUtil.timeToString(Common.getStartMsSupportFlex(request)), JobUtil.timeToString(Common.getEndMsSupportFlex(request)),
                 JobUtil.timeToString(request.getFlexMs()));
     }

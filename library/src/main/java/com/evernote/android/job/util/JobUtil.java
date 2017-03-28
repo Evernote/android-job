@@ -29,7 +29,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -47,8 +47,6 @@ public final class JobUtil {
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("HH:mm:ss", Locale.US);
 
     private static final long ONE_DAY = TimeUnit.DAYS.toMillis(1);
-
-    private static final CatLog CAT = new JobCat("JobUtil");
 
     private JobUtil() {
         // no op
@@ -93,7 +91,7 @@ public final class JobUtil {
             return PackageManager.PERMISSION_GRANTED == context.getPackageManager()
                     .checkPermission(permission, context.getPackageName());
         } catch (Exception e) {
-            CAT.e(e);
+            Cat.e(e);
             // crash https://gist.github.com/vRallev/6affe17c93e993681bfd
 
             // give it another chance with the application context

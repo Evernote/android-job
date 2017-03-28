@@ -32,9 +32,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.util.LruCache;
 import android.util.SparseArray;
 
-import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import java.util.HashSet;
 import java.util.Locale;
@@ -51,7 +50,6 @@ import java.util.concurrent.TimeUnit;
  */
 /*package*/ class JobExecutor {
 
-    private static final CatLog CAT = new JobCat("JobExecutor");
     private static final long WAKE_LOCK_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
 
     private final ExecutorService mExecutorService;
@@ -67,7 +65,7 @@ import java.util.concurrent.TimeUnit;
 
     public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @Nullable Job job) {
         if (job == null) {
-            CAT.w("JobCreator returned null for tag %s", request.getTag());
+            Cat.w("JobCreator returned null for tag %s", request.getTag());
             return null;
         }
         if (job.isFinished()) {
@@ -76,7 +74,7 @@ import java.util.concurrent.TimeUnit;
 
         job.setContext(context).setRequest(request);
 
-        CAT.i("Executing %s, context %s", request, context.getClass().getSimpleName());
+        Cat.i("Executing %s, context %s", request, context.getClass().getSimpleName());
 
         mJobs.put(request.getJobId(), job);
         return mExecutorService.submit(new JobCallable(job));
@@ -139,7 +137,7 @@ import java.util.concurrent.TimeUnit;
                 markJobAsFinished(mJob);
 
                 if (mWakeLock == null || !mWakeLock.isHeld()) {
-                    CAT.w("Wake lock was not held after job %s was done. The job took too long to complete. This could have unintended side effects on your app.", mJob);
+                    Cat.w("Wake lock was not held after job %s was done. The job took too long to complete. This could have unintended side effects on your app.", mJob);
                 }
                 WakeLockUtil.releaseWakeLock(mWakeLock);
             }
@@ -149,12 +147,12 @@ import java.util.concurrent.TimeUnit;
             Job.Result result;
             try {
                 result = mJob.runJob();
-                CAT.i("Finished %s", mJob);
+                Cat.i("Finished %s", mJob);
 
                 handleResult(result);
 
             } catch (Throwable t) {
-                CAT.e(t, "Crashed %s", mJob);
+                Cat.e(t, "Crashed %s", mJob);
                 result = mJob.getResult(); // probably the default value
             }
 

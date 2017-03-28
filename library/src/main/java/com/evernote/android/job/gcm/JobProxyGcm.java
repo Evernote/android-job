@@ -28,7 +28,6 @@ package com.evernote.android.job.gcm;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.evernote.android.job.util.JobCat;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.OneoffTask;
 import com.google.android.gms.gcm.PeriodicTask;
@@ -37,14 +36,12 @@ import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 /**
  * @author rwondratschek
  */
 public class JobProxyGcm implements JobProxy {
-
-    private static final CatLog CAT = new JobCat("JobProxyGcm");
 
     /*
      * Requires charging doesn't work reliable. Like the documentation says, the job doesn't run if
@@ -72,7 +69,7 @@ public class JobProxyGcm implements JobProxy {
 
         mGcmNetworkManager.schedule(task);
 
-        CAT.d("Scheduled OneoffTask, %s, start %s, end %s, reschedule count %d", request, JobUtil.timeToString(startMs),
+        Cat.d("Scheduled OneoffTask, %s, start %s, end %s, reschedule count %d", request, JobUtil.timeToString(startMs),
                 JobUtil.timeToString(endMs), Common.getRescheduleCount(request));
     }
 
@@ -85,13 +82,13 @@ public class JobProxyGcm implements JobProxy {
 
         mGcmNetworkManager.schedule(task);
 
-        CAT.d("Scheduled PeriodicTask, %s, interval %s, flex %s", request, JobUtil.timeToString(request.getIntervalMs()),
+        Cat.d("Scheduled PeriodicTask, %s, interval %s, flex %s", request, JobUtil.timeToString(request.getIntervalMs()),
                 JobUtil.timeToString(request.getFlexMs()));
     }
 
     @Override
     public void plantPeriodicFlexSupport(JobRequest request) {
-        CAT.w("plantPeriodicFlexSupport called although flex is supported");
+        Cat.w("plantPeriodicFlexSupport called although flex is supported");
 
         long startMs = Common.getStartMsSupportFlex(request);
         long endMs = Common.getEndMsSupportFlex(request);
@@ -102,7 +99,7 @@ public class JobProxyGcm implements JobProxy {
 
         mGcmNetworkManager.schedule(task);
 
-        CAT.d("Scheduled periodic (flex support), %s, start %s, end %s, flex %s", request, JobUtil.timeToString(startMs),
+        Cat.d("Scheduled periodic (flex support), %s, start %s, end %s, flex %s", request, JobUtil.timeToString(startMs),
                 JobUtil.timeToString(endMs), JobUtil.timeToString(request.getFlexMs()));
     }
 

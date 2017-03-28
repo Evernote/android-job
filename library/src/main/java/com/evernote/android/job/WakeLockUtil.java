@@ -8,10 +8,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
-import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import java.util.concurrent.TimeUnit;
 
@@ -20,9 +19,9 @@ import java.util.concurrent.TimeUnit;
  */
 /*package*/ final class WakeLockUtil {
 
-    private static final CatLog CAT = new JobCat("WakeLockUtil");
-
     private static final String EXTRA_WAKE_LOCK_ID = "com.evernote.android.job.wakelockid";
+    private static final SparseArray<PowerManager.WakeLock> ACTIVE_WAKE_LOCKS = new SparseArray<>();
+    private static int nextId = 1;
 
     private WakeLockUtil() {
         // no op
@@ -49,7 +48,7 @@ import java.util.concurrent.TimeUnit;
             } catch (Exception e) {
                 // saw an NPE on rooted Galaxy Nexus Android 4.1.1
                 // android.os.IPowerManager$Stub$Proxy.acquireWakeLock(IPowerManager.java:288)
-                CAT.e(e);
+                Cat.e(e);
             }
         }
         return false;
@@ -62,12 +61,9 @@ import java.util.concurrent.TimeUnit;
             }
         } catch (Exception e) {
             // just to make sure if the PowerManager crashes while acquiring a wake lock
-            CAT.e(e);
+            Cat.e(e);
         }
     }
-
-    private static final SparseArray<PowerManager.WakeLock> ACTIVE_WAKE_LOCKS = new SparseArray<>();
-    private static int nextId = 1;
 
     /**
      * Do a {@link android.content.Context#startService(android.content.Intent)
@@ -79,9 +75,9 @@ import java.util.concurrent.TimeUnit;
      * the wake lock.
      *
      * @param context The Context in which it operate.
-     * @param intent The Intent with which to start the service, as per
-     * {@link android.content.Context#startService(android.content.Intent)
-     * Context.startService}.
+     * @param intent  The Intent with which to start the service, as per
+     *                {@link android.content.Context#startService(android.content.Intent)
+     *                Context.startService}.
      */
     public static ComponentName startWakefulService(Context context, Intent intent) {
         synchronized (ACTIVE_WAKE_LOCKS) {
