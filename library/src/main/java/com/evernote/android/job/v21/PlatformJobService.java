@@ -34,9 +34,8 @@ import com.evernote.android.job.Job;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
-import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,7 +50,6 @@ public class PlatformJobService extends JobService {
      * JobScheduler can have issues: http://stackoverflow.com/questions/32079407/android-jobscheduler-onstartjob-called-multiple-times
      */
 
-    private static final CatLog CAT = new JobCat("PlatformJobService");
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
 
     @Override
@@ -86,9 +84,9 @@ public class PlatformJobService extends JobService {
         Job job = JobManager.instance().getJob(params.getJobId());
         if (job != null) {
             job.cancel();
-            CAT.d("Called onStopJob for %s", job);
+            Cat.d("Called onStopJob for %s", job);
         } else {
-            CAT.d("Called onStopJob, job %d not found", params.getJobId());
+            Cat.d("Called onStopJob, job %d not found", params.getJobId());
         }
 
 

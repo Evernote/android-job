@@ -33,13 +33,11 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.evernote.android.job.util.JobApi;
-import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.JobUtil;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
 import net.vrallev.android.cat.Cat;
-import net.vrallev.android.cat.CatLog;
 
 import java.util.concurrent.TimeUnit;
 
@@ -102,8 +100,6 @@ public final class JobRequest {
 
     private static final long WINDOW_THRESHOLD_WARNING = Long.MAX_VALUE / 3;
     private static final long WINDOW_THRESHOLD_MAX = (Long.MAX_VALUE / 3) * 2;
-
-    private static final CatLog CAT = new JobCat("JobRequest");
 
     /*package*/ static long getMinInterval() {
         return JobManager.instance().getConfig().isAllowSmallerIntervalsForMarshmallow() ? TimeUnit.MINUTES.toMillis(1) : MIN_INTERVAL;
@@ -529,7 +525,7 @@ public final class JobRequest {
             try {
                 mBackoffPolicy = BackoffPolicy.valueOf(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_BACKOFF_POLICY)));
             } catch (Throwable t) {
-                CAT.e(t); // https://gist.github.com/vRallev/574563f0e3fe636b19a7
+                Cat.e(t); // https://gist.github.com/vRallev/574563f0e3fe636b19a7
                 mBackoffPolicy = DEFAULT_BACKOFF_POLICY;
             }
 
@@ -543,7 +539,7 @@ public final class JobRequest {
             try {
                 mNetworkType = NetworkType.valueOf(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_NETWORK_TYPE)));
             } catch (Throwable t) {
-                CAT.e(t); // https://gist.github.com/vRallev/574563f0e3fe636b19a7
+                Cat.e(t); // https://gist.github.com/vRallev/574563f0e3fe636b19a7
                 mNetworkType = DEFAULT_NETWORK_TYPE;
             }
 
@@ -885,7 +881,7 @@ public final class JobRequest {
 
                 if (mIntervalMs < MIN_INTERVAL || mFlexMs < MIN_FLEX) {
                     // this means the debug flag is set to true
-                    CAT.w("AllowSmallerIntervals enabled, this will crash on Android N and later, interval %d (minimum is %d), flex %d (minimum is %d)",
+                    Cat.w("AllowSmallerIntervals enabled, this will crash on Android N and later, interval %d (minimum is %d), flex %d (minimum is %d)",
                             mIntervalMs, MIN_INTERVAL, mFlexMs, MIN_FLEX);
                 }
             }

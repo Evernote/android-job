@@ -35,10 +35,9 @@ import android.support.annotation.NonNull;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
-import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import java.util.List;
 
@@ -49,18 +48,10 @@ import java.util.List;
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class JobProxy21 implements JobProxy {
 
-    private static final String TAG = "JobProxy21";
-
     protected final Context mContext;
-    protected final CatLog mCat;
 
     public JobProxy21(Context context) {
-        this(context, TAG);
-    }
-
-    protected JobProxy21(Context context, String logTag) {
         mContext = context;
-        mCat = new JobCat(logTag);
     }
 
     @Override
@@ -71,7 +62,7 @@ public class JobProxy21 implements JobProxy {
         JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request), startMs, endMs).build();
         int scheduleResult = schedule(jobInfo);
 
-        mCat.d("Schedule one-off jobInfo %s, %s, start %s, end %s, reschedule count %d", scheduleResultToString(scheduleResult),
+        Cat.d("Schedule one-off jobInfo %s, %s, start %s, end %s, reschedule count %d", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs), Common.getRescheduleCount(request));
     }
 
@@ -83,7 +74,7 @@ public class JobProxy21 implements JobProxy {
         JobInfo jobInfo = createBuilderPeriodic(createBaseBuilder(request), intervalMs, flexMs).build();
         int scheduleResult = schedule(jobInfo);
 
-        mCat.d("Schedule periodic jobInfo %s, %s, interval %s, flex %s", scheduleResultToString(scheduleResult),
+        Cat.d("Schedule periodic jobInfo %s, %s, interval %s, flex %s", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(intervalMs), JobUtil.timeToString(flexMs));
     }
 
@@ -95,7 +86,7 @@ public class JobProxy21 implements JobProxy {
         JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request), startMs, endMs).build();
         int scheduleResult = schedule(jobInfo);
 
-        mCat.d("Schedule periodic (flex support) jobInfo %s, %s, start %s, end %s, flex %s", scheduleResultToString(scheduleResult),
+        Cat.d("Schedule periodic (flex support) jobInfo %s, %s, start %s, end %s, flex %s", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs), JobUtil.timeToString(request.getFlexMs()));
     }
 
@@ -105,7 +96,7 @@ public class JobProxy21 implements JobProxy {
             getJobScheduler().cancel(jobId);
         } catch (Exception e) {
             // https://gist.github.com/vRallev/5d48a4a8e8d05067834e
-            mCat.e(e);
+            Cat.e(e);
         }
     }
 
@@ -116,7 +107,7 @@ public class JobProxy21 implements JobProxy {
             pendingJobs = getJobScheduler().getAllPendingJobs();
         } catch (Exception e) {
             // it's possible that this throws an exception, see https://gist.github.com/vRallev/a59947dd3932d2642641
-            mCat.e(e);
+            Cat.e(e);
             return false;
         }
 
@@ -174,7 +165,7 @@ public class JobProxy21 implements JobProxy {
         try {
             return getJobScheduler().schedule(jobInfo);
         } catch (Exception e) {
-            mCat.e(e);
+            Cat.e(e);
             return JobScheduler.RESULT_FAILURE;
         }
     }

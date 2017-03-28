@@ -34,6 +34,8 @@ import android.support.annotation.NonNull;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.v21.JobProxy21;
 
+import net.vrallev.android.cat.Cat;
+
 
 /**
  * @author rwondratschek
@@ -41,15 +43,13 @@ import com.evernote.android.job.v21.JobProxy21;
 @TargetApi(Build.VERSION_CODES.N)
 public class JobProxy24 extends JobProxy21 {
 
-    private static final String TAG = "JobProxy24";
-
     public JobProxy24(Context context) {
-        super(context, TAG);
+        super(context);
     }
 
     @Override
     public void plantPeriodicFlexSupport(JobRequest request) {
-        mCat.w("plantPeriodicFlexSupport called although flex is supported");
+        Cat.w("plantPeriodicFlexSupport called although flex is supported");
         super.plantPeriodicFlexSupport(request);
     }
 
@@ -58,7 +58,7 @@ public class JobProxy24 extends JobProxy21 {
         try {
             return getJobScheduler().getPendingJob(request.getJobId()) != null;
         } catch (Exception e) {
-            mCat.e(e);
+            Cat.e(e);
             return false;
         }
     }

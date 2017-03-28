@@ -34,30 +34,21 @@ import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
-import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 /**
  * @author rwondratschek
  */
 public class JobProxy14 implements JobProxy {
 
-    private static final String TAG = "JobProxy14";
-
     protected final Context mContext;
-    protected final CatLog mCat;
 
     private AlarmManager mAlarmManager;
 
     public JobProxy14(Context context) {
-        this(context, TAG);
-    }
-
-    protected JobProxy14(Context context, String logTag) {
         mContext = context;
-        mCat = new JobCat(logTag);
     }
 
     @Override
@@ -77,7 +68,7 @@ public class JobProxy14 implements JobProxy {
             }
         } catch (Exception e) {
             // https://gist.github.com/vRallev/621b0b76a14ddde8691c
-            mCat.e(e);
+            Cat.e(e);
         }
     }
 
@@ -102,7 +93,7 @@ public class JobProxy14 implements JobProxy {
         long triggerAtMs = System.currentTimeMillis() + Common.getAverageDelayMsSupportFlex(request);
         alarmManager.set(AlarmManager.RTC, triggerAtMs, pendingIntent);
 
-        mCat.d("Scheduled repeating alarm (flex support), %s, interval %s, flex %s", request,
+        Cat.d("Scheduled repeating alarm (flex support), %s, interval %s, flex %s", request,
                 JobUtil.timeToString(request.getIntervalMs()), JobUtil.timeToString(request.getFlexMs()));
     }
 
@@ -111,7 +102,7 @@ public class JobProxy14 implements JobProxy {
     }
 
     private void logScheduled(JobRequest request) {
-        mCat.d("Scheduled alarm, %s, delay %s, exact %b, reschedule count %d", request,
+        Cat.d("Scheduled alarm, %s, delay %s, exact %b, reschedule count %d", request,
                 JobUtil.timeToString(Common.getAverageDelayMs(request)), request.isExact(), Common.getRescheduleCount(request));
     }
 
@@ -123,7 +114,7 @@ public class JobProxy14 implements JobProxy {
             alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
         }
 
-        mCat.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
+        Cat.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
     }
 
     @Override
@@ -139,7 +130,7 @@ public class JobProxy14 implements JobProxy {
             plantOneOffFlexSupport(request, alarmManager, pendingIntent);
         } catch (Exception e) {
             // https://gist.github.com/vRallev/621b0b76a14ddde8691c
-            mCat.e(e);
+            Cat.e(e);
         }
     }
 
@@ -153,7 +144,7 @@ public class JobProxy14 implements JobProxy {
             } catch (Exception e) {
                 // java.lang.SecurityException: get application info: Neither user 1010133 nor
                 // current process has android.permission.INTERACT_ACROSS_USERS.
-                mCat.e(e);
+                Cat.e(e);
             }
         }
     }
@@ -189,7 +180,7 @@ public class JobProxy14 implements JobProxy {
         } catch (Exception e) {
             // java.lang.SecurityException: Permission Denial: getIntentSender() from pid=31482, uid=10057,
             // (need uid=-1) is not allowed to send as package com.evernote
-            mCat.e(e);
+            Cat.e(e);
             return null;
         }
     }
@@ -201,7 +192,7 @@ public class JobProxy14 implements JobProxy {
         }
         if (mAlarmManager == null) {
             // https://gist.github.com/vRallev/5daef6e8a3b0d4a7c366
-            mCat.e("AlarmManager is null");
+            Cat.e("AlarmManager is null");
         }
         return mAlarmManager;
     }

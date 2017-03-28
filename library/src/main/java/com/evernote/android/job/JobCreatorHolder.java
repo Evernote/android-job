@@ -1,8 +1,7 @@
 package com.evernote.android.job;
 
-import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +10,6 @@ import java.util.List;
  * @author rwondratschek
  */
 /*package*/ class JobCreatorHolder {
-
-    private static final CatLog CAT = new JobCat("JobCreatorHolder");
 
     private final List<JobCreator> mJobCreators;
     private final Object mMonitor;
@@ -41,7 +38,7 @@ import java.util.List;
         synchronized (mMonitor) {
             int count = mJobCreators.size();
             if (count == 0) {
-                CAT.w("no JobCreator added");
+                Cat.w("no JobCreator added");
                 return null;
 
             } else if (count == 1) {
