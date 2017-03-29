@@ -44,8 +44,6 @@ import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.JobUtil;
 import com.google.android.gms.gcm.GcmNetworkManager;
 
-import net.vrallev.android.cat.Cat;
-import net.vrallev.android.cat.CatGlobal;
 import net.vrallev.android.cat.CatLog;
 
 import java.util.List;
@@ -79,10 +77,9 @@ import java.util.Set;
  *
  * @author rwondratschek
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public final class JobManager {
 
-    private static final Package PACKAGE = JobManager.class.getPackage();
     private static final CatLog CAT = new JobCat("JobManager");
 
     @SuppressLint("StaticFieldLeak")
@@ -101,11 +98,6 @@ public final class JobManager {
                 if (instance == null) {
                     JobPreconditions.checkNotNull(context, "Context cannot be null");
 
-                    if (PACKAGE != null) {
-                        // package can be null when class is repackaged, then ignore this
-                        CatGlobal.setDefaultCatLogPackage(PACKAGE.getName(), new JobCat());
-                    }
-
                     if (context.getApplicationContext() != null) {
                         // could be null in unit tests
                         context = context.getApplicationContext();
@@ -114,10 +106,10 @@ public final class JobManager {
                     instance = new JobManager(context);
 
                     if (!JobUtil.hasWakeLockPermission(context)) {
-                        Cat.w("No wake lock permission");
+                        CAT.w("No wake lock permission");
                     }
                     if (!JobUtil.hasBootPermission(context)) {
-                        Cat.w("No boot permission");
+                        CAT.w("No boot permission");
                     }
 
                     sendAddJobCreatorIntent(context);
@@ -198,7 +190,7 @@ public final class JobManager {
         return mConfig;
     }
 
-    protected void setJobProxy(JobApi api) {
+    private void setJobProxy(JobApi api) {
         mApi = api;
     }
 
@@ -407,6 +399,7 @@ public final class JobManager {
             }
         }
 
+        //noinspection ConstantConditions
         Set<Job> jobs = TextUtils.isEmpty(tag) ? getAllJobs() : getAllJobsForTag(tag);
         for (Job job : jobs) {
             if (cancelInner(job)) {
@@ -476,14 +469,13 @@ public final class JobManager {
         return api.getCachedProxy(mContext);
     }
 
+    // TODO: extract this class so that settings can be changed before the JobManager has been created
     public final class Config {
 
-        private boolean mVerbose;
         private boolean mGcmEnabled;
         private boolean mAllowSmallerIntervals;
 
         private Config() {
-            mVerbose = true;
             mGcmEnabled = true;
             mAllowSmallerIntervals = false;
         }
@@ -492,7 +484,7 @@ public final class JobManager {
          * @return Whether logging is enabled for this library. The default value is {@code true}.
          */
         public boolean isVerbose() {
-            return mVerbose;
+            return JobCat.isVerbose();
         }
 
         /**
@@ -501,10 +493,7 @@ public final class JobManager {
          * @param verbose Whether or not to print all log messages. The default value is {@code true}.
          */
         public void setVerbose(boolean verbose) {
-            if (mVerbose != verbose && PACKAGE != null) {
-                mVerbose = verbose;
-                CatGlobal.setPackageEnabled(PACKAGE.getName(), verbose);
-            }
+            JobCat.setVerbose(verbose);
         }
 
         /**

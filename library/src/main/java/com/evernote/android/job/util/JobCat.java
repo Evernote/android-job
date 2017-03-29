@@ -25,8 +25,13 @@
  */
 package com.evernote.android.job.util;
 
+import android.support.annotation.NonNull;
+
 import net.vrallev.android.cat.CatLog;
 import net.vrallev.android.cat.instance.CatLazy;
+import net.vrallev.android.cat.print.CatPrinter;
+
+import java.util.Arrays;
 
 /**
  * The default {@link CatLog} class for this library.
@@ -34,6 +39,67 @@ import net.vrallev.android.cat.instance.CatLazy;
  * @author rwondratschek
  */
 public class JobCat extends CatLazy {
+
+    private static volatile CatPrinter[] printers = new CatPrinter[0]; // use array to avoid synchronization while printing log statements
+    private static volatile boolean verbose = true;
+
+    /**
+     * Add a global logger for the job library, which will be notified about each log statement.
+     *
+     * @param printer Your desired logger.
+     * @return {@code true} if the printer was added. Returns {@code false} if the printer was
+     * already added.
+     */
+    public static synchronized boolean addLogPrinter(@NonNull CatPrinter printer) {
+        for (CatPrinter printer1 : printers) {
+            if (printer.equals(printer1)) {
+                return false;
+            }
+        }
+
+        for (int i = 0; i < printers.length; i++) {
+            if (printers[i] == null) {
+                printers[i] = printer;
+                return true;
+            }
+        }
+
+        int index = printers.length;
+        printers = Arrays.copyOf(printers, printers.length + 2);
+        printers[index] = printer;
+        return true;
+    }
+
+    /**
+     * Remove a global logger.
+     *
+     * @param printer Your desired logger.
+     * @see #addLogPrinter(CatPrinter)
+     */
+    public static synchronized void removeLogPrinter(@NonNull CatPrinter printer) {
+        for (int i = 0; i < printers.length; i++) {
+            if (printer.equals(printers[i])) {
+                printers[i] = null;
+                // continue, maybe for some reason the printer is twice in the array
+            }
+        }
+    }
+
+    /**
+     * Global switch to enable or disable logging.
+     *
+     * @param verbose Whether or not to print all log messages. The default value is {@code true}.
+     */
+    public static void setVerbose(boolean verbose) {
+        JobCat.verbose = verbose;
+    }
+
+    /**
+     * @return Whether logging is enabled for this library. The default value is {@code true}.
+     */
+    public static boolean isVerbose() {
+        return verbose;
+    }
 
     private final String mTag;
 
@@ -56,6 +122,19 @@ public class JobCat extends CatLazy {
 
     @Override
     protected void println(int priority, String message, Throwable t) {
+        if (!verbose) {
+            return;
+        }
+
         super.println(priority, message, t);
+
+        String tag = getTag();
+
+        CatPrinter[] printers = JobCat.printers;
+        for (CatPrinter printer : printers) {
+            if (printer != null) {
+                printer.println(priority, tag, message, t);
+            }
+        }
     }
 }

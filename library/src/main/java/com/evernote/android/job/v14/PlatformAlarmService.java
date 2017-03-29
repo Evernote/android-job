@@ -33,8 +33,9 @@ import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
+import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.Cat;
+import net.vrallev.android.cat.CatLog;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -45,6 +46,8 @@ import java.util.concurrent.Executors;
  * @author rwondratschek
  */
 public final class PlatformAlarmService extends Service {
+
+    private static final CatLog CAT = new JobCat("PlatformAlarmService");
 
     /*package*/ static Intent createIntent(Context context, int jobId) {
         Intent intent = new Intent(context, PlatformAlarmService.class);
@@ -105,12 +108,12 @@ public final class PlatformAlarmService extends Service {
 
     private void runJob(Intent intent) {
         if (intent == null) {
-            Cat.i("Delivered intent is null");
+            CAT.i("Delivered intent is null");
             return;
         }
 
         int jobId = intent.getIntExtra(PlatformAlarmReceiver.EXTRA_JOB_ID, -1);
-        final JobProxy.Common common = new JobProxy.Common(this, jobId);
+        final JobProxy.Common common = new JobProxy.Common(this, CAT, jobId);
 
         // create the JobManager. Seeing sometimes exceptions, that it wasn't created, yet.
         final JobRequest request = common.getPendingRequest(true);
