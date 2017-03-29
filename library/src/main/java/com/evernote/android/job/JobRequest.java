@@ -38,7 +38,6 @@ import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.JobUtil;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
-import net.vrallev.android.cat.Cat;
 import net.vrallev.android.cat.CatLog;
 
 import java.util.concurrent.TimeUnit;
@@ -615,11 +614,11 @@ public final class JobRequest {
             mEndMs = JobPreconditions.checkArgumentInRange(endMs, startMs, Long.MAX_VALUE, "endMs");
 
             if (mStartMs > WINDOW_THRESHOLD_MAX) {
-                Cat.i("startMs reduced from %d days to %d days", TimeUnit.MILLISECONDS.toDays(mStartMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
+                CAT.i("startMs reduced from %d days to %d days", TimeUnit.MILLISECONDS.toDays(mStartMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
                 mStartMs = WINDOW_THRESHOLD_MAX;
             }
             if (mEndMs > WINDOW_THRESHOLD_MAX) {
-                Cat.i("endMs reduced from %d days to %d days", TimeUnit.MILLISECONDS.toDays(mEndMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
+                CAT.i("endMs reduced from %d days to %d days", TimeUnit.MILLISECONDS.toDays(mEndMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
                 mEndMs = WINDOW_THRESHOLD_MAX;
             }
 
@@ -771,7 +770,7 @@ public final class JobRequest {
         public Builder setExact(long exactMs) {
             mExact = true;
             if (exactMs > WINDOW_THRESHOLD_MAX) {
-                Cat.i("exactMs clamped from %d days to %d days", TimeUnit.MILLISECONDS.toDays(exactMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
+                CAT.i("exactMs clamped from %d days to %d days", TimeUnit.MILLISECONDS.toDays(exactMs), TimeUnit.MILLISECONDS.toDays(WINDOW_THRESHOLD_MAX));
                 exactMs = WINDOW_THRESHOLD_MAX;
             }
 
@@ -912,7 +911,7 @@ public final class JobRequest {
             }
 
             if (mIntervalMs <= 0 && (mStartMs > WINDOW_THRESHOLD_WARNING || mEndMs > WINDOW_THRESHOLD_WARNING)) {
-                Cat.w("Attention: your execution window is too large. This could result in undesired behavior, see https://github.com/evernote/android-job/blob/master/FAQ.md");
+                CAT.w("Attention: your execution window is too large. This could result in undesired behavior, see https://github.com/evernote/android-job/blob/master/FAQ.md");
             }
 
             return new JobRequest(this);

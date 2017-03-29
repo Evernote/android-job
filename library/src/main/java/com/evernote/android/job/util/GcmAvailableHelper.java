@@ -11,7 +11,7 @@ import com.evernote.android.job.gcm.PlatformGcmService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
-import net.vrallev.android.cat.Cat;
+import net.vrallev.android.cat.CatLog;
 
 import java.util.List;
 
@@ -19,6 +19,8 @@ import java.util.List;
  * @author rwondratschek
  */
 /*package*/ final class GcmAvailableHelper {
+
+    private static final CatLog CAT = new JobCat("GcmAvailableHelper");
 
     private static final String ACTION_TASK_READY = "com.google.android.gms.gcm.ACTION_TASK_READY";
     private static final String GCM_PERMISSION = "com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE";
@@ -52,7 +54,7 @@ import java.util.List;
         } catch (Throwable t) {
             // seeing sometimes a DeadObjectException, return false, we can't do anything in this case
             // still sometimes seeing a NoClassDefFoundError here
-            Cat.w(t);
+            CAT.w(t);
             return false;
         }
     }
@@ -109,7 +111,7 @@ import java.util.List;
                 case PackageManager.COMPONENT_ENABLED_STATE_ENABLED:
                     if (!enabled) {
                         packageManager.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-                        Cat.i("GCM service disabled");
+                        CAT.i("GCM service disabled");
                     }
                     break;
 
@@ -117,14 +119,14 @@ import java.util.List;
                 case PackageManager.COMPONENT_ENABLED_STATE_DISABLED:
                     if (enabled) {
                         packageManager.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
-                        Cat.i("GCM service enabled");
+                        CAT.i("GCM service enabled");
                     }
                     break;
             }
 
         } catch (Throwable t) {
             // just in case, don't let the app crash with each restart
-            Cat.e(t);
+            CAT.e(t);
         }
     }
 

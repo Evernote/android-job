@@ -257,3 +257,32 @@ public class SeparateProcessService extends IntentService {
     }
 }
 ```
+
+### How can I add a custom logger?
+
+By default the library prints all log statement in Logcat. But often you wish to store those somewhere else, e.g. in file. The `JobCat` class gives you an option register a custom logger. It's recommended to add the logger before creating the `JobManager` instance.
+
+```java
+private class TestPrinter implements CatPrinter {
+
+    @Override
+    public void println(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+        switch (priority) {
+            case Log.ERROR:
+                // do something
+                break;
+        }
+    }
+}
+
+public class App extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        JobCat.addLogPrinter(new TestPrinter());
+        JobManager.create(this).addJobCreator(new DemoJobCreator());
+    }
+}
+```

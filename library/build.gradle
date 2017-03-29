@@ -3,11 +3,11 @@ apply plugin: 'com.github.ben-manes.versions'
 apply from: '../build-config/gradle-quality.gradle'
 
 dependencies {
-    provided "com.google.android.gms:play-services-gcm:$rootProject.ext.playServicesVersion"
+    provided "com.google.android.gms:play-services-gcm:$playServicesVersion"
     //compile "com.google.android.gms:play-services-gcm:$rootProject.ext.playServicesVersion"
 
     //noinspection GradleDependency
-    compile "com.android.support:support-annotations:$rootProject.ext.supportLibVersion"
+    compile "com.android.support:support-annotations:$supportLibVersion"
     compile 'net.vrallev.android:cat:1.0.5'
 
     androidTestCompile 'com.android.support.test:runner:0.5'
@@ -15,7 +15,11 @@ dependencies {
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
     androidTestCompile 'com.squareup.assertj:assertj-android:1.1.1'
 
-    androidTestCompile "com.facebook.stetho:stetho:$rootProject.ext.stethoVersion"
+    androidTestCompile "com.facebook.stetho:stetho:$stethoVersion"
+
+    testCompile "junit:junit:$junitVersion"
+    testCompile "org.mockito:mockito-core:$mockitoVersion"
+    testCompile "org.assertj:assertj-core:$assertjVersion"
 }
 
 android {
@@ -43,6 +47,15 @@ android {
 
     lintOptions {
         abortOnError true
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+        unitTests.all {
+            testLogging {
+                events 'passed', 'skipped', 'failed', 'standardOut', 'standardError'
+            }
+        }
     }
 }
 

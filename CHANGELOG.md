@@ -1,3 +1,7 @@
+## 1.1.9
+
+* Improve logging by providing an option to add a custom logger
+
 ## 1.1.8 (2017-03-23)
 
 * Catch wake lock crashes in all cases, fixes #153
