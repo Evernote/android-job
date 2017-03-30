@@ -116,6 +116,10 @@ import java.util.concurrent.TimeUnit;
      * now released; returns false if there was no wake lock specified for it.
      */
     public static boolean completeWakefulIntent(Intent intent) {
+        if (intent == null) {
+            return false;
+        }
+
         final int id = intent.getIntExtra(EXTRA_WAKE_LOCK_ID, 0);
         if (id == 0) {
             return false;
