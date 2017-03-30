@@ -25,18 +25,18 @@ public class TestLogger {
 
     @After
     public void resetValue() {
-        JobCat.setVerbose(true);
+        JobCat.setLogcatEnabled(true);
         mResetValueCalled = true;
     }
 
     @Test
-    public void testIsVerbose() {
+    public void testIsLogcatEnabled() {
         // first test in class, so resetValue() hasn't been called, yet
         assertThat(mResetValueCalled).isFalse();
-        assertThat(JobCat.isVerbose()).isTrue();
+        assertThat(JobCat.isLogcatEnabled()).isTrue();
 
-        JobCat.setVerbose(false);
-        assertThat(JobCat.isVerbose()).isFalse();
+        JobCat.setLogcatEnabled(false);
+        assertThat(JobCat.isLogcatEnabled()).isFalse();
     }
 
     @Test
@@ -116,17 +116,17 @@ public class TestLogger {
     public void testNotVerboseLogging() {
         JobCat cat = new JobCat("Tag");
 
-        TestPrinter printer = new TestPrinter();
-        assertThat(JobCat.addLogPrinter(printer)).isTrue();
+        TestPrinter fakeLogcatPrinter = new TestPrinter();
+        cat.addPrinter(fakeLogcatPrinter); // in this list logcat is enabled
 
         cat.d("hello");
 
-        assertThat(printer.mMessages).containsExactly("hello");
+        assertThat(fakeLogcatPrinter.mMessages).containsExactly("hello");
 
-        JobCat.setVerbose(false);
+        JobCat.setLogcatEnabled(false);
 
         cat.d("world");
-        assertThat(printer.mMessages).containsExactly("hello");
+        assertThat(fakeLogcatPrinter.mMessages).containsExactly("hello");
     }
 
     private static final class TestPrinter implements CatPrinter {

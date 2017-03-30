@@ -41,7 +41,7 @@ import java.util.Arrays;
 public class JobCat extends CatLazy {
 
     private static volatile CatPrinter[] printers = new CatPrinter[0]; // use array to avoid synchronization while printing log statements
-    private static volatile boolean verbose = true;
+    private static volatile boolean logcatEnabled = true;
 
     /**
      * Add a global logger for the job library, which will be notified about each log statement.
@@ -86,19 +86,19 @@ public class JobCat extends CatLazy {
     }
 
     /**
-     * Global switch to enable or disable logging.
+     * Global switch to enable or disable printing log messages to Logcat.
      *
-     * @param verbose Whether or not to print all log messages. The default value is {@code true}.
+     * @param enabled Whether or not to print all log messages. The default value is {@code true}.
      */
-    public static void setVerbose(boolean verbose) {
-        JobCat.verbose = verbose;
+    public static void setLogcatEnabled(boolean enabled) {
+        JobCat.logcatEnabled = enabled;
     }
 
     /**
      * @return Whether logging is enabled for this library. The default value is {@code true}.
      */
-    public static boolean isVerbose() {
-        return verbose;
+    public static boolean isLogcatEnabled() {
+        return logcatEnabled;
     }
 
     private final String mTag;
@@ -122,18 +122,18 @@ public class JobCat extends CatLazy {
 
     @Override
     protected void println(int priority, String message, Throwable t) {
-        if (!verbose) {
-            return;
+        if (logcatEnabled) {
+            super.println(priority, message, t);
         }
 
-        super.println(priority, message, t);
-
-        String tag = getTag();
-
         CatPrinter[] printers = JobCat.printers;
-        for (CatPrinter printer : printers) {
-            if (printer != null) {
-                printer.println(priority, tag, message, t);
+        if (printers.length > 0) {
+            String tag = getTag();
+
+            for (CatPrinter printer : printers) {
+                if (printer != null) {
+                    printer.println(priority, tag, message, t);
+                }
             }
         }
     }

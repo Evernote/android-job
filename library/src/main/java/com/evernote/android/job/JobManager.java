@@ -484,7 +484,7 @@ public final class JobManager {
          * @return Whether logging is enabled for this library. The default value is {@code true}.
          */
         public boolean isVerbose() {
-            return JobCat.isVerbose();
+            return JobCat.isLogcatEnabled();
         }
 
         /**
@@ -493,7 +493,7 @@ public final class JobManager {
          * @param verbose Whether or not to print all log messages. The default value is {@code true}.
          */
         public void setVerbose(boolean verbose) {
-            JobCat.setVerbose(verbose);
+            JobCat.setLogcatEnabled(verbose);
         }
 
         /**
