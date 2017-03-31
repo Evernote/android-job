@@ -1,23 +1,21 @@
-package com.evernote.android.job.test;
+package com.evernote.android.job.util.support;
 
-import android.support.test.filters.SmallTest;
-import android.support.test.runner.AndroidJUnit4;
+import com.evernote.android.job.test.JobRobolectricTestRunner;
 
-import com.evernote.android.job.util.support.PersistableBundleCompat;
-
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 /**
  * @author rwondratschek
  */
-@RunWith(AndroidJUnit4.class)
-@SmallTest
+@RunWith(JobRobolectricTestRunner.class)
+@FixMethodOrder(MethodSorters.JVM)
 public class PersistableBundleCompatTest {
 
-    @SuppressWarnings("ConstantConditions")
     @Test
     public void testBundle() {
         PersistableBundleCompat bundle = new PersistableBundleCompat();
