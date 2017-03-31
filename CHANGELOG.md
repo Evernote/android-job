@@ -2,6 +2,7 @@
 
 * Improve logging by providing an option to add a custom logger
 * Fix crash when rescheduling jobs, see #164
+* Fix wrong returned network type, see #166
 
 ## 1.1.8 (2017-03-23)
 
