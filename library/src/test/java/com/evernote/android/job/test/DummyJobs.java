@@ -61,6 +61,20 @@ public final class DummyJobs {
         }
     }
 
+    public static final class TwoSecondPauseJob extends Job {
+        public static final String TAG = "TwoSecondPauseJob";
+
+        @NonNull
+        @Override
+        protected Result onRunJob(Params params) {
+            try {
+                Thread.sleep(2_000);
+            } catch (InterruptedException ignored) {
+            }
+            return Result.SUCCESS;
+        }
+    }
+
     public static final JobCreator TEST_JOB_CREATOR = new JobCreator() {
         @Override
         public Job create(String tag) {
@@ -71,6 +85,8 @@ public final class DummyJobs {
                     return new RescheduleJob();
                 case FailureJob.TAG:
                     return new FailureJob();
+                case TwoSecondPauseJob.TAG:
+                    return new TwoSecondPauseJob();
                 default:
                     return null;
             }
@@ -99,5 +115,11 @@ public final class DummyJobs {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    public static JobRequest createOneOff() {
+        return createBuilder(SuccessJob.class)
+                .setExecutionWindow(300_000, 400_000)
+                .build();
     }
 }

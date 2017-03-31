@@ -1,18 +1,14 @@
 package com.evernote.android.job;
 
-import android.support.annotation.NonNull;
-
+import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.robolectric.RuntimeEnvironment;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -21,23 +17,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
  */
 @RunWith(JobRobolectricTestRunner.class)
 @FixMethodOrder(MethodSorters.JVM)
-public class JobRequestTest {
-
-    @Before
-    public void prepare() {
-        JobManager.create(RuntimeEnvironment.application).addJobCreator(new JobCreator() {
-            @Override
-            public Job create(String tag) {
-                return new TestJob();
-            }
-        });
-    }
-
-    @After
-    public void after() {
-        JobManager.instance().cancelAll();
-        JobManager.instance().destroy();
-    }
+public class JobRequestTest extends BaseJobManagerTest {
 
     @Test
     public void testSimpleJob() {
@@ -49,7 +29,7 @@ public class JobRequestTest {
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
-        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
+        assertThat(request.getTag()).isEqualTo(DummyJobs.SuccessJob.TAG);
         assertThat(request.getStartMs()).isEqualTo(2_000L);
         assertThat(request.getEndMs()).isEqualTo(3_000L);
         assertThat(request.getBackoffMs()).isEqualTo(4_000L);
@@ -76,7 +56,7 @@ public class JobRequestTest {
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
-        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
+        assertThat(request.getTag()).isEqualTo(DummyJobs.SuccessJob.TAG);
         assertThat(request.isPersisted()).isTrue();
         assertThat(request.getIntervalMs()).isEqualTo(interval);
         assertThat(request.getFlexMs()).isEqualTo(interval);
@@ -108,7 +88,7 @@ public class JobRequestTest {
         JobManager.instance().schedule(request);
 
         assertThat(request.getJobId()).isGreaterThan(0);
-        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
+        assertThat(request.getTag()).isEqualTo(DummyJobs.SuccessJob.TAG);
         assertThat(request.getIntervalMs()).isEqualTo(interval);
         assertThat(request.getFlexMs()).isEqualTo(flex);
         assertThat(request.isPeriodic()).isTrue();
@@ -125,7 +105,7 @@ public class JobRequestTest {
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
-        assertThat(request.getTag()).isEqualTo(TestJob.TAG);
+        assertThat(request.getTag()).isEqualTo(DummyJobs.SuccessJob.TAG);
         assertThat(request.getStartMs()).isEqualTo(2_000L);
         assertThat(request.getEndMs()).isEqualTo(2_000L);
         assertThat(request.getBackoffMs()).isEqualTo(4_000L);
@@ -233,17 +213,6 @@ public class JobRequestTest {
     }
 
     private JobRequest.Builder getBuilder() {
-        return new JobRequest.Builder(TestJob.TAG);
-    }
-
-    private static final class TestJob extends Job {
-
-        private static final String TAG = "tag";
-
-        @NonNull
-        @Override
-        protected Result onRunJob(@NonNull Params params) {
-            return Result.FAILURE;
-        }
+        return DummyJobs.createBuilder(DummyJobs.SuccessJob.class);
     }
 }

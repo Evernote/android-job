@@ -1,17 +1,12 @@
 package com.evernote.android.job;
 
-import android.support.annotation.NonNull;
-
+import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
-import com.evernote.android.job.util.JobApi;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.robolectric.RuntimeEnvironment;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -20,100 +15,54 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
  */
 @RunWith(JobRobolectricTestRunner.class)
 @FixMethodOrder(MethodSorters.JVM)
-public class JobManagerTest {
-
-    @Before
-    public void prepare() {
-        JobManager.create(RuntimeEnvironment.application).addJobCreator(new JobCreator() {
-            @Override
-            public Job create(String tag) {
-                return new TestJob();
-            }
-        });
-    }
-
-    @After
-    public void tearDown() {
-        getManager().cancelAll();
-        getManager().destroy();
-    }
+public class JobManagerTest extends BaseJobManagerTest {
 
     @Test
     public void testScheduleAndCancel() {
-        JobApi defaultApi = JobApi.getDefault(RuntimeEnvironment.application, getManager().getConfig().isGcmApiEnabled());
-        assertThat(getManager().getApi()).isEqualTo(defaultApi);
+        JobRequest request = DummyJobs.createOneOff();
+        int jobId = request.schedule();
 
-        JobRequest request = getJobRequest();
-        int id = request.schedule();
+        assertThat(manager().getJobRequest(jobId)).isNotNull();
+        assertThat(manager().getJob(jobId)).isNull();
 
-        assertThat(getManager().getJobRequest(id)).isNotNull();
-        assertThat(getManager().getJob(id)).isNull();
+        assertThat(manager().cancel(jobId)).isTrue();
 
-        boolean canceled = getManager().cancel(id);
-        assertThat(canceled).isTrue();
-
-        assertThat(getManager().getAllJobRequests()).isEmpty();
-        assertThat(getManager().getAllJobs()).isEmpty();
+        assertThat(manager().getAllJobRequests()).isEmpty();
+        assertThat(manager().getAllJobs()).isEmpty();
 
         request.schedule();
         request.schedule();
         request.schedule();
 
-        assertThat(getManager().getAllJobRequests().size()).isEqualTo(1);
+        assertThat(manager().getAllJobRequests()).hasSize(1);
+        assertThat(manager().cancelAll()).isEqualTo(1);
 
-        int cancelCount = getManager().cancelAll();
-        assertThat(cancelCount).isEqualTo(1);
-
-        assertThat(getManager().getAllJobRequests()).isEmpty();
-        assertThat(getManager().getAllJobs()).isEmpty();
+        assertThat(manager().getAllJobRequests()).isEmpty();
+        assertThat(manager().getAllJobs()).isEmpty();
     }
 
     @Test
     public void testSameIdAfterCancel() {
-        JobRequest request = getJobRequest();
+        JobRequest request = DummyJobs.createOneOff();
         int jobId = request.getJobId();
 
-        getManager().schedule(request);
+        manager().schedule(request);
 
-        int newId = getManager().getJobRequest(jobId).cancelAndEdit().build().schedule();
-        assertThat(jobId).isEqualTo(newId);
+        int newId = request.cancelAndEdit().build().schedule();
+        assertThat(newId).isEqualTo(jobId);
     }
 
     @Test
     public void testCancelTag() {
-        JobRequest request = getJobRequest();
-
+        JobRequest request = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExecutionWindow(300_000, 400_000)
+                .build();
         request.schedule();
 
-        assertThat(getManager().getAllJobRequestsForTag(TestJob.TAG)).isNotNull().hasSize(1);
-        assertThat(getManager().getAllJobRequestsForTag("other")).isNotNull().isEmpty();
+        assertThat(manager().getAllJobRequestsForTag(DummyJobs.SuccessJob.TAG)).hasSize(1);
+        assertThat(manager().getAllJobRequestsForTag("other")).isNotNull().isEmpty();
 
-        assertThat(getManager().cancelAllForTag(TestJob.TAG)).isEqualTo(1);
-        assertThat(getManager().cancelAllForTag(TestJob.TAG)).isZero();
-    }
-
-    private JobRequest getJobRequest() {
-        return getBuilder()
-                .setExecutionWindow(300_000L, 300_000L)
-                .build();
-    }
-
-    private JobRequest.Builder getBuilder() {
-        return new JobRequest.Builder(TestJob.TAG);
-    }
-
-    private JobManager getManager() {
-        return JobManager.instance();
-    }
-
-    private static final class TestJob extends Job {
-
-        private static final String TAG = "tag";
-
-        @NonNull
-        @Override
-        protected Result onRunJob(@NonNull Params params) {
-            return Result.FAILURE;
-        }
+        assertThat(manager().cancelAllForTag(DummyJobs.SuccessJob.TAG)).isEqualTo(1);
+        assertThat(manager().cancelAllForTag(DummyJobs.SuccessJob.TAG)).isZero();
     }
 }

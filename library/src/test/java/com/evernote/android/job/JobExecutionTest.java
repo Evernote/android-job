@@ -1,21 +1,14 @@
 package com.evernote.android.job;
 
-import android.support.annotation.NonNull;
-
+import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
-import com.evernote.android.job.test.TestCat;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.robolectric.RuntimeEnvironment;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -24,118 +17,70 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
  */
 @RunWith(JobRobolectricTestRunner.class)
 @FixMethodOrder(MethodSorters.JVM)
-public class JobExecutionTest {
-
-    @Before
-    public void prepare() {
-        JobManager.create(RuntimeEnvironment.application).addJobCreator(new JobCreator() {
-            @Override
-            public Job create(String tag) {
-                return new TestJob();
-            }
-        });
-    }
-
-    @After
-    public void after() {
-        JobManager.instance().cancelAll();
-        JobManager.instance().destroy();
-    }
-
-    @Test
-    public void testSimpleJob() throws Throwable {
-        final int jobId = getBuilder()
-                .setExecutionWindow(200_000L, 400_000L)
-                .setPersisted(true)
-                .build()
-                .schedule();
-
-        JobProxy.Common common = getCommon(jobId);
-        JobRequest pendingRequest = common.getPendingRequest(true);
-        assertThat(pendingRequest).isNotNull();
-
-        final CountDownLatch latch = new CountDownLatch(1);
-        final AtomicReference<Throwable> crash = new AtomicReference<>();
-        final JobManager manager = JobManager.instance();
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(200);
-                    assertThat(manager.getJobRequest(jobId)).isNull();
-
-                    JobRequest transientRequest = manager.getJobRequest(jobId, true);
-                    assertThat(transientRequest).isNotNull();
-                    assertThat(transientRequest.isTransient()).isTrue();
-                } catch (Throwable t) {
-                    crash.set(t);
-                }
-
-                latch.countDown();
-            }
-        }.start();
-
-        Job.Result result = common.executeJobRequest(pendingRequest);
-        assertThat(result).isEqualTo(Job.Result.FAILURE);
-
-        assertThat(manager.getAllJobRequestsForTag(TestJob.TAG)).isEmpty();
-
-        pendingRequest = common.getPendingRequest(true);
-        assertThat(pendingRequest).isNull();
-
-        latch.await(1, TimeUnit.SECONDS);
-        if (crash.get() != null) {
-            throw crash.get();
-        }
-    }
+public class JobExecutionTest extends BaseJobManagerTest {
 
     @Test
     public void testPeriodicJob() throws Exception {
-        int jobId = getBuilder()
+        int jobId = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
                 .setPeriodic(TimeUnit.MINUTES.toMillis(15))
                 .setPersisted(true)
                 .build()
                 .schedule();
 
-        JobProxy.Common common = getCommon(jobId);
-        JobRequest pendingRequest = common.getPendingRequest(true);
-        assertThat(pendingRequest).isNotNull();
+        executeJob(jobId, Job.Result.SUCCESS);
 
-        Job.Result result = common.executeJobRequest(pendingRequest);
-        assertThat(result).isEqualTo(Job.Result.FAILURE);
-
-        pendingRequest = common.getPendingRequest(true);
-        assertThat(pendingRequest).isNull();
-
-        assertThat(JobManager.instance().getAllJobRequestsForTag(TestJob.TAG)).hasSize(1);
-
-        Thread.sleep(3_000);
-
-        pendingRequest = common.getPendingRequest(true);
-        assertThat(pendingRequest).isNotNull();
+        // make sure job request is still around
+        assertThat(manager().getAllJobRequestsForTag(DummyJobs.SuccessJob.TAG)).hasSize(1);
     }
 
-    private JobRequest.Builder getBuilder() {
-        return new JobRequest.Builder(TestJob.TAG);
+    @Test
+    public void testSimpleJob() throws Throwable {
+        final int jobId = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExecutionWindow(200_000L, 400_000L)
+                .build()
+                .schedule();
+
+        executeJob(jobId, Job.Result.SUCCESS);
+
+        assertThat(manager().getAllJobRequestsForTag(DummyJobs.SuccessJob.TAG)).isEmpty();
+
+        assertThat(manager().getJobRequest(jobId)).isNull();
+        assertThat(manager().getJobRequest(jobId, true)).isNull();
     }
 
-    private JobProxy.Common getCommon(int jobId) {
-        return new JobProxy.Common(RuntimeEnvironment.application, new TestCat(), jobId);
+    @Test
+    public void testTransientState() throws Throwable {
+        int jobId = DummyJobs.createBuilder(DummyJobs.TwoSecondPauseJob.class)
+                .setExecutionWindow(300_000, 400_000)
+                .build()
+                .schedule();
+
+        executeJobAsync(jobId, Job.Result.SUCCESS);
+
+        // wait until the job is started
+        Thread.sleep(100);
+
+        // request should be in transient state, running but not removed from DB
+        JobRequest transientRequest = manager().getJobRequest(jobId, true);
+        assertThat(transientRequest).isNotNull();
+        assertThat(transientRequest.isTransient()).isTrue();
     }
 
-    private static final class TestJob extends Job {
+    @Test
+    public void testPeriodicJobNotInTransientState() throws Throwable {
+        int jobId = DummyJobs.createBuilder(DummyJobs.TwoSecondPauseJob.class)
+                .setPeriodic(TimeUnit.MINUTES.toMillis(15))
+                .build()
+                .schedule();
 
-        private static final String TAG = "tag";
+        executeJobAsync(jobId, Job.Result.SUCCESS);
 
-        @NonNull
-        @Override
-        protected Result onRunJob(@NonNull Params params) {
-            try {
-                Thread.sleep(1_000L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return Result.FAILURE;
-        }
+        // wait until the job is started
+        Thread.sleep(100);
+
+        // request should be in transient state, running but not removed from DB
+        JobRequest transientRequest = manager().getJobRequest(jobId, true);
+        assertThat(transientRequest).isNotNull();
+        assertThat(transientRequest.isTransient()).isFalse();
     }
 }
