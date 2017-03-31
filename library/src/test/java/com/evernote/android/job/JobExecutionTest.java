@@ -13,8 +13,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.robolectric.RuntimeEnvironment;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -28,8 +26,6 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 @FixMethodOrder(MethodSorters.JVM)
 public class JobExecutionTest {
 
-    private Set<Integer> cachedJobIds;
-
     @Before
     public void prepare() {
         JobManager.create(RuntimeEnvironment.application).addJobCreator(new JobCreator() {
@@ -38,15 +34,10 @@ public class JobExecutionTest {
                 return new TestJob();
             }
         });
-        cachedJobIds = new HashSet<>();
     }
 
     @After
     public void after() {
-        for (Integer jobId : cachedJobIds) {
-            JobManager.instance().getApi().getCachedProxy(RuntimeEnvironment.application).cancel(jobId);
-        }
-
         JobManager.instance().cancelAll();
         JobManager.instance().destroy();
     }
@@ -59,22 +50,21 @@ public class JobExecutionTest {
                 .build()
                 .schedule();
 
-        cachedJobIds.add(jobId);
-
         JobProxy.Common common = getCommon(jobId);
         JobRequest pendingRequest = common.getPendingRequest(true);
         assertThat(pendingRequest).isNotNull();
 
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Throwable> crash = new AtomicReference<>();
+        final JobManager manager = JobManager.instance();
         new Thread() {
             @Override
             public void run() {
                 try {
                     Thread.sleep(200);
-                    assertThat(JobManager.instance().getJobRequest(jobId)).isNull();
+                    assertThat(manager.getJobRequest(jobId)).isNull();
 
-                    JobRequest transientRequest = JobManager.instance().getJobRequest(jobId, true);
+                    JobRequest transientRequest = manager.getJobRequest(jobId, true);
                     assertThat(transientRequest).isNotNull();
                     assertThat(transientRequest.isTransient()).isTrue();
                 } catch (Throwable t) {
@@ -88,7 +78,7 @@ public class JobExecutionTest {
         Job.Result result = common.executeJobRequest(pendingRequest);
         assertThat(result).isEqualTo(Job.Result.FAILURE);
 
-        assertThat(JobManager.instance().getAllJobRequestsForTag(TestJob.TAG)).isEmpty();
+        assertThat(manager.getAllJobRequestsForTag(TestJob.TAG)).isEmpty();
 
         pendingRequest = common.getPendingRequest(true);
         assertThat(pendingRequest).isNull();
@@ -106,8 +96,6 @@ public class JobExecutionTest {
                 .setPersisted(true)
                 .build()
                 .schedule();
-
-        cachedJobIds.add(jobId);
 
         JobProxy.Common common = getCommon(jobId);
         JobRequest pendingRequest = common.getPendingRequest(true);
