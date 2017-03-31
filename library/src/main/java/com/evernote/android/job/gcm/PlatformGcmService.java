@@ -29,19 +29,24 @@ import com.evernote.android.job.Job;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
+import com.evernote.android.job.util.JobCat;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
+
+import net.vrallev.android.cat.CatLog;
 
 /**
  * @author rwondratschek
  */
 public class PlatformGcmService extends GcmTaskService {
 
+    private static final CatLog CAT = new JobCat("JobRequest");
+
     @Override
     public int onRunTask(TaskParams taskParams) {
         int jobId = Integer.parseInt(taskParams.getTag());
-        JobProxy.Common common = new JobProxy.Common(this, jobId);
+        JobProxy.Common common = new JobProxy.Common(this, CAT, jobId);
 
         JobRequest request = common.getPendingRequest(true);
         if (request == null) {

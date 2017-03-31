@@ -1,3 +1,8 @@
+## 1.1.9
+
+* Improve logging by providing an option to add a custom logger
+* Fix crash when rescheduling jobs, see #164
+
 ## 1.1.8 (2017-03-23)
 
 * Catch wake lock crashes in all cases, fixes #153

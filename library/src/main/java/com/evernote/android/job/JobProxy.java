@@ -33,7 +33,6 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.util.JobApi;
-import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
@@ -132,14 +131,14 @@ public interface JobProxy {
 
         private final JobManager mJobManager;
 
-        public Common(@NonNull Service service, int jobId) {
-            this(service, service.getClass().getSimpleName(), jobId);
+        public Common(@NonNull Service service, CatLog cat, int jobId) {
+            this((Context) service, cat, jobId);
         }
 
-        /*package*/ Common(@NonNull Context context, String loggingTag, int jobId) {
+        /*package*/ Common(@NonNull Context context, CatLog cat, int jobId) {
             mContext = context;
             mJobId = jobId;
-            mCat = new JobCat(loggingTag);
+            mCat = cat;
 
             mJobManager = JobManager.create(context);
         }
