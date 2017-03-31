@@ -3,7 +3,6 @@ package com.evernote.android.job.util;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.telephony.TelephonyManager;
 import android.test.mock.MockContext;
 
 import com.evernote.android.job.JobRequest;
@@ -69,16 +68,13 @@ public class DeviceTest {
         when(networkInfo.isConnected()).thenReturn(true);
         when(networkInfo.isConnectedOrConnecting()).thenReturn(true);
         when(networkInfo.getType()).thenReturn(ConnectivityManager.TYPE_MOBILE);
+        when(networkInfo.isRoaming()).thenReturn(false);
 
         ConnectivityManager connectivityManager = mock(ConnectivityManager.class);
         when(connectivityManager.getActiveNetworkInfo()).thenReturn(networkInfo);
 
-        TelephonyManager telephonyManager = mock(TelephonyManager.class);
-        when(telephonyManager.isNetworkRoaming()).thenReturn(false);
-
         Context context = mock(MockContext.class);
         when(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager);
-        when(context.getSystemService(Context.TELEPHONY_SERVICE)).thenReturn(telephonyManager);
 
         assertThat(Device.getNetworkType(context)).isEqualTo(JobRequest.NetworkType.NOT_ROAMING);
     }
@@ -89,16 +85,13 @@ public class DeviceTest {
         when(networkInfo.isConnected()).thenReturn(true);
         when(networkInfo.isConnectedOrConnecting()).thenReturn(true);
         when(networkInfo.getType()).thenReturn(ConnectivityManager.TYPE_MOBILE);
+        when(networkInfo.isRoaming()).thenReturn(true);
 
         ConnectivityManager connectivityManager = mock(ConnectivityManager.class);
         when(connectivityManager.getActiveNetworkInfo()).thenReturn(networkInfo);
 
-        TelephonyManager telephonyManager = mock(TelephonyManager.class);
-        when(telephonyManager.isNetworkRoaming()).thenReturn(true);
-
         Context context = mock(MockContext.class);
         when(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager);
-        when(context.getSystemService(Context.TELEPHONY_SERVICE)).thenReturn(telephonyManager);
 
         assertThat(Device.getNetworkType(context)).isEqualTo(JobRequest.NetworkType.CONNECTED);
     }
@@ -109,16 +102,13 @@ public class DeviceTest {
         when(networkInfo.isConnected()).thenReturn(true);
         when(networkInfo.isConnectedOrConnecting()).thenReturn(true);
         when(networkInfo.getType()).thenReturn(ConnectivityManager.TYPE_WIFI);
+        when(networkInfo.isRoaming()).thenReturn(false);
 
         ConnectivityManager connectivityManager = mock(ConnectivityManager.class);
         when(connectivityManager.getActiveNetworkInfo()).thenReturn(networkInfo);
 
-        TelephonyManager telephonyManager = mock(TelephonyManager.class);
-        when(telephonyManager.isNetworkRoaming()).thenReturn(false);
-
         Context context = mock(MockContext.class);
         when(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager);
-        when(context.getSystemService(Context.TELEPHONY_SERVICE)).thenReturn(telephonyManager);
 
         assertThat(Device.getNetworkType(context)).isEqualTo(JobRequest.NetworkType.UNMETERED);
     }
@@ -129,16 +119,13 @@ public class DeviceTest {
         when(networkInfo.isConnected()).thenReturn(true);
         when(networkInfo.isConnectedOrConnecting()).thenReturn(true);
         when(networkInfo.getType()).thenReturn(ConnectivityManager.TYPE_WIFI);
+        when(networkInfo.isRoaming()).thenReturn(true);
 
         ConnectivityManager connectivityManager = mock(ConnectivityManager.class);
         when(connectivityManager.getActiveNetworkInfo()).thenReturn(networkInfo);
 
-        TelephonyManager telephonyManager = mock(TelephonyManager.class);
-        when(telephonyManager.isNetworkRoaming()).thenReturn(true);
-
         Context context = mock(MockContext.class);
         when(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager);
-        when(context.getSystemService(Context.TELEPHONY_SERVICE)).thenReturn(telephonyManager);
 
         assertThat(Device.getNetworkType(context)).isEqualTo(JobRequest.NetworkType.UNMETERED);
     }
