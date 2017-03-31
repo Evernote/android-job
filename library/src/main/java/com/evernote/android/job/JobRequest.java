@@ -115,7 +115,7 @@ public final class JobRequest {
     private final Builder mBuilder;
     private final JobApi mJobApi;
 
-    private int mNumFailures;
+    private int mFailureCount;
     private long mScheduledAt;
     private boolean mTransient;
     private boolean mFlexSupport;
@@ -271,14 +271,14 @@ public final class JobRequest {
         long offset;
         switch (getBackoffPolicy()) {
             case LINEAR:
-                offset = mNumFailures * getBackoffMs();
+                offset = mFailureCount * getBackoffMs();
                 break;
 
             case EXPONENTIAL:
-                if (mNumFailures == 0) {
+                if (mFailureCount == 0) {
                     offset = 0L;
                 } else {
-                    offset = (long) (getBackoffMs() * Math.pow(2, mNumFailures - 1));
+                    offset = (long) (getBackoffMs() * Math.pow(2, mFailureCount - 1));
                 }
                 break;
 
@@ -319,9 +319,8 @@ public final class JobRequest {
      *
      * @return How often the job already has failed.
      */
-
-    public int getNumFailures() {
-        return mNumFailures;
+    public int getFailureCount() {
+        return mFailureCount;
     }
 
     /**
@@ -381,15 +380,15 @@ public final class JobRequest {
     /*package*/ int reschedule(boolean failure, boolean newJob) {
         JobRequest newRequest = new Builder(this, newJob).build();
         if (failure) {
-            newRequest.mNumFailures = mNumFailures + 1;
+            newRequest.mFailureCount = mFailureCount + 1;
         }
         return newRequest.schedule();
     }
 
     /*package*/ void incNumFailures() {
-        mNumFailures++;
+        mFailureCount++;
         ContentValues contentValues = new ContentValues();
-        contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mNumFailures);
+        contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mFailureCount);
         JobManager.instance().getJobStorage().update(this, contentValues);
     }
 
@@ -403,7 +402,7 @@ public final class JobRequest {
     /*package*/ ContentValues toContentValues() {
         ContentValues contentValues = new ContentValues();
         mBuilder.fillContentValues(contentValues);
-        contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mNumFailures);
+        contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mFailureCount);
         contentValues.put(JobStorage.COLUMN_SCHEDULED_AT, mScheduledAt);
         contentValues.put(JobStorage.COLUMN_TRANSIENT, mTransient);
         contentValues.put(JobStorage.COLUMN_FLEX_SUPPORT, mFlexSupport);
@@ -412,12 +411,12 @@ public final class JobRequest {
 
     /*package*/ static JobRequest fromCursor(Cursor cursor) throws Exception {
         JobRequest request = new Builder(cursor).build();
-        request.mNumFailures = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_NUM_FAILURES));
+        request.mFailureCount = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_NUM_FAILURES));
         request.mScheduledAt = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_SCHEDULED_AT));
         request.mTransient = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_TRANSIENT)) > 0;
         request.mFlexSupport = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_FLEX_SUPPORT)) > 0;
 
-        JobPreconditions.checkArgumentNonnegative(request.mNumFailures, "failure count can't be negative");
+        JobPreconditions.checkArgumentNonnegative(request.mFailureCount, "failure count can't be negative");
         JobPreconditions.checkArgumentNonnegative(request.mScheduledAt, "scheduled at can't be negative");
 
         return request;

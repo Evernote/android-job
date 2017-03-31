@@ -90,7 +90,7 @@ public interface JobProxy {
         }
 
         public static long getStartMs(JobRequest request) {
-            if (request.getNumFailures() > 0) {
+            if (request.getFailureCount() > 0) {
                 return request.getBackoffOffset();
             } else {
                 return request.getStartMs();
@@ -98,7 +98,7 @@ public interface JobProxy {
         }
 
         public static long getEndMs(JobRequest request) {
-            if (request.getNumFailures() > 0) {
+            if (request.getFailureCount() > 0) {
                 return request.getBackoffOffset();
             } else {
                 return request.getEndMs();
@@ -122,7 +122,7 @@ public interface JobProxy {
         }
 
         public static int getRescheduleCount(JobRequest request) {
-            return request.getNumFailures();
+            return request.getFailureCount();
         }
 
         private final Context mContext;

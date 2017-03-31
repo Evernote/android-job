@@ -27,12 +27,12 @@ public class FailureCountTest extends BaseJobManagerTest {
                 .schedule();
 
         executeJob(jobId, Job.Result.FAILURE);
-        assertThat(manager().getJobRequest(jobId).getNumFailures()).isEqualTo(1);
+        assertThat(manager().getJobRequest(jobId).getFailureCount()).isEqualTo(1);
 
         resetJob(jobId);
 
         executeJob(jobId, Job.Result.FAILURE);
-        assertThat(manager().getJobRequest(jobId).getNumFailures()).isEqualTo(2);
+        assertThat(manager().getJobRequest(jobId).getFailureCount()).isEqualTo(2);
     }
 
     @Test
@@ -46,12 +46,12 @@ public class FailureCountTest extends BaseJobManagerTest {
         DummyJobs.RescheduleJob job = (DummyJobs.RescheduleJob) manager().getJob(jobId);
         jobId = job.getNewJobId();
 
-        assertThat(manager().getJobRequest(jobId).getNumFailures()).isEqualTo(1);
+        assertThat(manager().getJobRequest(jobId).getFailureCount()).isEqualTo(1);
 
         executeJob(jobId, Job.Result.RESCHEDULE);
         job = (DummyJobs.RescheduleJob) manager().getJob(jobId);
         jobId = job.getNewJobId();
 
-        assertThat(manager().getJobRequest(jobId).getNumFailures()).isEqualTo(2);
+        assertThat(manager().getJobRequest(jobId).getFailureCount()).isEqualTo(2);
     }
 }

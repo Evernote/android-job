@@ -508,7 +508,7 @@ public abstract class Job {
          * @return How often the job already has failed.
          */
         public int getFailureCount() {
-            return mRequest.getNumFailures();
+            return mRequest.getFailureCount();
         }
 
         /**
