@@ -313,7 +313,14 @@ public final class JobRequest {
         return mScheduledAt;
     }
 
-    /*package*/ int getNumFailures() {
+    /**
+     * The failure count increases if a non periodic {@link Job} was rescheduled or if a periodic
+     * {@link Job} wasn't successful.
+     *
+     * @return How often the job already has failed.
+     */
+
+    public int getNumFailures() {
         return mNumFailures;
     }
 
