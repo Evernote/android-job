@@ -1,33 +1,30 @@
 package com.evernote.android.job;
 
 import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.runner.AndroidJUnit4;
 
+import com.evernote.android.job.test.JobRobolectricTestRunner;
 import com.evernote.android.job.util.JobApi;
-import com.facebook.stetho.Stetho;
 
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+import org.robolectric.RuntimeEnvironment;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 /**
  * @author rwondratschek
  */
-@RunWith(AndroidJUnit4.class)
-@LargeTest
+@RunWith(JobRobolectricTestRunner.class)
+@FixMethodOrder(MethodSorters.JVM)
 public class JobManagerTest {
 
-    @BeforeClass
-    public static void beforeClass() {
-        Stetho.initializeWithDefaults(InstrumentationRegistry.getContext());
-
-        JobManager.create(InstrumentationRegistry.getContext()).addJobCreator(new JobCreator() {
+    @Before
+    public void prepare() {
+        JobManager.create(RuntimeEnvironment.application).addJobCreator(new JobCreator() {
             @Override
             public Job create(String tag) {
                 return new TestJob();
@@ -35,14 +32,15 @@ public class JobManagerTest {
         });
     }
 
-    @AfterClass
-    public static void afterClass() {
-        JobManager.instance().destroy();
+    @After
+    public void tearDown() {
+        getManager().cancelAll();
+        getManager().destroy();
     }
 
     @Test
     public void testScheduleAndCancel() {
-        JobApi defaultApi = JobApi.getDefault(InstrumentationRegistry.getContext(), getManager().getConfig().isGcmApiEnabled());
+        JobApi defaultApi = JobApi.getDefault(RuntimeEnvironment.application, getManager().getConfig().isGcmApiEnabled());
         assertThat(getManager().getApi()).isEqualTo(defaultApi);
 
         JobRequest request = getJobRequest();
@@ -92,11 +90,6 @@ public class JobManagerTest {
 
         assertThat(getManager().cancelAllForTag(TestJob.TAG)).isEqualTo(1);
         assertThat(getManager().cancelAllForTag(TestJob.TAG)).isZero();
-    }
-
-    @After
-    public void tearDown() {
-        getManager().cancelAll();
     }
 
     private JobRequest getJobRequest() {

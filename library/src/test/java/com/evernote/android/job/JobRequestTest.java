@@ -1,35 +1,31 @@
 package com.evernote.android.job;
 
 import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.runner.AndroidJUnit4;
 
+import com.evernote.android.job.test.JobRobolectricTestRunner;
 import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
-import com.facebook.stetho.Stetho;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+import org.robolectric.RuntimeEnvironment;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 /**
  * @author rwondratschek
  */
-@RunWith(AndroidJUnit4.class)
-@LargeTest
+@RunWith(JobRobolectricTestRunner.class)
+@FixMethodOrder(MethodSorters.JVM)
 public class JobRequestTest {
 
-    @BeforeClass
-    public static void beforeClass() {
-        Stetho.initializeWithDefaults(InstrumentationRegistry.getContext());
-
-        JobManager.create(InstrumentationRegistry.getContext()).addJobCreator(new JobCreator() {
+    @Before
+    public void prepare() {
+        JobManager.create(RuntimeEnvironment.application).addJobCreator(new JobCreator() {
             @Override
             public Job create(String tag) {
                 return new TestJob();
@@ -37,19 +33,10 @@ public class JobRequestTest {
         });
     }
 
-    @AfterClass
-    public static void afterClass() {
-        JobManager.instance().destroy();
-    }
-
-    @Before
-    public void beforeTest() {
-        JobManager.instance().cancelAll();
-    }
-
     @After
-    public void afterTest() {
+    public void after() {
         JobManager.instance().cancelAll();
+        JobManager.instance().destroy();
     }
 
     @Test
@@ -110,13 +97,14 @@ public class JobRequestTest {
 
     @Test
     public void testFlex() {
+        JobManager.instance().forceApi(JobApi.V_14);
+
         long interval = JobRequest.MIN_INTERVAL * 5;
         long flex = JobRequest.MIN_FLEX * 5;
         JobRequest request = getBuilder()
                 .setPeriodic(interval, flex)
                 .build();
 
-        JobManager.instance().forceApi(JobApi.V_14);
         JobManager.instance().schedule(request);
 
         assertThat(request.getJobId()).isGreaterThan(0);

@@ -1,41 +1,38 @@
 package com.evernote.android.job;
 
-import android.content.Context;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.runner.AndroidJUnit4;
 
-import com.facebook.stetho.Stetho;
+import com.evernote.android.job.test.JobRobolectricTestRunner;
+import com.evernote.android.job.test.TestCat;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+import org.robolectric.RuntimeEnvironment;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 /**
  * @author rwondratschek
  */
-@RunWith(AndroidJUnit4.class)
-@LargeTest
+@RunWith(JobRobolectricTestRunner.class)
+@FixMethodOrder(MethodSorters.JVM)
 public class JobExecutionTest {
 
-    private static Set<Integer> cachedJobIds;
+    private Set<Integer> cachedJobIds;
 
-    @BeforeClass
-    public static void beforeClass() {
-        Stetho.initializeWithDefaults(InstrumentationRegistry.getContext());
-
-        JobManager.create(InstrumentationRegistry.getContext()).addJobCreator(new JobCreator() {
+    @Before
+    public void prepare() {
+        JobManager.create(RuntimeEnvironment.application).addJobCreator(new JobCreator() {
             @Override
             public Job create(String tag) {
                 return new TestJob();
@@ -44,28 +41,18 @@ public class JobExecutionTest {
         cachedJobIds = new HashSet<>();
     }
 
-    @AfterClass
-    public static void afterClass() {
-        Context context = InstrumentationRegistry.getContext();
+    @After
+    public void after() {
         for (Integer jobId : cachedJobIds) {
-            JobManager.instance().getApi().getCachedProxy(context).cancel(jobId);
+            JobManager.instance().getApi().getCachedProxy(RuntimeEnvironment.application).cancel(jobId);
         }
 
+        JobManager.instance().cancelAll();
         JobManager.instance().destroy();
     }
 
-    @Before
-    public void beforeTest() {
-        JobManager.instance().cancelAll();
-    }
-
-    @After
-    public void afterTest() {
-        JobManager.instance().cancelAll();
-    }
-
     @Test
-    public void testSimpleJob() {
+    public void testSimpleJob() throws Throwable {
         final int jobId = getBuilder()
                 .setExecutionWindow(200_000L, 400_000L)
                 .setPersisted(true)
@@ -78,15 +65,23 @@ public class JobExecutionTest {
         JobRequest pendingRequest = common.getPendingRequest(true);
         assertThat(pendingRequest).isNotNull();
 
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<Throwable> crash = new AtomicReference<>();
         new Thread() {
             @Override
             public void run() {
-                SystemClock.sleep(200);
-                assertThat(JobManager.instance().getJobRequest(jobId)).isNull();
+                try {
+                    Thread.sleep(200);
+                    assertThat(JobManager.instance().getJobRequest(jobId)).isNull();
 
-                JobRequest transientRequest = JobManager.instance().getJobRequest(jobId, true);
-                assertThat(transientRequest).isNotNull();
-                assertThat(transientRequest.isTransient()).isTrue();
+                    JobRequest transientRequest = JobManager.instance().getJobRequest(jobId, true);
+                    assertThat(transientRequest).isNotNull();
+                    assertThat(transientRequest.isTransient()).isTrue();
+                } catch (Throwable t) {
+                    crash.set(t);
+                }
+
+                latch.countDown();
             }
         }.start();
 
@@ -97,10 +92,15 @@ public class JobExecutionTest {
 
         pendingRequest = common.getPendingRequest(true);
         assertThat(pendingRequest).isNull();
+
+        latch.await(1, TimeUnit.SECONDS);
+        if (crash.get() != null) {
+            throw crash.get();
+        }
     }
 
     @Test
-    public void testPeriodicJob() {
+    public void testPeriodicJob() throws Exception {
         int jobId = getBuilder()
                 .setPeriodic(TimeUnit.MINUTES.toMillis(15))
                 .setPersisted(true)
@@ -121,7 +121,7 @@ public class JobExecutionTest {
 
         assertThat(JobManager.instance().getAllJobRequestsForTag(TestJob.TAG)).hasSize(1);
 
-        SystemClock.sleep(3_000);
+        Thread.sleep(3_000);
 
         pendingRequest = common.getPendingRequest(true);
         assertThat(pendingRequest).isNotNull();
@@ -132,7 +132,7 @@ public class JobExecutionTest {
     }
 
     private JobProxy.Common getCommon(int jobId) {
-        return new JobProxy.Common(InstrumentationRegistry.getContext(), "JobExecutionTest", jobId);
+        return new JobProxy.Common(RuntimeEnvironment.application, new TestCat(), jobId);
     }
 
     private static final class TestJob extends Job {
@@ -142,7 +142,11 @@ public class JobExecutionTest {
         @NonNull
         @Override
         protected Result onRunJob(@NonNull Params params) {
-            SystemClock.sleep(1_000L);
+            try {
+                Thread.sleep(1_000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             return Result.FAILURE;
         }
     }

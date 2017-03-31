@@ -11,14 +11,14 @@ import org.robolectric.annotation.Config;
  */
 public class JobRobolectricTestRunner extends RobolectricTestRunner {
 
-  public JobRobolectricTestRunner(Class<?> testClass) throws InitializationError {
-    super(testClass);
-  }
+    public JobRobolectricTestRunner(Class<?> testClass) throws InitializationError {
+        super(testClass);
+    }
 
-  @Override
-  protected Config buildGlobalConfig() {
-    return new Config.Builder()
-        .setConstants(BuildConfig.class)
-        .build();
-  }
+    @Override
+    protected Config buildGlobalConfig() {
+        return new Config.Builder()
+                .setConstants(BuildConfig.class)
+                .build();
+    }
 }
