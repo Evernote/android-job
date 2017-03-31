@@ -36,7 +36,6 @@ import android.os.Build;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.net.ConnectivityManagerCompat;
-import android.telephony.TelephonyManager;
 
 import com.evernote.android.job.JobRequest;
 
@@ -91,8 +90,7 @@ public final class Device {
             return JobRequest.NetworkType.ANY;
         }
 
-        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        if (telephonyManager != null && telephonyManager.isNetworkRoaming()) {
+        if (networkInfo.isRoaming()) {
             return JobRequest.NetworkType.CONNECTED;
         }
 
