@@ -19,7 +19,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
  * @author rwondratschek
  */
 @FixMethodOrder(MethodSorters.JVM)
-public class TestLogger {
+public class LoggerTest {
 
     private boolean mResetValueCalled;
 

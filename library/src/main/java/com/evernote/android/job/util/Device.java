@@ -36,7 +36,6 @@ import android.os.Build;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.net.ConnectivityManagerCompat;
-import android.telephony.TelephonyManager;
 
 import com.evernote.android.job.JobRequest;
 
@@ -83,20 +82,31 @@ public final class Device {
         }
     }
 
+    /**
+     * Checks the network condition of the device and returns the best type. If the device
+     * is connected to a WiFi and mobile network at the same time, then it would assume
+     * that the connection is unmetered because of the WiFi connection.
+     *
+     * @param context Any context, e.g. the application context.
+     * @return The current network type of the device.
+     */
     @NonNull
-    public static JobRequest.NetworkType getNetworkType(Context context) {
+    public static JobRequest.NetworkType getNetworkType(@NonNull Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         if (networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
             return JobRequest.NetworkType.ANY;
         }
 
-        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        if (telephonyManager != null && telephonyManager.isNetworkRoaming()) {
-            return JobRequest.NetworkType.CONNECTED;
+        boolean metered = ConnectivityManagerCompat.isActiveNetworkMetered(connectivityManager);
+        if (!metered) {
+            return JobRequest.NetworkType.UNMETERED;
         }
 
-        boolean metered = ConnectivityManagerCompat.isActiveNetworkMetered(connectivityManager);
-        return metered ? JobRequest.NetworkType.NOT_ROAMING : JobRequest.NetworkType.UNMETERED;
+        if (networkInfo.isRoaming()) {
+            return JobRequest.NetworkType.CONNECTED;
+        } else {
+            return JobRequest.NetworkType.NOT_ROAMING;
+        }
     }
 }
