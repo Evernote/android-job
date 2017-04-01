@@ -2,6 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.ben-manes.versions'
 apply from: '../build-config/gradle-quality.gradle'
 
+archivesBaseName = 'android-job'
+
 dependencies {
     provided "com.google.android.gms:play-services-gcm:$playServicesVersion"
 

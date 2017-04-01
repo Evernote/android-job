@@ -6,4 +6,5 @@
     </issue>
     <issue id="GradleDependency" severity="ignore"/>
     <issue id="IconMissingDensityFolder" severity="ignore"/>
+    <issue id="GradleCompatible" severity="ignore"/>
 </lint>

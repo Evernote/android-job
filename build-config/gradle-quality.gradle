@@ -9,6 +9,7 @@ task checkstyle(type: Checkstyle) {
     source 'src'
     include '**/*.java'
     exclude '**/gen/**'
+    exclude '**/XmlUtils.java'
 
     classpath = files()
 //

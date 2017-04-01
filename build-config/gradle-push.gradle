@@ -1,16 +1,17 @@
 apply plugin: 'maven'
 apply plugin: 'signing'
 
+@SuppressWarnings(["GrMethodMayBeStatic", "GroovyUnusedDeclaration"])
 def isReleaseBuild() {
-    return VERSION_NAME.contains("SNAPSHOT") == false
+    return !VERSION_NAME.contains("SNAPSHOT")
 }
 
 def isLocal() {
-    return hasProperty('local') ? Boolean.parseBoolean(getProperty('local')) : true;
+    return hasProperty('local') ? Boolean.parseBoolean(getProperty('local')) : true
 }
 
 def getReleaseRepositoryUrl() {
-    if (isLocal()) {
+    if (this.isLocal()) {
         return hasProperty('RELEASE_REPOSITORY_LOCAL') ? RELEASE_REPOSITORY_LOCAL : "file://${System.env.HOME}/.m2/repository"
     } else {
         return hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
@@ -18,7 +19,7 @@ def getReleaseRepositoryUrl() {
 }
 
 def getSnapshotRepositoryUrl() {
-    if (isLocal()) {
+    if (this.isLocal()) {
         return hasProperty('SNAPSHOT_REPOSITORY_LOCAL') ? SNAPSHOT_REPOSITORY_LOCAL : "file://${System.env.HOME}/.m2/repository"
     } else {
         return hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL : "https://oss.sonatype.org/content/repositories/snapshots/"
@@ -33,10 +34,28 @@ def getRepositoryPassword() {
     return hasProperty('SONATYPE_PASSWORD') ? SONATYPE_PASSWORD : ""
 }
 
+android.libraryVariants.all { variant ->
+    variant.outputs.each { output ->
+        File outputFile = output.outputFile
+        if (outputFile != null && outputFile.name.endsWith('.aar') && 'release'.equals(variant.buildType.name)) {
+            def fileName = "${project.archivesBaseName}-${version}.aar"
+            output.outputFile = new File(outputFile.parent, fileName)
+        }
+    }
+}
+
+version = VERSION_NAME
+
+artifacts {
+    archives file("$buildDir/outputs/jar/${project.archivesBaseName}-${project.version}-sources.jar")
+    archives file("$buildDir/outputs/jar/${project.archivesBaseName}-${project.version}-javadoc.jar")
+}
+
 afterEvaluate { project ->
     uploadArchives {
         //noinspection GradleMisplacedStatement
         repositories {
+            //noinspection GroovyAssignabilityCheck
             mavenDeployer {
                 beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
@@ -44,11 +63,11 @@ afterEvaluate { project ->
                 pom.artifactId = 'android-job'
                 pom.version = VERSION_NAME
 
-                repository(url: getReleaseRepositoryUrl()) {
-                    authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+                repository(url: this.getReleaseRepositoryUrl()) {
+                    authentication(userName: this.getRepositoryUsername(), password: this.getRepositoryPassword())
                 }
-                snapshotRepository(url: getSnapshotRepositoryUrl()) {
-                    authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+                snapshotRepository(url: this.getSnapshotRepositoryUrl()) {
+                    authentication(userName: this.getRepositoryUsername(), password: this.getRepositoryPassword())
                 }
 
                 pom.project {
@@ -95,31 +114,82 @@ afterEvaluate { project ->
     }
 
     signing {
-        required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
+        required { gradle.taskGraph.hasTask("uploadArchives") }
         sign configurations.archives
     }
+}
 
-    task androidJavadocs2(type: Javadoc) {
-        failOnError = false
-        source = android.sourceSets.main.java.sourceFiles
-        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+project.tasks.whenTaskAdded { task ->
+    if (task.name == 'signArchives') {
+        this.addSourcesAndJavadocTask task
+    }
+}
+
+def addSourcesAndJavadocTask(Task uploadTask) {
+    android.libraryVariants.all { variant ->
+        if (variant.name.equalsIgnoreCase('release')) {
+            uploadTask.dependsOn project.tasks.getByName("assemble${variant.name.capitalize()}")
+            uploadTask.dependsOn project.tasks.getByName("generate${variant.name.capitalize()}JavadocJar")
+            uploadTask.dependsOn project.tasks.getByName("generate${variant.name.capitalize()}SourcesJar")
+        }
+    }
+}
+
+// javadoc jar
+android.libraryVariants.all { variant ->
+    project.task("${variant.name.capitalize()}Javadoc", type: Javadoc) {
+        failOnError true
+
+        destinationDir = new File("$project.buildDir/javadoc/$variant.name")
+
+        source = variant.javaCompile.source
+
+        ext.androidJar = "${project.android.sdkDirectory}/platforms/${project.android.compileSdkVersion}/android.jar"
+        classpath += project.files(variant.javaCompile.classpath.files) + project.files(ext.androidJar)
+        classpath += files("$buildDir/generated/source/r/${variant.name}/")
+        classpath += files("$buildDir/generated/source/buildConfig/${variant.name}/")
+
+        options {
+            linksOffline("http://d.android.com/reference", "${project.android.sdkDirectory}/docs/reference")
+            links("http://docs.oracle.com/javase/7/docs/api/")
+            setMemberLevel(JavadocMemberLevel.PACKAGE)
+            addStringOption('Xdoclint:none', '-quiet')
+            docEncoding = 'UTF-8'
+            encoding = 'UTF-8'
+            charSet = 'UTF-8'
+        }
+
+        exclude '**/BuildConfig.java'
+        exclude '**/R.java'
     }
 
-    task androidJavadocsJar2(type: Jar, dependsOn: androidJavadocs2) {
-        classifier = 'javadoc'
-        //basename = artifact_id
-        from androidJavadocs2.destinationDir
-    }
+    project.task("generate${variant.name.capitalize()}JavadocJar", type: Jar, dependsOn: "${variant.name.capitalize()}Javadoc") {
+        classifier 'javadoc'
 
-    task androidSourcesJar2(type: Jar) {
+        description = 'Assembles a jar archive containing the generated Javadoc API documentation of $variant.name.'
+
+        destinationDir = new File("$project.buildDir/outputs/jar/")
+
+        exclude '**/BuildConfig.class'
+        exclude '**/R.class'
+
+        from "$project.buildDir/javadoc/$variant.name"
+    }
+}
+
+// sources jar
+android.libraryVariants.all { variant ->
+    project.task("generate${variant.name.capitalize()}SourcesJar", type: Jar) {
         classifier = 'sources'
-        //basename = artifact_id
-        from android.sourceSets.main.java.sourceFiles
-    }
 
-    artifacts {
-        //archives packageReleaseJar
-        archives androidSourcesJar2
-        archives androidJavadocsJar2
+        description = 'Assembles a jar archive containing the main sources of $variant.name..'
+
+        destinationDir = new File("$project.buildDir/outputs/jar/")
+
+        // exclude generated files
+        exclude '**/BuildConfig.java'
+        exclude '**/R.java'
+
+        from variant.javaCompile.source
     }
 }
