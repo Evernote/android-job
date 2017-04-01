@@ -4,16 +4,15 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.runner.AndroidJUnit4;
 
+import com.evernote.android.job.test.JobRobolectricTestRunner;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
-import com.facebook.stetho.Stetho;
 
-import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+import org.robolectric.RuntimeEnvironment;
 
 import java.util.concurrent.TimeUnit;
 
@@ -36,23 +35,18 @@ import static com.evernote.android.job.JobStorage.COLUMN_TAG;
 import static com.evernote.android.job.JobStorage.COLUMN_TRANSIENT;
 import static com.evernote.android.job.JobStorage.DATABASE_NAME;
 import static com.evernote.android.job.JobStorage.JOB_TABLE_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 /**
  * @author rwondratschek
  */
-@RunWith(AndroidJUnit4.class)
-@LargeTest
+@RunWith(JobRobolectricTestRunner.class)
+@FixMethodOrder(MethodSorters.JVM)
 public class DatabaseUpgradeTest {
-
-    @BeforeClass
-    public static void beforeClass() {
-        Stetho.initializeWithDefaults(InstrumentationRegistry.getContext());
-    }
 
     @Test
     public void testDatabaseUpgrade1to3() {
-        Context context = InstrumentationRegistry.getContext();
+        Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
         JobOpenHelper1 openHelper = new JobOpenHelper1(context);
@@ -64,7 +58,7 @@ public class DatabaseUpgradeTest {
 
     @Test
     public void testDatabaseUpgrade2to3() {
-        Context context = InstrumentationRegistry.getContext();
+        Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
         JobOpenHelper2 openHelper = new JobOpenHelper2(context);
@@ -76,7 +70,7 @@ public class DatabaseUpgradeTest {
 
     @Test
     public void testDatabaseUpgrade1to2to3() {
-        Context context = InstrumentationRegistry.getContext();
+        Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
         JobOpenHelper1 openHelper = new JobOpenHelper1(context);
@@ -167,12 +161,12 @@ public class DatabaseUpgradeTest {
         JobManager.instance().destroy();
     }
 
-    private abstract class UpgradeAbleJobOpenHelper extends SQLiteOpenHelper {
+    private abstract static class UpgradeAbleJobOpenHelper extends SQLiteOpenHelper {
 
         private boolean mDatabaseCreated;
         private boolean mDatabaseUpgraded;
 
-        public UpgradeAbleJobOpenHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+        UpgradeAbleJobOpenHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
             super(context, name, factory, version);
         }
 
@@ -222,9 +216,9 @@ public class DatabaseUpgradeTest {
         }
     }
 
-    private class JobOpenHelper1 extends UpgradeAbleJobOpenHelper {
+    private static final class JobOpenHelper1 extends UpgradeAbleJobOpenHelper {
 
-        public JobOpenHelper1(Context context) {
+        JobOpenHelper1(Context context) {
             super(context, DATABASE_NAME, null, 1);
         }
 
@@ -259,9 +253,9 @@ public class DatabaseUpgradeTest {
         }
     }
 
-    private class JobOpenHelper2 extends UpgradeAbleJobOpenHelper {
+    private static final class JobOpenHelper2 extends UpgradeAbleJobOpenHelper {
 
-        public JobOpenHelper2(Context context) {
+        JobOpenHelper2(Context context) {
             super(context, DATABASE_NAME, null, 2);
         }
 
