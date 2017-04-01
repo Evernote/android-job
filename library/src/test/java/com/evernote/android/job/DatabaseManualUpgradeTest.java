@@ -42,7 +42,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
  */
 @RunWith(JobRobolectricTestRunner.class)
 @FixMethodOrder(MethodSorters.JVM)
-public class DatabaseUpgradeTest {
+public class DatabaseManualUpgradeTest {
 
     @Test
     public void testDatabaseUpgrade1to3() {

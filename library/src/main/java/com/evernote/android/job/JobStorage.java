@@ -48,7 +48,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author rwondratschek
  */
-/*package*/ class JobStorage {
+/*package*/
+@SuppressWarnings("WeakerAccess")
+class JobStorage {
 
     private static final CatLog CAT = new JobCat("JobStorage");
 
@@ -93,6 +95,10 @@ import java.util.concurrent.atomic.AtomicInteger;
     private SQLiteDatabase mDatabase;
 
     public JobStorage(Context context) {
+        this(context, DATABASE_NAME);
+    }
+
+    public JobStorage(Context context, String databasePath) {
         mPreferences = context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE);
 
         mCacheId = new JobCacheId();
@@ -100,7 +106,7 @@ import java.util.concurrent.atomic.AtomicInteger;
         int lastJobId = mPreferences.getInt(JOB_ID_COUNTER, 0);
         mJobCounter = new AtomicInteger(lastJobId);
 
-        mDbHelper = new JobOpenHelper(context);
+        mDbHelper = new JobOpenHelper(context, databasePath);
     }
 
     public synchronized void put(final JobRequest request) {
@@ -253,10 +259,10 @@ import java.util.concurrent.atomic.AtomicInteger;
         }
     }
 
-    private class JobOpenHelper extends SQLiteOpenHelper {
+    private static class JobOpenHelper extends SQLiteOpenHelper {
 
-        public JobOpenHelper(Context context) {
-            super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        private JobOpenHelper(Context context, String databasePath) {
+            super(context, databasePath, null, DATABASE_VERSION);
         }
 
         @Override
