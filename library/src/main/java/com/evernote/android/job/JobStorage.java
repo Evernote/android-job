@@ -33,8 +33,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.Nullable;
-import android.support.v4.util.LruCache;
 import android.text.TextUtils;
+import android.util.LruCache;
 
 import com.evernote.android.job.util.JobCat;
 
@@ -259,7 +259,7 @@ class JobStorage {
         }
     }
 
-    private static class JobOpenHelper extends SQLiteOpenHelper {
+    private static final class JobOpenHelper extends SQLiteOpenHelper {
 
         private JobOpenHelper(Context context, String databasePath) {
             super(context, databasePath, null, DATABASE_VERSION);
