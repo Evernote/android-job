@@ -11,8 +11,8 @@ import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.v14.PlatformAlarmService;
 import com.evernote.android.job.v21.PlatformJobService;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -33,16 +33,13 @@ public class PlatformTest {
 
     private TestJob mJob;
 
+    @Rule
+    public JobManagerRule mJobManagerRule = new JobManagerRule();
+
     @Before
     public void prepare() {
-        mManager = JobManager.create(InstrumentationRegistry.getTargetContext());
+        mManager = mJobManagerRule.getManager();
         mManager.addJobCreator(new TestJobCreator());
-    }
-
-    @After
-    public void clear() {
-        mManager.cancelAll();
-        mManager.destroy();
     }
 
     @Test

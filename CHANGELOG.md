@@ -4,6 +4,7 @@
 * Fix crash when rescheduling jobs, see #164
 * Fix wrong returned network type, see #166
 * Expose failure count in the `JobRequest` class, see #168
+* Don't silently eat `JobScheduler`'s limit exception
 
 ## 1.1.8 (2017-03-23)
 

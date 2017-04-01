@@ -171,12 +171,7 @@ public class JobProxy21 implements JobProxy {
     }
 
     protected final int schedule(JobInfo jobInfo) {
-        try {
-            return getJobScheduler().schedule(jobInfo);
-        } catch (Exception e) {
-            mCat.e(e);
-            return JobScheduler.RESULT_FAILURE;
-        }
+        return getJobScheduler().schedule(jobInfo);
     }
 
     protected static String scheduleResultToString(int scheduleResult) {
