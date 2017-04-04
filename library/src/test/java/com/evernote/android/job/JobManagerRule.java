@@ -37,8 +37,4 @@ public final class JobManagerRule extends ExternalResource {
     public JobManager getJobManager() {
         return mManager;
     }
-
-    public void setJobFinished() {
-        mManager.removeJobCreator(mJobCreator);
-    }
 }

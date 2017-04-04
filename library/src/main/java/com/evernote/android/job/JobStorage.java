@@ -30,9 +30,11 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.LruCache;
 
@@ -42,6 +44,7 @@ import net.vrallev.android.cat.CatLog;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,6 +58,7 @@ class JobStorage {
     private static final CatLog CAT = new JobCat("JobStorage");
 
     private static final String JOB_ID_COUNTER = "JOB_ID_COUNTER";
+    private static final String FAILED_DELETE_IDS = "FAILED_DELETE_IDS";
 
     public static final String PREF_FILE_NAME = "evernote_jobs";
     public static final String DATABASE_NAME = PREF_FILE_NAME + ".db";
@@ -90,6 +94,7 @@ class JobStorage {
     private final JobCacheId mCacheId;
 
     private final AtomicInteger mJobCounter;
+    private final Set<String> mFailedDeleteIds;
 
     private final JobOpenHelper mDbHelper;
     private SQLiteDatabase mDatabase;
@@ -107,12 +112,19 @@ class JobStorage {
         mJobCounter = new AtomicInteger(lastJobId);
 
         mDbHelper = new JobOpenHelper(context, databasePath);
+
+        mFailedDeleteIds = mPreferences.getStringSet(FAILED_DELETE_IDS, new HashSet<String>());
+        if (!mFailedDeleteIds.isEmpty()) {
+            tryToCleanupFinishedJobs();
+        }
     }
 
     public synchronized void put(final JobRequest request) {
-        updateRequestInCache(request);
         // don't write to db async, there could be a race condition with remove()
         store(request);
+
+        // put in cache if store() was successful
+        updateRequestInCache(request);
     }
 
     public synchronized void update(JobRequest request, ContentValues contentValues) {
@@ -120,6 +132,7 @@ class JobStorage {
         try {
             getDatabase().update(JOB_TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
         } catch (Exception e) {
+            // catch the exception here and keep what's in the database
             CAT.e(e, "could not update %s", request);
         }
     }
@@ -129,6 +142,7 @@ class JobStorage {
     }
 
     public synchronized JobRequest get(int id) {
+        // not necessary to check if failed to delete, the cache is doing this
         return mCacheId.get(id);
     }
 
@@ -153,13 +167,15 @@ class JobStorage {
             @SuppressLint("UseSparseArrays")
             HashMap<Integer, JobRequest> cachedRequests = new HashMap<>(mCacheId.snapshot());
 
-            while (cursor.moveToNext()) {
+            while (cursor != null && cursor.moveToNext()) {
                 // check in cache first, can avoid creating many JobRequest objects
                 Integer id = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));
-                if (cachedRequests.containsKey(id)) {
-                    result.add(cachedRequests.get(id));
-                } else {
-                    result.add(JobRequest.fromCursor(cursor));
+                if (!didFailToDelete(id)) {
+                    if (cachedRequests.containsKey(id)) {
+                        result.add(cachedRequests.get(id));
+                    } else {
+                        result.add(JobRequest.fromCursor(cursor));
+                    }
                 }
             }
         } catch (Exception e) {
@@ -175,11 +191,18 @@ class JobStorage {
     }
 
     public synchronized void remove(JobRequest request) {
-        mCacheId.remove(request.getJobId());
+        remove(request, request.getJobId());
+    }
+
+    private synchronized boolean remove(@Nullable JobRequest request, int jobId) {
+        mCacheId.remove(jobId);
         try {
-            getDatabase().delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
+            getDatabase().delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(jobId)});
+            return true;
         } catch (Exception e) {
-            CAT.e(e, "could not delete %s", request);
+            CAT.e(e, "could not delete %d %s", jobId, request);
+            addFailedDeleteId(jobId);
+            return false;
         }
     }
 
@@ -203,15 +226,17 @@ class JobStorage {
     }
 
     private void store(JobRequest request) {
-        try {
-            ContentValues contentValues = request.toContentValues();
-            getDatabase().insert(JOB_TABLE_NAME, null, contentValues);
-        } catch (Exception e) {
-            CAT.e(e, "could not store %s", request);
+        ContentValues contentValues = request.toContentValues();
+        if (getDatabase().insertOrThrow(JOB_TABLE_NAME, null, contentValues) < 0) {
+            throw new SQLException("Couldn't insert job request into database");
         }
     }
 
     private JobRequest load(int id, boolean includeTransient) {
+        if (didFailToDelete(id)) {
+            return null;
+        }
+
         Cursor cursor = null;
         try {
             String where = COLUMN_ID + "=?";
@@ -220,7 +245,7 @@ class JobStorage {
             }
 
             cursor = getDatabase().query(JOB_TABLE_NAME, null, where, new String[]{String.valueOf(id)}, null, null, null);
-            if (cursor.moveToFirst()) {
+            if (cursor != null && cursor.moveToFirst()) {
                 return JobRequest.fromCursor(cursor);
             }
 
@@ -236,7 +261,8 @@ class JobStorage {
         return null;
     }
 
-    private SQLiteDatabase getDatabase() {
+    @VisibleForTesting
+    /*package*/ SQLiteDatabase getDatabase() {
         if (mDatabase == null) {
             synchronized (this) {
                 if (mDatabase == null) {
@@ -245,6 +271,75 @@ class JobStorage {
             }
         }
         return mDatabase;
+    }
+
+    @VisibleForTesting
+    /*package*/ void setDatabase(SQLiteDatabase database) {
+        mDatabase = database;
+    }
+
+    @VisibleForTesting
+    /*package*/ Set<String> getFailedDeleteIds() {
+        return mFailedDeleteIds;
+    }
+
+    private void addFailedDeleteId(int id) {
+        synchronized (mFailedDeleteIds) {
+            mFailedDeleteIds.add(String.valueOf(id));
+            mPreferences.edit().putStringSet(FAILED_DELETE_IDS, mFailedDeleteIds).apply();
+        }
+    }
+
+    private boolean didFailToDelete(int id) {
+        synchronized (mFailedDeleteIds) {
+            return !mFailedDeleteIds.isEmpty() && mFailedDeleteIds.contains(String.valueOf(id));
+        }
+    }
+
+    private void tryToCleanupFinishedJobs() {
+        new Thread("CleanupFinishedJobsThread") {
+            @Override
+            public void run() {
+                Set<String> ids;
+                synchronized (mFailedDeleteIds) {
+                    ids = new HashSet<>(mFailedDeleteIds);
+                }
+
+                Iterator<String> iterator = ids.iterator();
+                while (iterator.hasNext()) {
+                    String idString = iterator.next();
+                    try {
+                        int jobId = Integer.parseInt(idString);
+                        if (remove(null, jobId)) {
+                            iterator.remove();
+                            CAT.i("Deleted job %d which failed to delete earlier", jobId);
+                        } else {
+                            CAT.e("Couldn't delete job %d which failed to delete earlier", jobId);
+                        }
+
+                    } catch (NumberFormatException e) {
+                        iterator.remove();
+                    }
+                }
+
+                synchronized (mFailedDeleteIds) {
+                    mFailedDeleteIds.clear();
+
+                    // that's too bad, but there must be something wrong with the device
+                    if (ids.size() > 50) {
+                        int counter = 0;
+                        for (String id : ids) {
+                            if (counter++ > 50) {
+                                break;
+                            }
+                            mFailedDeleteIds.add(id);
+                        }
+                    } else {
+                        mFailedDeleteIds.addAll(ids);
+                    }
+                }
+            }
+        }.start();
     }
 
     private class JobCacheId extends LruCache<Integer, JobRequest> {
