@@ -31,8 +31,6 @@ public class JobManagerTest extends BaseJobManagerTest {
         assertThat(manager().getAllJobs()).isEmpty();
 
         request.schedule();
-        request.schedule();
-        request.schedule();
 
         assertThat(manager().getAllJobRequests()).hasSize(1);
         assertThat(manager().cancelAll()).isEqualTo(1);
@@ -45,11 +43,19 @@ public class JobManagerTest extends BaseJobManagerTest {
     public void testSameIdAfterCancel() {
         JobRequest request = DummyJobs.createOneOff();
         int jobId = request.getJobId();
+        assertThat(request.getScheduledAt()).isEqualTo(0L);
 
         manager().schedule(request);
+        assertThat(request.getScheduledAt()).isGreaterThan(0L);
 
-        int newId = request.cancelAndEdit().build().schedule();
+        JobRequest requestNew = request.cancelAndEdit().build();
+        assertThat(request.getScheduledAt()).isEqualTo(0L);
+
+        int newId = requestNew.schedule();
         assertThat(newId).isEqualTo(jobId);
+
+        assertThat(request.getScheduledAt()).isEqualTo(0L);
+        assertThat(requestNew.getScheduledAt()).isGreaterThan(0L);
     }
 
     @Test
@@ -59,10 +65,32 @@ public class JobManagerTest extends BaseJobManagerTest {
                 .build();
         request.schedule();
 
+        assertThat(request.getScheduledAt()).isGreaterThan(0L);
+
         assertThat(manager().getAllJobRequestsForTag(DummyJobs.SuccessJob.TAG)).hasSize(1);
         assertThat(manager().getAllJobRequestsForTag("other")).isNotNull().isEmpty();
 
         assertThat(manager().cancelAllForTag(DummyJobs.SuccessJob.TAG)).isEqualTo(1);
         assertThat(manager().cancelAllForTag(DummyJobs.SuccessJob.TAG)).isZero();
+
+        assertThat(request.getScheduledAt()).isEqualTo(0L);
+    }
+
+    @Test
+    public void testScheduleIsIdempotent() throws Exception {
+        JobRequest request = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExecutionWindow(300_000, 400_000)
+                .build();
+        int jobId = request.schedule();
+
+        long scheduledAt = request.getScheduledAt();
+        assertThat(scheduledAt).isGreaterThan(0L);
+
+        Thread.sleep(10);
+
+        int newJobId = request.schedule();
+
+        assertThat(newJobId).isEqualTo(jobId);
+        assertThat(request.getScheduledAt()).isEqualTo(scheduledAt);
     }
 }

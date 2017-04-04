@@ -5,6 +5,7 @@
 * Fix wrong returned network type, see #166
 * Expose failure count in the `JobRequest` class, see #168
 * Don't silently eat `JobScheduler`'s limit exception
+* Make `schedule()` method idempotent
 
 ## 1.1.8 (2017-03-23)
 

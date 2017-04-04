@@ -197,14 +197,18 @@ public final class JobManager {
     /**
      * Schedule a request which will be executed in the future. If you want to update an existing
      * {@link JobRequest}, call {@link JobRequest#cancelAndEdit()}, update your parameters and call
-     * this method again. Note that after a {@link JobRequest} was updated, it has a new unique ID.
-     * {@code JobRequest}
+     * this method again. Calling this method with the same request multiple times without cancelling
+     * it is idempotent.
      *
-     * @param request The {@link JobRequest} which will be run in the future.
+     * @param request The {@link JobRequest} which will run in the future.
      */
     public void schedule(@NonNull JobRequest request) {
         if (mJobCreatorHolder.isEmpty()) {
             CAT.w("you haven't registered a JobCreator with addJobCreator(), it's likely that your job never will be executed");
+        }
+
+        if (request.getScheduledAt() > 0) {
+            return;
         }
 
         if (request.isUpdateCurrent()) {
@@ -373,6 +377,7 @@ public final class JobManager {
             CAT.i("Found pending job %s, canceling", request);
             getJobProxy(request).cancel(request.getJobId());
             getJobStorage().remove(request);
+            request.setScheduledAt(0); // reset value
             return true;
         } else {
             return false;
