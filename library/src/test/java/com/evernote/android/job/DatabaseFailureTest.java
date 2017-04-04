@@ -36,7 +36,7 @@ public class DatabaseFailureTest extends BaseJobManagerTest {
         when(database.insert(anyString(), nullable(String.class), any(ContentValues.class))).thenReturn(-1L);
         when(database.insertOrThrow(anyString(), nullable(String.class), any(ContentValues.class))).thenThrow(SQLException.class);
 
-        manager().getJobStorage().setDatabase(database);
+        manager().getJobStorage().injectDatabase(database);
 
         DummyJobs.createOneOff().schedule();
     }
@@ -52,8 +52,7 @@ public class DatabaseFailureTest extends BaseJobManagerTest {
         SQLiteDatabase database = mock(SQLiteDatabase.class);
         when(database.update(anyString(), any(ContentValues.class), nullable(String.class), any(String[].class))).thenThrow(SQLException.class);
 
-        SQLiteDatabase originalDatabase = manager().getJobStorage().getDatabase();
-        manager().getJobStorage().setDatabase(database);
+        manager().getJobStorage().injectDatabase(database);
 
         request.incNumFailures(); // updates the database value, but fails in this case
         assertThat(request.getFailureCount()).isEqualTo(1); // in memory value was updated, keep that
@@ -62,7 +61,7 @@ public class DatabaseFailureTest extends BaseJobManagerTest {
         // because we're using the mock at the moment
         manager().getJobStorage().remove(request);
 
-        manager().getJobStorage().setDatabase(originalDatabase); // restore
+        manager().getJobStorage().injectDatabase(null); // reset
 
         request = manager().getJobRequest(jobId);
         assertThat(request.getFailureCount()).isEqualTo(0);
@@ -99,13 +98,12 @@ public class DatabaseFailureTest extends BaseJobManagerTest {
         SQLiteDatabase database = mock(SQLiteDatabase.class);
         when(database.delete(anyString(), anyString(), any(String[].class))).thenThrow(SQLException.class);
 
-        SQLiteDatabase originalDatabase = manager().getJobStorage().getDatabase();
-        manager().getJobStorage().setDatabase(database);
+        manager().getJobStorage().injectDatabase(database);
 
         // that should delete the job, but this operation fails with the mock database
         deleteOperation.delete(request);
 
-        manager().getJobStorage().setDatabase(originalDatabase); // restore
+        manager().getJobStorage().injectDatabase(null); // restore
 
         // shouldn't be available anymore
         assertThat(manager().getJobRequest(jobId)).isNull();

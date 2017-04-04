@@ -33,6 +33,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
@@ -42,6 +43,8 @@ import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.CatLog;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -97,7 +100,7 @@ class JobStorage {
     private final Set<String> mFailedDeleteIds;
 
     private final JobOpenHelper mDbHelper;
-    private SQLiteDatabase mDatabase;
+    private SQLiteDatabase mInjectedDatabase;
 
     public JobStorage(Context context) {
         this(context, DATABASE_NAME);
@@ -129,11 +132,15 @@ class JobStorage {
 
     public synchronized void update(JobRequest request, ContentValues contentValues) {
         updateRequestInCache(request);
+        SQLiteDatabase database = null;
         try {
-            getDatabase().update(JOB_TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
+            database = getDatabase();
+            database.update(JOB_TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
         } catch (Exception e) {
             // catch the exception here and keep what's in the database
             CAT.e(e, "could not update %s", request);
+        } finally {
+            closeSilently(database);
         }
     }
 
@@ -149,6 +156,7 @@ class JobStorage {
     public synchronized Set<JobRequest> getAllJobRequests(@Nullable String tag, boolean includeTransient) {
         Set<JobRequest> result = new HashSet<>();
 
+        SQLiteDatabase database = null;
         Cursor cursor = null;
         try {
             String where; // filter transient requests
@@ -162,7 +170,8 @@ class JobStorage {
                 args = new String[]{tag};
             }
 
-            cursor = getDatabase().query(JOB_TABLE_NAME, null, where, args, null, null, null);
+            database = getDatabase();
+            cursor = database.query(JOB_TABLE_NAME, null, where, args, null, null, null);
 
             @SuppressLint("UseSparseArrays")
             HashMap<Integer, JobRequest> cachedRequests = new HashMap<>(mCacheId.snapshot());
@@ -182,9 +191,8 @@ class JobStorage {
             CAT.e(e, "could not load all jobs");
 
         } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
+            closeSilently(cursor);
+            closeSilently(database);
         }
 
         return result;
@@ -196,13 +204,17 @@ class JobStorage {
 
     private synchronized boolean remove(@Nullable JobRequest request, int jobId) {
         mCacheId.remove(jobId);
+        SQLiteDatabase database = null;
         try {
-            getDatabase().delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(jobId)});
+            database = getDatabase();
+            database.delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(jobId)});
             return true;
         } catch (Exception e) {
             CAT.e(e, "could not delete %d %s", jobId, request);
             addFailedDeleteId(jobId);
             return false;
+        } finally {
+            closeSilently(database);
         }
     }
 
@@ -227,8 +239,14 @@ class JobStorage {
 
     private void store(JobRequest request) {
         ContentValues contentValues = request.toContentValues();
-        if (getDatabase().insertOrThrow(JOB_TABLE_NAME, null, contentValues) < 0) {
-            throw new SQLException("Couldn't insert job request into database");
+        SQLiteDatabase database = null;
+        try {
+            database = getDatabase();
+            if (database.insertOrThrow(JOB_TABLE_NAME, null, contentValues) < 0) {
+                throw new SQLException("Couldn't insert job request into database");
+            }
+        } finally {
+            closeSilently(database);
         }
     }
 
@@ -237,6 +255,7 @@ class JobStorage {
             return null;
         }
 
+        SQLiteDatabase database = null;
         Cursor cursor = null;
         try {
             String where = COLUMN_ID + "=?";
@@ -244,7 +263,8 @@ class JobStorage {
                 where += " AND " + COLUMN_TRANSIENT + "<=0";
             }
 
-            cursor = getDatabase().query(JOB_TABLE_NAME, null, where, new String[]{String.valueOf(id)}, null, null, null);
+            database = getDatabase();
+            cursor = database.query(JOB_TABLE_NAME, null, where, new String[]{String.valueOf(id)}, null, null, null);
             if (cursor != null && cursor.moveToFirst()) {
                 return JobRequest.fromCursor(cursor);
             }
@@ -253,29 +273,25 @@ class JobStorage {
             CAT.e(e, "could not load id %d", id);
 
         } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
+            closeSilently(cursor);
+            closeSilently(database);
         }
 
         return null;
     }
 
-    @VisibleForTesting
-    /*package*/ SQLiteDatabase getDatabase() {
-        if (mDatabase == null) {
-            synchronized (this) {
-                if (mDatabase == null) {
-                    mDatabase = mDbHelper.getWritableDatabase();
-                }
-            }
+    @NonNull
+    private SQLiteDatabase getDatabase() {
+        if (mInjectedDatabase != null) {
+            return mInjectedDatabase;
+        } else {
+            return mDbHelper.getWritableDatabase();
         }
-        return mDatabase;
     }
 
     @VisibleForTesting
-    /*package*/ void setDatabase(SQLiteDatabase database) {
-        mDatabase = database;
+    /*package*/ void injectDatabase(SQLiteDatabase database) {
+        mInjectedDatabase = database;
     }
 
     @VisibleForTesting
@@ -421,6 +437,22 @@ class JobStorage {
 
             // copy interval into flex column, that's the default value and the flex support mode is not required
             db.execSQL("update " + JOB_TABLE_NAME + " set " + COLUMN_FLEX_MS + " = " + COLUMN_INTERVAL_MS + ";");
+        }
+    }
+
+    private static void closeSilently(@Nullable Cursor cursor) {
+        // cursor implements Closeable only with API 16 and above
+        if (cursor != null) {
+            cursor.close();
+        }
+    }
+
+    private static void closeSilently(@Nullable Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException ignored) {
+            }
         }
     }
 }
