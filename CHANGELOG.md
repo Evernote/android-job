@@ -1,4 +1,4 @@
-## 1.1.9
+## 1.1.9 (2017-04-10)
 
 * Improve logging by providing an option to add a custom logger
 * Fix crash when rescheduling jobs, see #164
