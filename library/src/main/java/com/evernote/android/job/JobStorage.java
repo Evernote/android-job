@@ -30,9 +30,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.LruCache;
 
@@ -40,8 +43,11 @@ import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.CatLog;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,6 +61,7 @@ class JobStorage {
     private static final CatLog CAT = new JobCat("JobStorage");
 
     private static final String JOB_ID_COUNTER = "JOB_ID_COUNTER";
+    private static final String FAILED_DELETE_IDS = "FAILED_DELETE_IDS";
 
     public static final String PREF_FILE_NAME = "evernote_jobs";
     public static final String DATABASE_NAME = PREF_FILE_NAME + ".db";
@@ -90,9 +97,10 @@ class JobStorage {
     private final JobCacheId mCacheId;
 
     private final AtomicInteger mJobCounter;
+    private final Set<String> mFailedDeleteIds;
 
     private final JobOpenHelper mDbHelper;
-    private SQLiteDatabase mDatabase;
+    private SQLiteDatabase mInjectedDatabase;
 
     public JobStorage(Context context) {
         this(context, DATABASE_NAME);
@@ -107,20 +115,32 @@ class JobStorage {
         mJobCounter = new AtomicInteger(lastJobId);
 
         mDbHelper = new JobOpenHelper(context, databasePath);
+
+        mFailedDeleteIds = mPreferences.getStringSet(FAILED_DELETE_IDS, new HashSet<String>());
+        if (!mFailedDeleteIds.isEmpty()) {
+            tryToCleanupFinishedJobs();
+        }
     }
 
     public synchronized void put(final JobRequest request) {
-        updateRequestInCache(request);
         // don't write to db async, there could be a race condition with remove()
         store(request);
+
+        // put in cache if store() was successful
+        updateRequestInCache(request);
     }
 
     public synchronized void update(JobRequest request, ContentValues contentValues) {
         updateRequestInCache(request);
+        SQLiteDatabase database = null;
         try {
-            getDatabase().update(JOB_TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
+            database = getDatabase();
+            database.update(JOB_TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
         } catch (Exception e) {
+            // catch the exception here and keep what's in the database
             CAT.e(e, "could not update %s", request);
+        } finally {
+            closeSilently(database);
         }
     }
 
@@ -129,12 +149,14 @@ class JobStorage {
     }
 
     public synchronized JobRequest get(int id) {
+        // not necessary to check if failed to delete, the cache is doing this
         return mCacheId.get(id);
     }
 
     public synchronized Set<JobRequest> getAllJobRequests(@Nullable String tag, boolean includeTransient) {
         Set<JobRequest> result = new HashSet<>();
 
+        SQLiteDatabase database = null;
         Cursor cursor = null;
         try {
             String where; // filter transient requests
@@ -148,38 +170,51 @@ class JobStorage {
                 args = new String[]{tag};
             }
 
-            cursor = getDatabase().query(JOB_TABLE_NAME, null, where, args, null, null, null);
+            database = getDatabase();
+            cursor = database.query(JOB_TABLE_NAME, null, where, args, null, null, null);
 
             @SuppressLint("UseSparseArrays")
             HashMap<Integer, JobRequest> cachedRequests = new HashMap<>(mCacheId.snapshot());
 
-            while (cursor.moveToNext()) {
+            while (cursor != null && cursor.moveToNext()) {
                 // check in cache first, can avoid creating many JobRequest objects
                 Integer id = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));
-                if (cachedRequests.containsKey(id)) {
-                    result.add(cachedRequests.get(id));
-                } else {
-                    result.add(JobRequest.fromCursor(cursor));
+                if (!didFailToDelete(id)) {
+                    if (cachedRequests.containsKey(id)) {
+                        result.add(cachedRequests.get(id));
+                    } else {
+                        result.add(JobRequest.fromCursor(cursor));
+                    }
                 }
             }
         } catch (Exception e) {
             CAT.e(e, "could not load all jobs");
 
         } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
+            closeSilently(cursor);
+            closeSilently(database);
         }
 
         return result;
     }
 
     public synchronized void remove(JobRequest request) {
-        mCacheId.remove(request.getJobId());
+        remove(request, request.getJobId());
+    }
+
+    private synchronized boolean remove(@Nullable JobRequest request, int jobId) {
+        mCacheId.remove(jobId);
+        SQLiteDatabase database = null;
         try {
-            getDatabase().delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
+            database = getDatabase();
+            database.delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(jobId)});
+            return true;
         } catch (Exception e) {
-            CAT.e(e, "could not delete %s", request);
+            CAT.e(e, "could not delete %d %s", jobId, request);
+            addFailedDeleteId(jobId);
+            return false;
+        } finally {
+            closeSilently(database);
         }
     }
 
@@ -203,15 +238,24 @@ class JobStorage {
     }
 
     private void store(JobRequest request) {
+        ContentValues contentValues = request.toContentValues();
+        SQLiteDatabase database = null;
         try {
-            ContentValues contentValues = request.toContentValues();
-            getDatabase().insert(JOB_TABLE_NAME, null, contentValues);
-        } catch (Exception e) {
-            CAT.e(e, "could not store %s", request);
+            database = getDatabase();
+            if (database.insertOrThrow(JOB_TABLE_NAME, null, contentValues) < 0) {
+                throw new SQLException("Couldn't insert job request into database");
+            }
+        } finally {
+            closeSilently(database);
         }
     }
 
     private JobRequest load(int id, boolean includeTransient) {
+        if (didFailToDelete(id)) {
+            return null;
+        }
+
+        SQLiteDatabase database = null;
         Cursor cursor = null;
         try {
             String where = COLUMN_ID + "=?";
@@ -219,8 +263,9 @@ class JobStorage {
                 where += " AND " + COLUMN_TRANSIENT + "<=0";
             }
 
-            cursor = getDatabase().query(JOB_TABLE_NAME, null, where, new String[]{String.valueOf(id)}, null, null, null);
-            if (cursor.moveToFirst()) {
+            database = getDatabase();
+            cursor = database.query(JOB_TABLE_NAME, null, where, new String[]{String.valueOf(id)}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
                 return JobRequest.fromCursor(cursor);
             }
 
@@ -228,23 +273,89 @@ class JobStorage {
             CAT.e(e, "could not load id %d", id);
 
         } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
+            closeSilently(cursor);
+            closeSilently(database);
         }
 
         return null;
     }
 
+    @NonNull
     private SQLiteDatabase getDatabase() {
-        if (mDatabase == null) {
-            synchronized (this) {
-                if (mDatabase == null) {
-                    mDatabase = mDbHelper.getWritableDatabase();
+        if (mInjectedDatabase != null) {
+            return mInjectedDatabase;
+        } else {
+            return mDbHelper.getWritableDatabase();
+        }
+    }
+
+    @VisibleForTesting
+    /*package*/ void injectDatabase(SQLiteDatabase database) {
+        mInjectedDatabase = database;
+    }
+
+    @VisibleForTesting
+    /*package*/ Set<String> getFailedDeleteIds() {
+        return mFailedDeleteIds;
+    }
+
+    private void addFailedDeleteId(int id) {
+        synchronized (mFailedDeleteIds) {
+            mFailedDeleteIds.add(String.valueOf(id));
+            mPreferences.edit().putStringSet(FAILED_DELETE_IDS, mFailedDeleteIds).apply();
+        }
+    }
+
+    private boolean didFailToDelete(int id) {
+        synchronized (mFailedDeleteIds) {
+            return !mFailedDeleteIds.isEmpty() && mFailedDeleteIds.contains(String.valueOf(id));
+        }
+    }
+
+    private void tryToCleanupFinishedJobs() {
+        new Thread("CleanupFinishedJobsThread") {
+            @Override
+            public void run() {
+                Set<String> ids;
+                synchronized (mFailedDeleteIds) {
+                    ids = new HashSet<>(mFailedDeleteIds);
+                }
+
+                Iterator<String> iterator = ids.iterator();
+                while (iterator.hasNext()) {
+                    String idString = iterator.next();
+                    try {
+                        int jobId = Integer.parseInt(idString);
+                        if (remove(null, jobId)) {
+                            iterator.remove();
+                            CAT.i("Deleted job %d which failed to delete earlier", jobId);
+                        } else {
+                            CAT.e("Couldn't delete job %d which failed to delete earlier", jobId);
+                        }
+
+                    } catch (NumberFormatException e) {
+                        iterator.remove();
+                    }
+                }
+
+                synchronized (mFailedDeleteIds) {
+                    mFailedDeleteIds.clear();
+
+                    // that's too bad, but there must be something wrong with the device
+                    if (ids.size() > 50) {
+                        int counter = 0;
+                        for (String id : ids) {
+                            if (counter++ > 50) {
+                                break;
+                            }
+                            mFailedDeleteIds.add(id);
+                        }
+                    } else {
+                        mFailedDeleteIds.addAll(ids);
+                    }
                 }
             }
-        }
-        return mDatabase;
+        }.start();
     }
 
     private class JobCacheId extends LruCache<Integer, JobRequest> {
@@ -326,6 +437,22 @@ class JobStorage {
 
             // copy interval into flex column, that's the default value and the flex support mode is not required
             db.execSQL("update " + JOB_TABLE_NAME + " set " + COLUMN_FLEX_MS + " = " + COLUMN_INTERVAL_MS + ";");
+        }
+    }
+
+    private static void closeSilently(@Nullable Cursor cursor) {
+        // cursor implements Closeable only with API 16 and above
+        if (cursor != null) {
+            cursor.close();
+        }
+    }
+
+    private static void closeSilently(@Nullable Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException ignored) {
+            }
         }
     }
 }

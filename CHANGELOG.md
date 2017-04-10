@@ -6,6 +6,7 @@
 * Expose failure count in the `JobRequest` class, see #168
 * Don't silently eat `JobScheduler`'s limit exception
 * Make `schedule()` method idempotent
+* Add a fallback if removing a job from the database fails for some reason, see #145
 
 ## 1.1.8 (2017-03-23)
 
