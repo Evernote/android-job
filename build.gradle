@@ -3,8 +3,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
+        classpath 'com.android.tools.build:gradle:2.3.1'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.14.0'
     }
 }
 
@@ -26,10 +26,10 @@ ext {
     stethoVersion = '1.4.2'
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
-    mockitoVersion = '2.6.2'
+    mockitoVersion = '2.7.22'
     robolectricVersion = '3.3.2'
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '3.4.1'
+    gradleVersion = '3.5'
 }
