@@ -1,14 +1,24 @@
 package com.evernote.android.job;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
 import com.evernote.android.job.util.JobApi;
+import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
+
+import net.vrallev.android.cat.print.CatPrinter;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -210,6 +220,31 @@ public class JobRequestTest extends BaseJobManagerTest {
                 .setExact(4_000L)
                 .setRequirementsEnforced(true)
                 .build();
+    }
+
+    @Test
+    public void testWarningWhenTooFarInTheFuture() {
+        class TestPrinter implements CatPrinter {
+            private final List<String> mMessages = new ArrayList<>();
+
+            @Override
+            public void println(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+                mMessages.add(message);
+            }
+        }
+
+        TestPrinter testPrinter = new TestPrinter();
+        JobCat.addLogPrinter(testPrinter);
+
+        getBuilder().setExecutionWindow(TimeUnit.DAYS.toMillis(366), TimeUnit.DAYS.toMillis(367)).build();
+        getBuilder().setExact(TimeUnit.DAYS.toMillis(366)).build();
+
+        JobCat.removeLogPrinter(testPrinter);
+
+        assertThat(testPrinter.mMessages).containsSubsequence(
+                "Warning: job with tag SuccessJob scheduled over a year in the future",
+                "Warning: job with tag SuccessJob scheduled over a year in the future"
+        );
     }
 
     private JobRequest.Builder getBuilder() {
