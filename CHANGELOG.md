@@ -1,6 +1,7 @@
 ## 1.1.10
 
 * Fix a race condition when canceling jobs, see #178
+* Make it possible to reuse builder objects, this may fix SQL exceptions, see #176
 
 ## 1.1.9 (2017-04-10)
 

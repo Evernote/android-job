@@ -107,8 +107,8 @@ public class JobManagerTest extends BaseJobManagerTest {
 
     @Test
     public void testSimultaneousCancel() throws Exception {
-        int threadCount = 5;
-        int jobCount = 25;
+        final int threadCount = 5;
+        final int jobCount = 25;
 
         CountDownLatch[] latches = new CountDownLatch[threadCount];
         for (int i = 0; i < latches.length; i++) {
@@ -152,5 +152,45 @@ public class JobManagerTest extends BaseJobManagerTest {
         }
 
         assertThat(testPrinter.mMessages).hasSize(25);
+    }
+
+    @Test
+    public void testReusingBuilderObject() throws Exception {
+        final int jobs = 20;
+
+        JobRequest.Builder builder = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExecutionWindow(300_000, 400_000);
+
+        int previousJobId = -1;
+        for (int i = 0; i < jobs; i++) {
+            int jobId = builder.build().schedule();
+
+            assertThat(jobId).isNotEqualTo(previousJobId);
+            previousJobId = jobId;
+        }
+
+        assertThat(manager().getAllJobRequests()).hasSize(jobs);
+    }
+
+    @Test
+    public void testReusingBuilderObjectWithMultipleThreads() throws Exception {
+        final int jobs = 20;
+
+        final JobRequest.Builder builder = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExecutionWindow(300_000, 400_000);
+
+        for (int i = 0; i < jobs; i++) {
+            final CountDownLatch latch = new CountDownLatch(1);
+            new Thread() {
+                @Override
+                public void run() {
+                    builder.build().schedule();
+                    latch.countDown();
+                }
+            }.start();
+            latch.await(1, TimeUnit.SECONDS);
+        }
+
+        assertThat(manager().getAllJobRequests()).hasSize(jobs);
     }
 }

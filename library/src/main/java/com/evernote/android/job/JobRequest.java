@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author rwondratschek
  */
+@SuppressWarnings({"WeakerAccess", "SameParameterValue"})
 public final class JobRequest {
 
     /**
@@ -365,7 +366,7 @@ public final class JobRequest {
      */
     public Builder cancelAndEdit() {
         JobManager.instance().cancel(getJobId());
-        Builder builder = new Builder(this, false);
+        Builder builder = new Builder(this.mBuilder);
         mTransient = false;
 
         if (!isPeriodic()) {
@@ -378,7 +379,7 @@ public final class JobRequest {
     }
 
     /*package*/ int reschedule(boolean failure, boolean newJob) {
-        JobRequest newRequest = new Builder(this, newJob).build();
+        JobRequest newRequest = new Builder(this.mBuilder, newJob).build();
         if (failure) {
             newRequest.mFailureCount = mFailureCount + 1;
         }
@@ -447,7 +448,9 @@ public final class JobRequest {
      */
     public static final class Builder {
 
-        private final int mId;
+        private static final int CREATE_ID = -8765; // magic number
+
+        private int mId;
         private final String mTag;
 
         private long mStartMs;
@@ -487,7 +490,7 @@ public final class JobRequest {
          */
         public Builder(@NonNull String tag) {
             mTag = JobPreconditions.checkNotEmpty(tag);
-            mId = JobManager.instance().getJobStorage().nextJobId();
+            mId = CREATE_ID;
 
             mStartMs = -1;
             mEndMs = -1;
@@ -496,30 +499,6 @@ public final class JobRequest {
             mBackoffPolicy = DEFAULT_BACKOFF_POLICY;
 
             mNetworkType = DEFAULT_NETWORK_TYPE;
-        }
-
-        private Builder(JobRequest request, boolean createId) {
-            mId = createId ? JobManager.instance().getJobStorage().nextJobId() : request.getJobId();
-            mTag = request.getTag();
-
-            mStartMs = request.getStartMs();
-            mEndMs = request.getEndMs();
-
-            mBackoffMs = request.getBackoffMs();
-            mBackoffPolicy = request.getBackoffPolicy();
-
-            mIntervalMs = request.getIntervalMs();
-            mFlexMs = request.getFlexMs();
-
-            mRequirementsEnforced = request.requirementsEnforced();
-            mRequiresCharging = request.requiresCharging();
-            mRequiresDeviceIdle = request.requiresDeviceIdle();
-            mExact = request.isExact();
-            mNetworkType = request.requiredNetworkType();
-
-            mExtras = request.mBuilder.mExtras;
-            mExtrasXml = request.mBuilder.mExtrasXml;
-            mPersisted = request.isPersisted();
         }
 
         @SuppressWarnings("unchecked")
@@ -555,6 +534,38 @@ public final class JobRequest {
             mExtrasXml = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_EXTRAS));
 
             mPersisted = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_PERSISTED)) > 0;
+        }
+
+        // copy constructor
+        private Builder(@NonNull Builder builder) {
+            this(builder, false);
+        }
+
+        private Builder(@NonNull Builder builder, boolean createId) {
+            mId = createId ? CREATE_ID : builder.mId;
+            mTag = builder.mTag;
+
+            mStartMs = builder.mStartMs;
+            mEndMs = builder.mEndMs;
+
+            mBackoffMs = builder.mBackoffMs;
+            mBackoffPolicy = builder.mBackoffPolicy;
+
+            mIntervalMs = builder.mIntervalMs;
+            mFlexMs = builder.mFlexMs;
+
+            mRequirementsEnforced = builder.mRequirementsEnforced;
+            mRequiresCharging = builder.mRequiresCharging;
+            mRequiresDeviceIdle = builder.mRequiresDeviceIdle;
+            mExact = builder.mExact;
+            mNetworkType = builder.mNetworkType;
+
+            mExtras = builder.mExtras;
+            mExtrasXml = builder.mExtrasXml;
+
+            mPersisted = builder.mPersisted;
+
+            mUpdateCurrent = builder.mUpdateCurrent;
         }
 
         private void fillContentValues(ContentValues contentValues) {
@@ -878,7 +889,6 @@ public final class JobRequest {
          * @return The {@link JobRequest} with this parameters to hand to the {@link JobManager}.
          */
         public JobRequest build() {
-            JobPreconditions.checkArgumentNonnegative(mId, "id can't be negative");
             JobPreconditions.checkNotEmpty(mTag);
             JobPreconditions.checkArgumentPositive(mBackoffMs, "backoffMs must be > 0");
             JobPreconditions.checkNotNull(mBackoffPolicy);
@@ -924,7 +934,17 @@ public final class JobRequest {
                 CAT.w("Warning: job with tag %s scheduled over a year in the future", mTag);
             }
 
-            return new JobRequest(this);
+            if (mId != CREATE_ID) {
+                JobPreconditions.checkArgumentNonnegative(mId, "id can't be negative");
+            }
+
+            Builder builder = new Builder(this);
+            if (mId == CREATE_ID) {
+                builder.mId = JobManager.instance().getJobStorage().nextJobId();
+                JobPreconditions.checkArgumentNonnegative(builder.mId, "id can't be negative");
+            }
+
+            return new JobRequest(builder);
         }
 
         @Override
