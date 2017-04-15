@@ -1,12 +1,23 @@
 package com.evernote.android.job;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
+import com.evernote.android.job.util.JobCat;
+
+import net.vrallev.android.cat.print.CatPrinter;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -92,5 +103,54 @@ public class JobManagerTest extends BaseJobManagerTest {
 
         assertThat(newJobId).isEqualTo(jobId);
         assertThat(request.getScheduledAt()).isEqualTo(scheduledAt);
+    }
+
+    @Test
+    public void testSimultaneousCancel() throws Exception {
+        int threadCount = 5;
+        int jobCount = 25;
+
+        CountDownLatch[] latches = new CountDownLatch[threadCount];
+        for (int i = 0; i < latches.length; i++) {
+            latches[i] = new CountDownLatch(1);
+
+        }
+
+        // that sucks, but the storage can't be injected to verify it better
+        class TestPrinter implements CatPrinter {
+            private final List<String> mMessages = new ArrayList<>();
+
+            @Override
+            public void println(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+                if (message.endsWith("canceling")) {
+                    mMessages.add(message);
+                }
+            }
+        }
+
+        TestPrinter testPrinter = new TestPrinter();
+        JobCat.addLogPrinter(testPrinter);
+
+        for (int i = 0; i < jobCount; i++) {
+            DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                    .setExecutionWindow(300_000, 400_000)
+                    .build().schedule();
+        }
+
+        for (final CountDownLatch latch : latches) {
+            new Thread() {
+                @Override
+                public void run() {
+                    manager().cancelAll();
+                    latch.countDown();
+                }
+            }.start();
+        }
+
+        for (CountDownLatch latch : latches) {
+            latch.await(3, TimeUnit.SECONDS);
+        }
+
+        assertThat(testPrinter.mMessages).hasSize(25);
     }
 }

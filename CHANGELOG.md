@@ -1,3 +1,7 @@
+## 1.1.10
+
+* Fix a race condition when canceling jobs, see #178
+
 ## 1.1.9 (2017-04-10)
 
 * Improve logging by providing an option to add a custom logger

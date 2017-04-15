@@ -54,7 +54,7 @@ import java.util.List;
         } catch (Throwable t) {
             // seeing sometimes a DeadObjectException, return false, we can't do anything in this case
             // still sometimes seeing a NoClassDefFoundError here
-            CAT.w(t);
+            CAT.w(t.getMessage());
             return false;
         }
     }

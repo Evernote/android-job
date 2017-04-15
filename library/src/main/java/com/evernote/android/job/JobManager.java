@@ -394,7 +394,7 @@ public final class JobManager {
         }
     }
 
-    private int cancelAllInner(@Nullable String tag) {
+    private synchronized int cancelAllInner(@Nullable String tag) {
         int canceled = 0;
 
         Set<JobRequest> requests = mJobStorage.getAllJobRequests(tag, true);
