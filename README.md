@@ -156,11 +156,21 @@ And then referring to it in your application tag in `AndroidManifest.xml`:
 
 #### Proguard
 
-The library doesn't use reflection, but it relies on two `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules](library/proguard.txt) in your configuration.
+The library doesn't use reflection, but it relies on three `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules](library/proguard.txt) in your configuration.
 
 ## FAQ
 
 See [here](FAQ.md).
+
+## Google Play Services
+
+This library does **not** automatically bundle the Google Play Services, because the dependency is really heavy and not all apps want to include them. That's why you need to add the dependency manually, if you want that the library uses the `GcmNetworkManager` on Android 4.
+```groovy
+dependencies {
+    compile "com.google.android.gms:play-services-gcm:latest_version"
+}
+```
+Crashes after removing the GCM dependency is a known limitation of the Google Play Services. Please take a look at [this workaround](FAQ.md#how-can-i-remove-the-gcm-dependency-from-my-app) to avoid those crashes.
 
 ## License
 ```

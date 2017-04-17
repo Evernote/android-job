@@ -126,7 +126,7 @@ import java.util.List;
 
         } catch (Throwable t) {
             // just in case, don't let the app crash with each restart
-            CAT.e(t);
+            CAT.e(t.getMessage());
         }
     }
 
