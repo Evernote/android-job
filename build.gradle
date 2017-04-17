@@ -11,6 +11,10 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+
+        maven {
+            url  'https://dl.bintray.com/android/android-tools'
+        }
     }
 }
 
@@ -23,7 +27,10 @@ ext {
 
     supportLibVersion = '25.0.0'
     playServicesVersion = '10.2.1'
+    lintVersion = '25.3.0'
+
     stethoVersion = '1.4.2'
+
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
     mockitoVersion = '2.7.22'
