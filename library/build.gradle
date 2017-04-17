@@ -4,6 +4,12 @@ apply from: '../build-config/gradle-quality.gradle'
 
 archivesBaseName = 'android-job'
 
+configurations.all {
+    resolutionStrategy {
+        force "com.android.support:support-v4:$supportLibVersion"
+    }
+}
+
 dependencies {
     provided "com.google.android.gms:play-services-gcm:$playServicesVersion"
 
