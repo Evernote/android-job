@@ -65,7 +65,7 @@ class JobStorage {
 
     public static final String PREF_FILE_NAME = "evernote_jobs";
     public static final String DATABASE_NAME = PREF_FILE_NAME + ".db";
-    public static final int DATABASE_VERSION = 3;
+    public static final int DATABASE_VERSION = 4;
 
     public static final String JOB_TABLE_NAME = "jobs";
 
@@ -88,6 +88,7 @@ class JobStorage {
     public static final String COLUMN_TRANSIENT = "isTransient";
     public static final String COLUMN_FLEX_MS = "flexMs";
     public static final String COLUMN_FLEX_SUPPORT = "flexSupport";
+    public static final String COLUMN_LAST_RUN = "lastRun";
 
     private static final int CACHE_SIZE = 30;
 
@@ -393,6 +394,10 @@ class JobStorage {
                         upgradeFrom2To3(db);
                         oldVersion++;
                         break;
+                    case 3:
+                        upgradeFrom3to4(db);
+                        oldVersion++;
+                        break;
                     default:
                         throw new IllegalStateException("not implemented");
                 }
@@ -419,7 +424,8 @@ class JobStorage {
                     + COLUMN_SCHEDULED_AT + " integer, "
                     + COLUMN_TRANSIENT + " integer, "
                     + COLUMN_FLEX_MS + " integer, "
-                    + COLUMN_FLEX_SUPPORT + " integer);");
+                    + COLUMN_FLEX_SUPPORT + " integer, "
+                    + COLUMN_LAST_RUN + " integer);");
         }
 
         private void upgradeFrom1To2(SQLiteDatabase db) {
@@ -437,6 +443,10 @@ class JobStorage {
 
             // copy interval into flex column, that's the default value and the flex support mode is not required
             db.execSQL("update " + JOB_TABLE_NAME + " set " + COLUMN_FLEX_MS + " = " + COLUMN_INTERVAL_MS + ";");
+        }
+
+        private void upgradeFrom3to4(SQLiteDatabase db) {
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_LAST_RUN + " integer;");
         }
     }
 

@@ -120,6 +120,7 @@ public final class JobRequest {
     private long mScheduledAt;
     private boolean mTransient;
     private boolean mFlexSupport;
+    private long mLastRun;
 
     private JobRequest(Builder builder) {
         mBuilder = builder;
@@ -346,6 +347,16 @@ public final class JobRequest {
     }
 
     /**
+     * Returns the time the job did run the last time. This is only useful for periodic jobs
+     * or jobs which were rescheduled. If the job didn't run, yet, then it returns 0.
+     *
+     * @return The last time the rescheduled or periodic job did run.
+     */
+    public long getLastRun() {
+        return mLastRun;
+    }
+
+    /**
      * Convenience method. Internally it calls {@link JobManager#schedule(JobRequest)}
      * and {@link #getJobId()} for this request.
      *
@@ -378,18 +389,25 @@ public final class JobRequest {
         return builder;
     }
 
-    /*package*/ int reschedule(boolean failure, boolean newJob) {
+    /*package*/ JobRequest reschedule(boolean failure, boolean newJob) {
         JobRequest newRequest = new Builder(this.mBuilder, newJob).build();
         if (failure) {
             newRequest.mFailureCount = mFailureCount + 1;
         }
-        return newRequest.schedule();
+        newRequest.schedule();
+        return newRequest;
     }
 
-    /*package*/ void incNumFailures() {
-        mFailureCount++;
+    /*package*/ void updateStats(boolean incFailureCount, boolean updateLastRun) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mFailureCount);
+        if (incFailureCount) {
+            mFailureCount++;
+            contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mFailureCount);
+        }
+        if (updateLastRun) {
+            mLastRun = System.currentTimeMillis();
+            contentValues.put(JobStorage.COLUMN_LAST_RUN, mLastRun);
+        }
         JobManager.instance().getJobStorage().update(this, contentValues);
     }
 
@@ -407,6 +425,7 @@ public final class JobRequest {
         contentValues.put(JobStorage.COLUMN_SCHEDULED_AT, mScheduledAt);
         contentValues.put(JobStorage.COLUMN_TRANSIENT, mTransient);
         contentValues.put(JobStorage.COLUMN_FLEX_SUPPORT, mFlexSupport);
+        contentValues.put(JobStorage.COLUMN_LAST_RUN, mLastRun);
         return contentValues;
     }
 
@@ -416,6 +435,7 @@ public final class JobRequest {
         request.mScheduledAt = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_SCHEDULED_AT));
         request.mTransient = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_TRANSIENT)) > 0;
         request.mFlexSupport = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_FLEX_SUPPORT)) > 0;
+        request.mLastRun = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_LAST_RUN));
 
         JobPreconditions.checkArgumentNonnegative(request.mFailureCount, "failure count can't be negative");
         JobPreconditions.checkArgumentNonnegative(request.mScheduledAt, "scheduled at can't be negative");

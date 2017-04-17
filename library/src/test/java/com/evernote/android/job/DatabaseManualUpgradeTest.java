@@ -21,6 +21,8 @@ import static com.evernote.android.job.JobStorage.COLUMN_BACKOFF_POLICY;
 import static com.evernote.android.job.JobStorage.COLUMN_END_MS;
 import static com.evernote.android.job.JobStorage.COLUMN_EXACT;
 import static com.evernote.android.job.JobStorage.COLUMN_EXTRAS;
+import static com.evernote.android.job.JobStorage.COLUMN_FLEX_MS;
+import static com.evernote.android.job.JobStorage.COLUMN_FLEX_SUPPORT;
 import static com.evernote.android.job.JobStorage.COLUMN_ID;
 import static com.evernote.android.job.JobStorage.COLUMN_INTERVAL_MS;
 import static com.evernote.android.job.JobStorage.COLUMN_NETWORK_TYPE;
@@ -45,7 +47,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 public class DatabaseManualUpgradeTest {
 
     @Test
-    public void testDatabaseUpgrade1to3() {
+    public void testDatabaseUpgrade1to4() {
         Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
@@ -57,7 +59,7 @@ public class DatabaseManualUpgradeTest {
     }
 
     @Test
-    public void testDatabaseUpgrade2to3() {
+    public void testDatabaseUpgrade2to4() {
         Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
@@ -69,7 +71,19 @@ public class DatabaseManualUpgradeTest {
     }
 
     @Test
-    public void testDatabaseUpgrade1to2to3() {
+    public void testDatabaseUpgrade3to4() {
+        Context context = RuntimeEnvironment.application;
+        context.deleteDatabase(DATABASE_NAME);
+
+        JobOpenHelper3 openHelper = new JobOpenHelper3(context);
+        createDatabase(openHelper, false);
+        createJobs(openHelper, true);
+
+        checkJob(context);
+    }
+
+    @Test
+    public void testDatabaseUpgrade1to2to3to4() {
         Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
@@ -78,6 +92,7 @@ public class DatabaseManualUpgradeTest {
         createJobs(openHelper);
 
         createDatabase(new JobOpenHelper2(context), true);
+        createDatabase(new JobOpenHelper3(context), true);
 
         checkJob(context);
     }
@@ -93,6 +108,10 @@ public class DatabaseManualUpgradeTest {
     }
 
     private void createJobs(UpgradeAbleJobOpenHelper openHelper) {
+        createJobs(openHelper, false);
+    }
+
+    private void createJobs(UpgradeAbleJobOpenHelper openHelper, boolean validInterval) {
         SQLiteDatabase database = openHelper.getWritableDatabase();
 
         ContentValues contentValues = openHelper.createBaseContentValues(1);
@@ -101,11 +120,19 @@ public class DatabaseManualUpgradeTest {
         database.insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
 
         contentValues = openHelper.createBaseContentValues(2);
-        contentValues.put(JobStorage.COLUMN_INTERVAL_MS, 60_000L);
+        if (validInterval) {
+            contentValues.put(JobStorage.COLUMN_INTERVAL_MS, JobRequest.MIN_INTERVAL);
+            contentValues.put(JobStorage.COLUMN_FLEX_MS, JobRequest.MIN_INTERVAL);
+        } else {
+            contentValues.put(JobStorage.COLUMN_INTERVAL_MS, 60_000L);
+        }
         database.insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
 
         contentValues = openHelper.createBaseContentValues(3);
         contentValues.put(JobStorage.COLUMN_INTERVAL_MS, TimeUnit.MINUTES.toMillis(20));
+        if (validInterval) {
+            contentValues.put(JobStorage.COLUMN_FLEX_MS, TimeUnit.MINUTES.toMillis(20));
+        }
         database.insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
     }
 
@@ -302,6 +329,76 @@ public class DatabaseManualUpgradeTest {
 
         private void upgradeFrom1To2(SQLiteDatabase db) {
             db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_TRANSIENT + " integer;");
+        }
+    }
+
+    private static final class JobOpenHelper3 extends UpgradeAbleJobOpenHelper {
+
+        JobOpenHelper3(Context context) {
+            super(context, DATABASE_NAME, null, 3);
+        }
+
+        @Override
+        public void onCreateInner(SQLiteDatabase db) {
+            createJobTable(db);
+        }
+
+        @Override
+        public void onUpgradeInner(SQLiteDatabase db, int oldVersion, int newVersion) {
+            while (oldVersion < newVersion) {
+                switch (oldVersion) {
+                    case 1:
+                        upgradeFrom1To2(db);
+                        oldVersion++;
+                        break;
+                    case 2:
+                        upgradeFrom2To3(db);
+                        oldVersion++;
+                        break;
+                    default:
+                        throw new IllegalStateException("not implemented");
+                }
+            }
+        }
+
+        private void createJobTable(SQLiteDatabase db) {
+            db.execSQL("create table " + JOB_TABLE_NAME + " ("
+                    + COLUMN_ID + " integer primary key, "
+                    + COLUMN_TAG + " text not null, "
+                    + COLUMN_START_MS + " integer, "
+                    + COLUMN_END_MS + " integer, "
+                    + COLUMN_BACKOFF_MS + " integer, "
+                    + COLUMN_BACKOFF_POLICY + " text not null, "
+                    + COLUMN_INTERVAL_MS + " integer, "
+                    + COLUMN_REQUIREMENTS_ENFORCED + " integer, "
+                    + COLUMN_REQUIRES_CHARGING + " integer, "
+                    + COLUMN_REQUIRES_DEVICE_IDLE + " integer, "
+                    + COLUMN_EXACT + " integer, "
+                    + COLUMN_NETWORK_TYPE + " text not null, "
+                    + COLUMN_EXTRAS + " text, "
+                    + COLUMN_PERSISTED + " integer, "
+                    + COLUMN_NUM_FAILURES + " integer, "
+                    + COLUMN_SCHEDULED_AT + " integer, "
+                    + COLUMN_TRANSIENT + " integer, "
+                    + COLUMN_FLEX_MS + " integer, "
+                    + COLUMN_FLEX_SUPPORT + " integer);");
+        }
+
+        private void upgradeFrom1To2(SQLiteDatabase db) {
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_TRANSIENT + " integer;");
+        }
+
+        private void upgradeFrom2To3(SQLiteDatabase db) {
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_FLEX_MS + " integer;");
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_FLEX_SUPPORT + " integer;");
+
+            // adjust interval to minimum value if necessary
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COLUMN_INTERVAL_MS, JobRequest.MIN_INTERVAL);
+            db.update(JOB_TABLE_NAME, contentValues, COLUMN_INTERVAL_MS + ">0 AND " + COLUMN_INTERVAL_MS + "<" + JobRequest.MIN_INTERVAL, new String[0]);
+
+            // copy interval into flex column, that's the default value and the flex support mode is not required
+            db.execSQL("update " + JOB_TABLE_NAME + " set " + COLUMN_FLEX_MS + " = " + COLUMN_INTERVAL_MS + ";");
         }
     }
 }

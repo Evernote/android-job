@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author rwondratschek
  */
+@SuppressWarnings("WeakerAccess")
 /*package*/ class JobExecutor {
 
     private static final CatLog CAT = new JobCat("JobExecutor");
@@ -163,11 +164,25 @@ import java.util.concurrent.TimeUnit;
 
         private void handleResult(Job.Result result) {
             JobRequest request = mJob.getParams().getRequest();
+            boolean incFailureCount = false;
+            boolean updateLastRun = false;
+
             if (!request.isPeriodic() && Job.Result.RESCHEDULE.equals(result)) {
-                int newJobId = request.reschedule(true, true);
-                mJob.onReschedule(newJobId);
-            } else if (request.isPeriodic() && !Job.Result.SUCCESS.equals(result)) {
-                request.incNumFailures();
+                request = request.reschedule(true, true);
+                mJob.onReschedule(request.getJobId());
+                updateLastRun = true;
+
+            } else if (request.isPeriodic()) {
+                updateLastRun = true;
+                if (!Job.Result.SUCCESS.equals(result)) {
+                    incFailureCount = true;
+                }
+
+            }
+
+            if (incFailureCount || updateLastRun) {
+                //noinspection ConstantConditions
+                request.updateStats(incFailureCount, updateLastRun);
             }
         }
     }

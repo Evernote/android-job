@@ -47,7 +47,7 @@ import java.lang.ref.WeakReference;
  *
  * @author rwondratschek
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class Job {
 
     private static final CatLog CAT = new JobCat("Job");
@@ -509,6 +509,16 @@ public abstract class Job {
          */
         public int getFailureCount() {
             return mRequest.getFailureCount();
+        }
+
+        /**
+         * Returns the time the job did run the last time. This is only useful for periodic jobs
+         * or jobs which were rescheduled. If the job didn't run, yet, then it returns 0.
+         *
+         * @return The last time the rescheduled or periodic job did run.
+         */
+        public long getLastRun() {
+            return mRequest.getLastRun();
         }
 
         /**

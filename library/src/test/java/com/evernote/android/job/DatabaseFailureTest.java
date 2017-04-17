@@ -48,14 +48,16 @@ public class DatabaseFailureTest extends BaseJobManagerTest {
 
         assertThat(request.getScheduledAt()).isGreaterThan(0L);
         assertThat(request.getFailureCount()).isEqualTo(0);
+        assertThat(request.getLastRun()).isEqualTo(0);
 
         SQLiteDatabase database = mock(SQLiteDatabase.class);
         when(database.update(anyString(), any(ContentValues.class), nullable(String.class), any(String[].class))).thenThrow(SQLException.class);
 
         manager().getJobStorage().injectDatabase(database);
 
-        request.incNumFailures(); // updates the database value, but fails in this case
+        request.updateStats(true, true); // updates the database value, but fails in this case
         assertThat(request.getFailureCount()).isEqualTo(1); // in memory value was updated, keep that
+        assertThat(request.getLastRun()).isGreaterThan(0);
 
         // kinda hacky, this removes the request from the cache, but doesn't delete it in the database,
         // because we're using the mock at the moment
@@ -65,6 +67,7 @@ public class DatabaseFailureTest extends BaseJobManagerTest {
 
         request = manager().getJobRequest(jobId);
         assertThat(request.getFailureCount()).isEqualTo(0);
+        assertThat(request.getLastRun()).isEqualTo(0);
     }
 
     @Test

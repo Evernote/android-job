@@ -2,6 +2,7 @@
 
 * Fix a race condition when canceling jobs, see #178
 * Make it possible to reuse builder objects, this may fix SQL exceptions, see #176
+* Add `JobRequest.getLastRun()` returning the time when the job did run the last time, if it was rescheduled or it's a periodic job, see #141
 
 ## 1.1.9 (2017-04-10)
 

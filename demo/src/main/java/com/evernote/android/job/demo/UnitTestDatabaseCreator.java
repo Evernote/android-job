@@ -26,6 +26,10 @@ public final class UnitTestDatabaseCreator {
         createJobs(new DummyJobCreatorV3());
     }
 
+    public void createV4() {
+        createJobs(new DummyJobCreatorV3()); // same as v3, only last run column is new
+    }
+
     private void createJobs(DummyJobCreator creator) {
         creator.createOneOff();
         creator.createExact();

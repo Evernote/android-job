@@ -33,6 +33,11 @@ public class DatabaseExistingTest extends BaseJobManagerTest {
         testDatabase("evernote_jobs_v2.db");
     }
 
+    @Test
+    public void upgradeFromV3() {
+        testDatabase("evernote_jobs_v3.db");
+    }
+
     private void testDatabase(String name) {
         String filePath = getClass().getResource("/databases/" + name).getPath();
         assertThat(new File(filePath).exists()).isTrue();
@@ -72,6 +77,7 @@ public class DatabaseExistingTest extends BaseJobManagerTest {
 
             assertThat(request.getIntervalMs()).isGreaterThanOrEqualTo(JobRequest.MIN_INTERVAL);
             assertThat(request.getFlexMs()).isGreaterThanOrEqualTo(JobRequest.MIN_FLEX);
+            assertThat(request.getLastRun()).isEqualTo(0);
         }
     }
 }
