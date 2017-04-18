@@ -43,8 +43,6 @@ import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.CatLog;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -141,7 +139,7 @@ class JobStorage {
             // catch the exception here and keep what's in the database
             CAT.e(e, "could not update %s", request);
         } finally {
-            closeSilently(database);
+            closeDatabase(database);
         }
     }
 
@@ -192,8 +190,8 @@ class JobStorage {
             CAT.e(e, "could not load all jobs");
 
         } finally {
-            closeSilently(cursor);
-            closeSilently(database);
+            closeCursor(cursor);
+            closeDatabase(database);
         }
 
         return result;
@@ -215,7 +213,7 @@ class JobStorage {
             addFailedDeleteId(jobId);
             return false;
         } finally {
-            closeSilently(database);
+            closeDatabase(database);
         }
     }
 
@@ -247,7 +245,7 @@ class JobStorage {
                 throw new SQLException("Couldn't insert job request into database");
             }
         } finally {
-            closeSilently(database);
+            closeDatabase(database);
         }
     }
 
@@ -274,8 +272,8 @@ class JobStorage {
             CAT.e(e, "could not load id %d", id);
 
         } finally {
-            closeSilently(cursor);
-            closeSilently(database);
+            closeCursor(cursor);
+            closeDatabase(database);
         }
 
         return null;
@@ -450,18 +448,22 @@ class JobStorage {
         }
     }
 
-    private static void closeSilently(@Nullable Cursor cursor) {
+    private static void closeCursor(@Nullable Cursor cursor) {
         // cursor implements Closeable only with API 16 and above
         if (cursor != null) {
-            cursor.close();
+            try {
+                cursor.close();
+            } catch (Exception ignored) {
+            }
         }
     }
 
-    private static void closeSilently(@Nullable Closeable closeable) {
-        if (closeable != null) {
+    private static void closeDatabase(@Nullable SQLiteDatabase database) {
+        // SQLiteDatabase doesn't implement Closable on some 4.0.3 devices, see #182
+        if (database != null) {
             try {
-                closeable.close();
-            } catch (IOException ignored) {
+                database.close();
+            } catch (Exception ignored) {
             }
         }
     }

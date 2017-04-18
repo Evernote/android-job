@@ -3,6 +3,7 @@
 * Fix a race condition when canceling jobs, see #178
 * Make it possible to reuse builder objects, this may fix SQL exceptions, see #176
 * Add `JobRequest.getLastRun()` returning the time when the job did run the last time, if it was rescheduled or it's a periodic job, see #141
+* Fix crash on Android 4.0.3 where `SQLiteDatabase` doesn't implement `Closable`, see #182
 
 ## 1.1.9 (2017-04-10)
 
