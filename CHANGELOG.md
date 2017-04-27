@@ -5,6 +5,7 @@
 * Add `JobRequest.getLastRun()` returning the time when the job did run the last time, if it was rescheduled or it's a periodic job, see #141
 * Fix crash on Android 4.0.3 where `SQLiteDatabase` doesn't implement `Closable`, see #182
 * Updating wording for network type ANY to make it clearer that no specific network state is required, see #185
+* Use a copy of the platform DefaultDatabaseErrorHandler. Some manufacturers replace this causing stack overflows, see #184
 
 ## 1.1.9 (2017-04-10)
 

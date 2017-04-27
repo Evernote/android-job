@@ -52,9 +52,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author rwondratschek
  */
-/*package*/
 @SuppressWarnings("WeakerAccess")
-class JobStorage {
+/*package*/ class JobStorage {
 
     private static final CatLog CAT = new JobCat("JobStorage");
 
@@ -280,7 +279,8 @@ class JobStorage {
     }
 
     @NonNull
-    private SQLiteDatabase getDatabase() {
+    @VisibleForTesting
+    /*package*/ SQLiteDatabase getDatabase() {
         if (mInjectedDatabase != null) {
             return mInjectedDatabase;
         } else {
@@ -372,7 +372,7 @@ class JobStorage {
     private static final class JobOpenHelper extends SQLiteOpenHelper {
 
         private JobOpenHelper(Context context, String databasePath) {
-            super(context, databasePath, null, DATABASE_VERSION);
+            super(context, databasePath, null, DATABASE_VERSION, new JobStorageDatabaseErrorHandler());
         }
 
         @Override
