@@ -996,7 +996,7 @@ public final class JobRequest {
 
     public enum NetworkType {
         /**
-         * Network must not be connected.
+         * Network does not have to be connected.
          */
         ANY,
         /**
