@@ -20,7 +20,7 @@ You can read the [JavaDoc here](https://evernote.github.io/android-job/javadoc/)
 
 The class `JobManager` serves as entry point. Your jobs need to extend the class `Job`. Create a `JobRequest` with the corresponding builder class and schedule this request with the `JobManager`.
 
-Before you can use the `JobManager` you must initialize the singleton. You need to provide a `Context` and add a `JobCreator` implementation after that. The `JobCreator` maps a job tag to a specific job class. It's recommend to initialize the `JobManager` in the `onCreate()` method of your `Application` object, but there is [an alternative](FAQ.md#i-cannot-override-the-application-class-how-can-i-add-my-jobcreator), if you don't have access to the `Application` class.
+Before you can use the `JobManager` you must initialize the singleton. You need to provide a `Context` and add a `JobCreator` implementation after that. The `JobCreator` maps a job tag to a specific job class. It's recommended to initialize the `JobManager` in the `onCreate()` method of your `Application` object, but there is [an alternative](FAQ.md#i-cannot-override-the-application-class-how-can-i-add-my-jobcreator), if you don't have access to the `Application` class.
 
 ```java
 public class App extends Application {
