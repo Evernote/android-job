@@ -33,12 +33,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.JobUtil;
@@ -167,31 +165,14 @@ public final class JobManager {
     private final JobCreatorHolder mJobCreatorHolder;
     private final JobStorage mJobStorage;
     private final JobExecutor mJobExecutor;
-    private final Config mConfig;
-
-    private JobApi mApi;
 
     private JobManager(Context context) {
         mContext = context;
         mJobCreatorHolder = new JobCreatorHolder();
         mJobStorage = new JobStorage(context);
         mJobExecutor = new JobExecutor();
-        mConfig = new Config();
-
-        setJobProxy(JobApi.getDefault(mContext, mConfig.isGcmApiEnabled()));
 
         JobRescheduleService.startService(mContext);
-    }
-
-    /**
-     * @return The current configuration for the job manager.
-     */
-    public Config getConfig() {
-        return mConfig;
-    }
-
-    private void setJobProxy(JobApi api) {
-        mApi = api;
     }
 
     /**
@@ -220,11 +201,6 @@ public final class JobManager {
         JobApi jobApi = request.getJobApi();
         boolean periodic = request.isPeriodic();
         boolean flexSupport = periodic && jobApi.isFlexSupport() && request.getFlexMs() < request.getIntervalMs();
-
-        if (jobApi == JobApi.GCM && !mConfig.isGcmApiEnabled()) {
-            // shouldn't happen
-            CAT.w("GCM API disabled, but used nonetheless");
-        }
 
         request.setScheduledAt(System.currentTimeMillis());
         request.setFlexSupport(flexSupport);
@@ -320,27 +296,6 @@ public final class JobManager {
     }
 
     /**
-     * <b>WARNING:</b> You shouldn't call this method. It only exists for testing and debugging
-     * purposes. The {@link JobManager} automatically decides which API suits best for a {@link Job}.
-     *
-     * @param api The {@link JobApi} which will be used for future scheduled JobRequests.
-     */
-    public void forceApi(@NonNull JobApi api) {
-        setJobProxy(JobPreconditions.checkNotNull(api));
-        CAT.w("Changed API to %s", api);
-    }
-
-    /**
-     * <b>WARNING:</b> Don't rely your logic on a specific {@link JobApi}. You shouldn't be worrying
-     * about it.
-     *
-     * @return The current {@link JobApi} which will be used for future schedules JobRequests.
-     */
-    public JobApi getApi() {
-        return mApi;
-    }
-
-    /**
      * Cancel either the pending {@link JobRequest} or the running {@link Job}.
      *
      * @param jobId The unique ID of the {@link JobRequest} or running {@link Job}.
@@ -415,17 +370,6 @@ public final class JobManager {
     }
 
     /**
-     * Global switch to enable or disable logging.
-     *
-     * @param verbose Whether or not to print log messages.
-     * @deprecated Use {@link Config#setVerbose(boolean)} instead.
-     */
-    @Deprecated
-    public void setVerbose(boolean verbose) {
-        mConfig.setVerbose(verbose);
-    }
-
-    /**
      * Registers this instance to create jobs for a specific tag. It's possible to have multiple
      * {@link JobCreator}s with a first come first serve order.
      *
@@ -471,98 +415,7 @@ public final class JobManager {
     }
 
     private JobProxy getJobProxy(JobApi api) {
-        return api.getCachedProxy(mContext);
-    }
-
-    // TODO: extract this class so that settings can be changed before the JobManager has been created
-    public final class Config {
-
-        private boolean mGcmEnabled;
-        private boolean mAllowSmallerIntervals;
-
-        private Config() {
-            mGcmEnabled = true;
-            mAllowSmallerIntervals = false;
-        }
-
-        /**
-         * @return Whether logging is enabled for this library. The default value is {@code true}.
-         */
-        public boolean isVerbose() {
-            return JobCat.isLogcatEnabled();
-        }
-
-        /**
-         * Global switch to enable or disable logging.
-         *
-         * @param verbose Whether or not to print all log messages. The default value is {@code true}.
-         */
-        public void setVerbose(boolean verbose) {
-            JobCat.setLogcatEnabled(verbose);
-        }
-
-        /**
-         * @return Whether the GCM API is enabled. The API is only used if the required class dependency
-         * is found, the Google Play Services are available and this setting is {@code true}. The default
-         * value is {@code true}.
-         */
-        public boolean isGcmApiEnabled() {
-            return mGcmEnabled;
-        }
-
-        /**
-         * Programmatic switch to disable the GCM API. If {@code false}, then the {@link AlarmManager} will
-         * be used for Android 4 devices in all cases.
-         *
-         * @param enabled Whether the GCM API should be enabled or disabled. Note that the API is only used,
-         *                if the required class dependency is found, the Google Play Services are available
-         *                and this setting is {@code true}. The default value is {@code true}.
-         */
-        public void setGcmApiEnabled(boolean enabled) {
-            if (enabled == mGcmEnabled) {
-                return;
-            }
-
-            mGcmEnabled = enabled;
-            if (enabled) {
-                JobApi defaultApi = JobApi.getDefault(mContext, true);
-                if (!defaultApi.equals(getApi())) {
-                    setJobProxy(defaultApi);
-                    CAT.i("Changed default proxy to %s after enabled the GCM API", defaultApi);
-                }
-            } else {
-                JobApi defaultApi = JobApi.getDefault(mContext, false);
-                if (JobApi.GCM == getApi()) {
-                    setJobProxy(defaultApi);
-                    CAT.i("Changed default proxy to %s after disabling the GCM API", defaultApi);
-                }
-            }
-        }
-
-        /**
-         * Checks whether a smaller interval and flex are allowed for periodic jobs. That's helpful
-         * for testing purposes.
-         *
-         * @return Whether a smaller interval and flex than the minimum values are allowed for periodic jobs
-         * are allowed. The default value is {@code false}.
-         */
-        public boolean isAllowSmallerIntervalsForMarshmallow() {
-            return mAllowSmallerIntervals && Build.VERSION.SDK_INT < Build.VERSION_CODES.N;
-        }
-
-        /**
-         * Option to override the minimum period and minimum flex for periodic jobs. This is useful for testing
-         * purposes. This method only works for Android M and earlier. Later versions throw an exception.
-         *
-         * @param allowSmallerIntervals Whether a smaller interval and flex than the minimum values are allowed
-         *                              for periodic jobs are allowed. The default value is {@code false}.
-         */
-        public void setAllowSmallerIntervalsForMarshmallow(boolean allowSmallerIntervals) {
-            if (allowSmallerIntervals && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                throw new IllegalStateException("This method is only allowed to call on Android M or earlier");
-            }
-            mAllowSmallerIntervals = allowSmallerIntervals;
-        }
+        return api.getProxy(mContext);
     }
 
     private static void sendAddJobCreatorIntent(@NonNull Context context) {

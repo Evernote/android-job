@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
-import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
@@ -87,7 +86,7 @@ public class JobRequestTest extends BaseJobManagerTest {
 
     @Test
     public void testFlex() {
-        JobManager.instance().forceApi(JobApi.V_14);
+        JobConfig.forceApi(JobApi.V_14);
 
         long interval = JobRequest.MIN_INTERVAL * 5;
         long flex = JobRequest.MIN_FLEX * 5;

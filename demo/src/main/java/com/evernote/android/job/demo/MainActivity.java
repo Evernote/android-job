@@ -11,9 +11,10 @@ import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.Spinner;
 
+import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobRequest;
-import com.evernote.android.job.util.JobApi;
+import com.evernote.android.job.JobApi;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
 import net.vrallev.android.cat.Cat;
@@ -27,7 +28,6 @@ public class MainActivity extends Activity {
 
     private int mLastJobId;
 
-    private CompoundButton mEnableGcm;
     private CompoundButton mRequiresCharging;
     private CompoundButton mRequiresDeviceIdle;
     private Spinner mNetworkTypeSpinner;
@@ -45,7 +45,7 @@ public class MainActivity extends Activity {
             mLastJobId = savedInstanceState.getInt(LAST_JOB_ID, 0);
         }
 
-        mEnableGcm = (CompoundButton) findViewById(R.id.enable_gcm);
+        CompoundButton enableGcm = (CompoundButton) findViewById(R.id.enable_gcm);
         mRequiresCharging = (CompoundButton) findViewById(R.id.check_requires_charging);
         mRequiresDeviceIdle = (CompoundButton) findViewById(R.id.check_requires_device_idle);
         mNetworkTypeSpinner = (Spinner) findViewById(R.id.spinner_network_type);
@@ -54,12 +54,12 @@ public class MainActivity extends Activity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mNetworkTypeSpinner.setAdapter(adapter);
 
-        mEnableGcm.setChecked(mJobManager.getConfig().isGcmApiEnabled());
-        mEnableGcm.setEnabled(JobApi.GCM.isSupported(this));
-        mEnableGcm.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        enableGcm.setChecked(JobConfig.isApiEnabled(JobApi.GCM));
+        enableGcm.setEnabled(JobApi.GCM.isSupported(this));
+        enableGcm.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mJobManager.getConfig().setGcmApiEnabled(isChecked);
+                JobConfig.setApiEnabled(JobApi.GCM, isChecked);
             }
         });
     }
@@ -106,7 +106,7 @@ public class MainActivity extends Activity {
             menu.findItem(R.id.action_force_gcm).setVisible(false);
         }
 
-        switch (mJobManager.getApi()) {
+        switch (JobApi.getDefault(this)) {
             case V_24:
                 menu.findItem(R.id.action_force_24).setChecked(true);
                 break;
@@ -133,19 +133,19 @@ public class MainActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_force_24:
-                mJobManager.forceApi(JobApi.V_24);
+                JobConfig.forceApi(JobApi.V_24);
                 return true;
             case R.id.action_force_21:
-                mJobManager.forceApi(JobApi.V_21);
+                JobConfig.forceApi(JobApi.V_21);
                 return true;
             case R.id.action_force_19:
-                mJobManager.forceApi(JobApi.V_19);
+                JobConfig.forceApi(JobApi.V_19);
                 return true;
             case R.id.action_force_14:
-                mJobManager.forceApi(JobApi.V_14);
+                JobConfig.forceApi(JobApi.V_14);
                 return true;
             case R.id.action_force_gcm:
-                mJobManager.forceApi(JobApi.GCM);
+                JobConfig.forceApi(JobApi.GCM);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -202,18 +202,16 @@ public class MainActivity extends Activity {
     }
 
     private void testAllImpl() {
-        JobApi currentApi = mJobManager.getApi();
-
         for (JobApi api : JobApi.values()) {
             if (api.isSupported(this)) {
-                mJobManager.forceApi(api);
+                JobConfig.forceApi(api);
                 testSimple();
             } else {
                 Cat.w("%s is not supported", api);
             }
         }
 
-        mJobManager.forceApi(currentApi);
+        JobConfig.reset();
     }
 
     private void testPeriodic() {

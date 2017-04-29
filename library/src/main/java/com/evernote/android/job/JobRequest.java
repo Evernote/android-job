@@ -32,7 +32,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.JobUtil;
@@ -106,15 +105,14 @@ public final class JobRequest {
     private static final CatLog CAT = new JobCat("JobRequest");
 
     /*package*/ static long getMinInterval() {
-        return JobManager.instance().getConfig().isAllowSmallerIntervalsForMarshmallow() ? TimeUnit.MINUTES.toMillis(1) : MIN_INTERVAL;
+        return JobConfig.isAllowSmallerIntervalsForMarshmallow() ? TimeUnit.MINUTES.toMillis(1) : MIN_INTERVAL;
     }
 
     /*package*/ static long getMinFlex() {
-        return JobManager.instance().getConfig().isAllowSmallerIntervalsForMarshmallow() ? TimeUnit.SECONDS.toMillis(30) : MIN_FLEX;
+        return JobConfig.isAllowSmallerIntervalsForMarshmallow() ? TimeUnit.SECONDS.toMillis(30) : MIN_FLEX;
     }
 
     private final Builder mBuilder;
-    private final JobApi mJobApi;
 
     private int mFailureCount;
     private long mScheduledAt;
@@ -124,7 +122,6 @@ public final class JobRequest {
 
     private JobRequest(Builder builder) {
         mBuilder = builder;
-        mJobApi = builder.mExact ? JobApi.V_14 : JobManager.instance().getApi();
     }
 
     /**
@@ -292,7 +289,7 @@ public final class JobRequest {
     }
 
     /*package*/ JobApi getJobApi() {
-        return mJobApi;
+        return mBuilder.mExact ? JobApi.V_14 : JobApi.getDefault(JobManager.instance().getContext());
     }
 
     /*package*/ void setScheduledAt(long timeStamp) {

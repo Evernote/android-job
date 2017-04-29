@@ -1,3 +1,8 @@
+## 1.2.0
+
+* Extract `JobManager.Config` class into `JobConfig` class to make it possible to change settings before the `JobManager` is created
+* Add an option to disable any specific API and not just the GCM API
+
 ## 1.1.10 (2017-04-29)
 
 * Fix a race condition when canceling jobs, see #178

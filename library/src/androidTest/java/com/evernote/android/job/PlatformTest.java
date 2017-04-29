@@ -7,7 +7,6 @@ import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.evernote.android.job.gcm.PlatformGcmService;
-import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.v14.PlatformAlarmService;
 import com.evernote.android.job.v21.PlatformJobService;
 
@@ -103,7 +102,7 @@ public class PlatformTest {
         // ignore test if not supported
         assumeTrue(api.isSupported(InstrumentationRegistry.getTargetContext()));
 
-        mManager.forceApi(api);
+        JobConfig.forceApi(api);
 
         int jobId = new JobRequest.Builder("tag")
                 .setExecutionWindow(2_000, 3_000)

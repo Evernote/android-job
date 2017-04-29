@@ -1,4 +1,4 @@
-package com.evernote.android.job.util;
+package com.evernote.android.job;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -8,6 +8,7 @@ import android.content.pm.ResolveInfo;
 
 import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.gcm.PlatformGcmService;
+import com.evernote.android.job.util.JobCat;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 

@@ -1,5 +1,6 @@
 package com.evernote.android.job;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.test.DummyJobs;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.doReturn;
 /**
  * @author rwondratschek
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class BaseJobManagerTest {
 
     @Rule
@@ -36,6 +38,10 @@ public abstract class BaseJobManagerTest {
     }
 
     @NonNull
+    protected final Context context() {
+        return RuntimeEnvironment.application;
+    }
+
     protected void executeJob(int jobId, @NonNull Job.Result expected) {
         try {
             executeJobAsync(jobId, expected).get(3, TimeUnit.SECONDS);

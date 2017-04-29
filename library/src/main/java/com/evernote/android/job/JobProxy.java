@@ -32,7 +32,6 @@ import android.content.Intent;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
-import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
@@ -256,7 +255,7 @@ public interface JobProxy {
             for (JobApi jobApi : JobApi.values()) {
                 if (jobApi.isSupported(context)) {
                     try {
-                        jobApi.getCachedProxy(context).cancel(jobId);
+                        jobApi.getProxy(context).cancel(jobId);
                     } catch (Exception ignored) {
                         // GCM API could crash if it's disabled, ignore crashes at this point and continue
                     }

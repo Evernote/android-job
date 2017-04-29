@@ -23,7 +23,7 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evernote.android.job.util;
+package com.evernote.android.job;
 
 import android.app.AlarmManager;
 import android.app.job.JobScheduler;
@@ -31,8 +31,6 @@ import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
-import com.evernote.android.job.JobManager;
-import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.v14.JobProxy14;
 import com.evernote.android.job.v19.JobProxy19;
@@ -77,11 +75,11 @@ public enum JobApi {
         mFlexSupport = flexSupport;
     }
 
-    public boolean supportsExecutionWindow() {
+    /*package*/ boolean supportsExecutionWindow() {
         return mSupportsExecutionWindow;
     }
 
-    public boolean isFlexSupport() {
+    /*package*/ boolean isFlexSupport() {
         return mFlexSupport;
     }
 
@@ -103,7 +101,7 @@ public enum JobApi {
     }
 
     @NonNull
-    public JobProxy createProxy(Context context) {
+    private JobProxy createProxy(Context context) {
         switch (this) {
             case V_24:
                 return new JobProxy24(context);
@@ -121,35 +119,27 @@ public enum JobApi {
     }
 
     @NonNull
-    public synchronized JobProxy getCachedProxy(Context context) {
+    /*package*/ synchronized JobProxy getProxy(Context context) {
         if (mCachedProxy == null) {
             mCachedProxy = createProxy(context);
         }
         return mCachedProxy;
     }
 
-    /**
-     * @deprecated Use {@link #getDefault(Context, boolean)} instead.
-     */
-    @SuppressWarnings("unused")
     @NonNull
-    @Deprecated
     public static JobApi getDefault(Context context) {
-        return getDefault(context, JobManager.instance().getConfig().isGcmApiEnabled());
-    }
-
-    @NonNull
-    public static JobApi getDefault(Context context, boolean gcmEnabled) {
-        if (V_24.isSupported(context)) {
+        if (V_24.isSupported(context) && JobConfig.isApiEnabled(V_24)) {
             return V_24;
-        } else if (V_21.isSupported(context)) {
+        } else if (V_21.isSupported(context) && JobConfig.isApiEnabled(V_21)) {
             return V_21;
-        } else if (gcmEnabled && GCM.isSupported(context)) {
+        } else if (GCM.isSupported(context) && JobConfig.isApiEnabled(GCM)) {
             return GCM;
-        } else if (V_19.isSupported(context)) {
+        } else if (V_19.isSupported(context) && JobConfig.isApiEnabled(V_19)) {
             return V_19;
-        } else {
+        } else if (JobConfig.isApiEnabled(V_14)) {
             return V_14;
+        } else {
+            throw new IllegalStateException("All supported APIs are disabled");
         }
     }
 }

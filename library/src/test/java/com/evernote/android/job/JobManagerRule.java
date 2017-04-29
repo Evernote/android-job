@@ -32,6 +32,7 @@ public final class JobManagerRule extends ExternalResource {
         mManager.cancelAll();
         mManager.destroy();
         JobCat.removeLogPrinter(TestCat.INSTANCE);
+        JobConfig.reset();
     }
 
     public JobManager getJobManager() {

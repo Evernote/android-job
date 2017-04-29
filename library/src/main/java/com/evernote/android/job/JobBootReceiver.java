@@ -29,8 +29,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.evernote.android.job.util.JobApi;
-
 /**
  * A {@code BroadcastReceiver} rescheduling jobs after a reboot, if the underlying {@link JobApi} can't
  * handle it.
