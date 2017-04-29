@@ -241,7 +241,7 @@ public class SeparateProcessJob extends Job {
     @NonNull
     protected Result onRunJob(final Params params) {
         Intent intent = new Intent(getContext(), SeparateProcessService.class);
-        startWakefulService(intent);
+        getContext().startService(intent);
         return Result.SUCCESS;
     }
 }
@@ -249,11 +249,7 @@ public class SeparateProcessJob extends Job {
 public class SeparateProcessService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
-        try {
-            // do work
-        } finally {
-            Job.completeWakefulIntent(intent);
-        }
+        // do work
     }
 }
 ```
