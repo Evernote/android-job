@@ -34,7 +34,6 @@ public class JobRequestTest extends BaseJobManagerTest {
                 .setExecutionWindow(2_000L, 3_000L)
                 .setBackoffCriteria(4_000, JobRequest.BackoffPolicy.LINEAR)
                 .setExtras(new PersistableBundleCompat())
-                .setPersisted(true)
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
@@ -43,7 +42,6 @@ public class JobRequestTest extends BaseJobManagerTest {
         assertThat(request.getEndMs()).isEqualTo(3_000L);
         assertThat(request.getBackoffMs()).isEqualTo(4_000L);
         assertThat(request.getBackoffPolicy()).isEqualTo(JobRequest.BackoffPolicy.LINEAR);
-        assertThat(request.isPersisted()).isTrue();
         assertThat(request.getExtras()).isNotNull();
 
         assertThat(request.getIntervalMs()).isZero();
@@ -61,12 +59,10 @@ public class JobRequestTest extends BaseJobManagerTest {
         JobRequest request = getBuilder()
                 .setPeriodic(interval)
                 .setExtras(new PersistableBundleCompat())
-                .setPersisted(true)
                 .build();
 
         assertThat(request.getJobId()).isGreaterThan(0);
         assertThat(request.getTag()).isEqualTo(DummyJobs.SuccessJob.TAG);
-        assertThat(request.isPersisted()).isTrue();
         assertThat(request.getIntervalMs()).isEqualTo(interval);
         assertThat(request.getFlexMs()).isEqualTo(interval);
         assertThat(request.isPeriodic()).isTrue();
@@ -109,7 +105,6 @@ public class JobRequestTest extends BaseJobManagerTest {
         JobRequest request = getBuilder()
                 .setBackoffCriteria(4_000, JobRequest.BackoffPolicy.LINEAR)
                 .setExtras(new PersistableBundleCompat())
-                .setPersisted(true)
                 .startNow()
                 .build();
 
@@ -119,7 +114,6 @@ public class JobRequestTest extends BaseJobManagerTest {
         assertThat(request.getEndMs()).isEqualTo(JobRequest.START_NOW);
         assertThat(request.getBackoffMs()).isEqualTo(4_000L);
         assertThat(request.getBackoffPolicy()).isEqualTo(JobRequest.BackoffPolicy.LINEAR);
-        assertThat(request.isPersisted()).isTrue();
         assertThat(request.getExtras()).isNotNull();
         assertThat(request.isExact()).isTrue();
 
@@ -136,7 +130,6 @@ public class JobRequestTest extends BaseJobManagerTest {
         JobRequest request = getBuilder()
                 .setBackoffCriteria(4_000, JobRequest.BackoffPolicy.LINEAR)
                 .setExtras(new PersistableBundleCompat())
-                .setPersisted(true)
                 .setExact(2_000L)
                 .build();
 
@@ -146,7 +139,6 @@ public class JobRequestTest extends BaseJobManagerTest {
         assertThat(request.getEndMs()).isEqualTo(2_000L);
         assertThat(request.getBackoffMs()).isEqualTo(4_000L);
         assertThat(request.getBackoffPolicy()).isEqualTo(JobRequest.BackoffPolicy.LINEAR);
-        assertThat(request.isPersisted()).isTrue();
         assertThat(request.getExtras()).isNotNull();
         assertThat(request.isExact()).isTrue();
 

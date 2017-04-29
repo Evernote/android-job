@@ -140,7 +140,7 @@ public class JobProxy21 implements JobProxy {
                 .setRequiresCharging(request.requiresCharging())
                 .setRequiresDeviceIdle(request.requiresDeviceIdle())
                 .setRequiredNetworkType(convertNetworkType(request.requiredNetworkType()))
-                .setPersisted(request.isPersisted());
+                .setPersisted(JobUtil.hasBootPermission(mContext));
     }
 
     protected JobInfo.Builder createBuilderOneOff(JobInfo.Builder builder, long startMs, long endMs) {

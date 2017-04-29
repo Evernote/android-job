@@ -196,7 +196,6 @@ public class MainActivity extends Activity {
                 .setRequiredNetworkType(JobRequest.NetworkType.values()[mNetworkTypeSpinner.getSelectedItemPosition()])
                 .setExtras(extras)
                 .setRequirementsEnforced(true)
-                .setPersisted(true)
                 .build()
                 .schedule();
     }
@@ -220,7 +219,6 @@ public class MainActivity extends Activity {
                 .setRequiresCharging(mRequiresCharging.isChecked())
                 .setRequiresDeviceIdle(mRequiresDeviceIdle.isChecked())
                 .setRequiredNetworkType(JobRequest.NetworkType.values()[mNetworkTypeSpinner.getSelectedItemPosition()])
-                .setPersisted(true)
                 .build()
                 .schedule();
     }
@@ -233,7 +231,6 @@ public class MainActivity extends Activity {
                 .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.EXPONENTIAL)
                 .setExtras(extras)
                 .setExact(20_000L)
-                .setPersisted(true)
                 .setUpdateCurrent(true)
                 .build()
                 .schedule();

@@ -54,8 +54,7 @@ public final class UnitTestDatabaseCreator {
                         .setRequiresCharging(random())
                         .setRequiresDeviceIdle(random())
                         .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
-                        .setRequirementsEnforced(random())
-                        .setPersisted(random());
+                        .setRequirementsEnforced(random());
 
                 if (random()) {
                     PersistableBundleCompat extras = new PersistableBundleCompat();
@@ -73,8 +72,7 @@ public final class UnitTestDatabaseCreator {
             for (int i = 0; i < 10; i++) {
                 JobRequest.Builder builder = new JobRequest.Builder("tag")
                         .setExact(400_000)
-                        .setBackoffCriteria(5_000L, random() ? JobRequest.BackoffPolicy.EXPONENTIAL : JobRequest.BackoffPolicy.LINEAR)
-                        .setPersisted(random());
+                        .setBackoffCriteria(5_000L, random() ? JobRequest.BackoffPolicy.EXPONENTIAL : JobRequest.BackoffPolicy.LINEAR);
 
                 if (random()) {
                     PersistableBundleCompat extras = new PersistableBundleCompat();
@@ -95,8 +93,7 @@ public final class UnitTestDatabaseCreator {
                         .setRequiresCharging(random())
                         .setRequiresDeviceIdle(random())
                         .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
-                        .setRequirementsEnforced(random())
-                        .setPersisted(random());
+                        .setRequirementsEnforced(random());
 
                 if (random()) {
                     PersistableBundleCompat extras = new PersistableBundleCompat();
@@ -117,8 +114,7 @@ public final class UnitTestDatabaseCreator {
                         .setRequiresCharging(random())
                         .setRequiresDeviceIdle(random())
                         .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
-                        .setRequirementsEnforced(random())
-                        .setPersisted(random());
+                        .setRequirementsEnforced(random());
 
                 if (random()) {
                     PersistableBundleCompat extras = new PersistableBundleCompat();

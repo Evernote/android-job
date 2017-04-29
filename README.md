@@ -90,7 +90,6 @@ private void scheduleAdvancedJob() {
             .setRequiredNetworkType(JobRequest.NetworkType.CONNECTED)
             .setExtras(extras)
             .setRequirementsEnforced(true)
-            .setPersisted(true)
             .setUpdateCurrent(true)
             .build()
             .schedule();
@@ -99,7 +98,6 @@ private void scheduleAdvancedJob() {
 private void schedulePeriodicJob() {
     int jobId = new JobRequest.Builder(DemoSyncJob.TAG)
             .setPeriodic(TimeUnit.MINUTES.toMillis(15), TimeUnit.MINUTES.toMillis(5))
-            .setPersisted(true)
             .build()
             .schedule();
 }
@@ -107,7 +105,6 @@ private void schedulePeriodicJob() {
 private void scheduleExactJob() {
     int jobId = new JobRequest.Builder(DemoSyncJob.TAG)
             .setExact(20_000L)
-            .setPersisted(true)
             .build()
             .schedule();
 }

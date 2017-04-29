@@ -36,7 +36,6 @@ public class JobSample extends Job {
 
         new JobRequest.Builder(TAG)
                 .setExecutionWindow(startMs, endMs)
-                .setPersisted(true)
                 .setUpdateCurrent(updateCurrent)
                 .build()
                 .schedule();
@@ -248,3 +247,9 @@ If you wish, you can even disable printing messages to Logcat, if you own logger
 ```java
 JobCat.setLogcatEnabled(false);
 ```
+
+### Why was persisted parameter removed?
+
+The `setPersisted()` method didn't work reliable. Jobs were and are always persisted in a database. Usually you don't want to deal with platform specific issues, e.g. when an alarm is cancelled in the `AlarmManager`. The library takes care of this and reschedules jobs if necessary.
+
+If you don't want that a job can run after a reboot, then you need to register your own boot completed broadcast receiver and cancel the specific job yourself.

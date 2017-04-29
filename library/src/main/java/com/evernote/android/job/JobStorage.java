@@ -79,6 +79,11 @@ import java.util.concurrent.atomic.AtomicInteger;
     public static final String COLUMN_EXACT = "exact";
     public static final String COLUMN_NETWORK_TYPE = "networkType";
     public static final String COLUMN_EXTRAS = "extras";
+
+    /*
+     * SQLite can't delete columns, so always initialize this old deprecated column with true.
+     * Create this column for consistency even for new installs.
+     */
     public static final String COLUMN_PERSISTED = "persisted";
     public static final String COLUMN_NUM_FAILURES = "numFailures";
     public static final String COLUMN_SCHEDULED_AT = "scheduledAt";

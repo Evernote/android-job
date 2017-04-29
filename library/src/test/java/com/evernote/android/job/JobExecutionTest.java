@@ -23,7 +23,6 @@ public class JobExecutionTest extends BaseJobManagerTest {
     public void testPeriodicJob() throws Exception {
         int jobId = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
                 .setPeriodic(TimeUnit.MINUTES.toMillis(15))
-                .setPersisted(true)
                 .build()
                 .schedule();
 

@@ -377,14 +377,6 @@ public abstract class Job {
         }
 
         /**
-         * @return If {@code true}, then the job persists across reboots.
-         * @see JobRequest#isPersisted()
-         */
-        public boolean isPersisted() {
-            return mRequest.isPersisted();
-        }
-
-        /**
          * Only valid if the job isn't periodic.
          *
          * @return The start of the time frame when the job will run after it's been scheduled.

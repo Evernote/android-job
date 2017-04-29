@@ -1,9 +1,10 @@
 ## 1.2.0
 
 * Extract `JobManager.Config` class into `JobConfig` class to make it possible to change settings before the `JobManager` is created
-* Add an option to disable any specific API and not just the GCM API
+* Add an option to disable any specific API and not just the GCM API (only useful for testing purposes)
 * Remove deprecated methods
 * Add the `startNow()` method to run a job immediately
+* Remove the persisted parameter, which didn't work reliable. All jobs are persisted anyway.
 
 ## 1.1.10 (2017-04-29)
 

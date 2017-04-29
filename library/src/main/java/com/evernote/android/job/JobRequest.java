@@ -35,7 +35,6 @@ import android.text.TextUtils;
 
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
-import com.evernote.android.job.util.JobUtil;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
 import net.vrallev.android.cat.CatLog;
@@ -242,13 +241,6 @@ public final class JobRequest {
             mBuilder.mExtras = PersistableBundleCompat.fromXml(mBuilder.mExtrasXml);
         }
         return mBuilder.mExtras;
-    }
-
-    /**
-     * @return If {@code true}, then the job persists across reboots.
-     */
-    public boolean isPersisted() {
-        return mBuilder.mPersisted;
     }
 
     /**
@@ -466,6 +458,7 @@ public final class JobRequest {
     /**
      * Builder class for constructing JobRequests.
      */
+    @SuppressWarnings("unused")
     public static final class Builder {
 
         private static final int CREATE_ID = -8765; // magic number
@@ -490,8 +483,6 @@ public final class JobRequest {
 
         private PersistableBundleCompat mExtras;
         private String mExtrasXml;
-
-        private boolean mPersisted;
 
         private boolean mUpdateCurrent;
 
@@ -552,8 +543,6 @@ public final class JobRequest {
             }
 
             mExtrasXml = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_EXTRAS));
-
-            mPersisted = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_PERSISTED)) > 0;
         }
 
         // copy constructor
@@ -583,8 +572,6 @@ public final class JobRequest {
             mExtras = builder.mExtras;
             mExtrasXml = builder.mExtrasXml;
 
-            mPersisted = builder.mPersisted;
-
             mUpdateCurrent = builder.mUpdateCurrent;
         }
 
@@ -612,7 +599,7 @@ public final class JobRequest {
             } else if (!TextUtils.isEmpty(mExtrasXml)) {
                 contentValues.put(JobStorage.COLUMN_EXTRAS, mExtrasXml);
             }
-            contentValues.put(JobStorage.COLUMN_PERSISTED, mPersisted);
+            contentValues.put(JobStorage.COLUMN_PERSISTED, true);
         }
 
         /**
@@ -890,22 +877,6 @@ public final class JobRequest {
         public Builder setBackoffCriteria(long backoffMs, @NonNull BackoffPolicy backoffPolicy) {
             mBackoffMs = JobPreconditions.checkArgumentPositive(backoffMs, "backoffMs must be > 0");
             mBackoffPolicy = JobPreconditions.checkNotNull(backoffPolicy);
-            return this;
-        }
-
-        /**
-         * Set whether the job should be persisted across reboots. This will only have an
-         * effect if your application holds the permission
-         * {@link android.Manifest.permission#RECEIVE_BOOT_COMPLETED}. Otherwise an exception will
-         * be thrown. The default is set to {@code false}.
-         *
-         * @param persisted If {@code true} the job is scheduled after a reboot.
-         */
-        public Builder setPersisted(boolean persisted) {
-            if (persisted && !JobUtil.hasBootPermission(JobManager.instance().getContext())) {
-                throw new IllegalStateException("Does not have RECEIVE_BOOT_COMPLETED permission, which is mandatory for this feature");
-            }
-            mPersisted = persisted;
             return this;
         }
 
