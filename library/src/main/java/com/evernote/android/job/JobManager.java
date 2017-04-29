@@ -119,31 +119,6 @@ public final class JobManager {
     }
 
     /**
-     * Initializes the singleton. It's necessary to call this function before using the {@code JobManager}.
-     * Calling it multiple times has not effect.
-     *
-     * @param context    Any {@link Context} to instantiate the singleton object.
-     * @param jobCreator The mapping between a specific job tag and the job class.
-     * @return The new or existing singleton object.
-     * @deprecated Use {@link #create(Context)} instead and call {@link #addJobCreator(JobCreator)} after that.
-     */
-    @Deprecated
-    public static JobManager create(Context context, JobCreator jobCreator) {
-        boolean addJobCreator;
-        synchronized (JobManager.class) {
-            addJobCreator = instance == null;
-        }
-
-        create(context);
-
-        if (addJobCreator) {
-            instance.addJobCreator(jobCreator);
-        }
-
-        return instance;
-    }
-
-    /**
      * Ensure that you've called {@link #create(Context)} first. Otherwise this method
      * throws an exception.
      *
