@@ -78,6 +78,18 @@ public class PlatformTest {
         mJob.mLatch.await(4, TimeUnit.SECONDS);
     }
 
+    @Test
+    public void testStartNow() throws Exception {
+        mJob = new TestJob(PlatformAlarmService.class);
+
+        new JobRequest.Builder("tag")
+                .startNow()
+                .build()
+                .schedule();
+
+        mJob.mLatch.await(1, TimeUnit.SECONDS);
+    }
+
     private void testOneOff(JobApi api) throws Exception {
         testOneOff(api, 10, TimeUnit.SECONDS);
     }

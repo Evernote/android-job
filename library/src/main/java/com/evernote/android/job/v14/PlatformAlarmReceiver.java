@@ -49,11 +49,13 @@ public class PlatformAlarmReceiver extends WakefulBroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent == null || !intent.hasExtra(EXTRA_JOB_ID)) {
-            return;
+        if (intent != null && intent.hasExtra(EXTRA_JOB_ID)) {
+            startService(context, intent.getIntExtra(EXTRA_JOB_ID, -1));
         }
+    }
 
-        Intent serviceIntent = PlatformAlarmService.createIntent(context, intent.getIntExtra(EXTRA_JOB_ID, -1));
+    /*package*/ static void startService(Context context, int requestId) {
+        Intent serviceIntent = PlatformAlarmService.createIntent(context, requestId);
         JobProxy.Common.startWakefulService(context, serviceIntent);
     }
 }

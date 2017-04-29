@@ -71,7 +71,12 @@ public class JobProxy14 implements JobProxy {
 
         try {
             if (request.isExact()) {
-                plantOneOffExact(request, alarmManager, pendingIntent);
+                if (request.getStartMs() == 1) {
+                    // this job should start immediately
+                    PlatformAlarmReceiver.startService(mContext, request.getJobId());
+                } else {
+                    plantOneOffExact(request, alarmManager, pendingIntent);
+                }
             } else {
                 plantOneOffInexact(request, alarmManager, pendingIntent);
             }

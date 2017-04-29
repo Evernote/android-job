@@ -1,52 +1,13 @@
 ### Can I run a job immediately?
 
-No, it's recommended to extract the logic from your job instead and to reuse it in a background thread.
+Yes, simply use the `startNow()` method. Your job will work like an exact job.
 
 ```java
-public class DemoSyncJob extends Job {
-
-    public static final String TAG = "job_demo_tag";
-
-    @Override
-    @NonNull
-    protected Result onRunJob(final Params params) {
-        boolean success = new DemoSyncEngine().sync();
-        return success ? Result.SUCCESS : Result.FAILURE;
-    }
-}
-
-public class DemoSyncEngine {
-
-    @WorkerThread
-    public boolean sync() {
-        // do something fancy
-        return true;
-    }
-}
-
-public class SyncHistoryActivity extends Activity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sync_history);
-
-        syncAsynchronously();
-    }
-
-    private void syncAsynchronously() {
-        new AsyncTask<Void, Void, Boolean>() {
-            @Override
-            protected Boolean doInBackground(Void... params) {
-                return new DemoSyncEngine().sync();
-            }
-
-            @Override
-            protected void onPostExecute(Boolean aBoolean) {
-                refreshView();
-            }
-        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
+private void runJobImmediately() {
+    new JobRequest.Builder(DemoSyncJob.TAG)
+            .startNow()
+            .build()
+            .schedule();
 }
 ```
 

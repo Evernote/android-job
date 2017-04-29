@@ -105,6 +105,33 @@ public class JobRequestTest extends BaseJobManagerTest {
     }
 
     @Test
+    public void verifyStartNow() {
+        JobRequest request = getBuilder()
+                .setBackoffCriteria(4_000, JobRequest.BackoffPolicy.LINEAR)
+                .setExtras(new PersistableBundleCompat())
+                .setPersisted(true)
+                .startNow()
+                .build();
+
+        assertThat(request.getJobId()).isGreaterThan(0);
+        assertThat(request.getTag()).isEqualTo(DummyJobs.SuccessJob.TAG);
+        assertThat(request.getStartMs()).isEqualTo(JobRequest.START_NOW);
+        assertThat(request.getEndMs()).isEqualTo(JobRequest.START_NOW);
+        assertThat(request.getBackoffMs()).isEqualTo(4_000L);
+        assertThat(request.getBackoffPolicy()).isEqualTo(JobRequest.BackoffPolicy.LINEAR);
+        assertThat(request.isPersisted()).isTrue();
+        assertThat(request.getExtras()).isNotNull();
+        assertThat(request.isExact()).isTrue();
+
+        assertThat(request.getIntervalMs()).isZero();
+        assertThat(request.isPeriodic()).isFalse();
+        assertThat(request.requiredNetworkType()).isEqualTo(JobRequest.DEFAULT_NETWORK_TYPE);
+        assertThat(request.requirementsEnforced()).isFalse();
+        assertThat(request.requiresCharging()).isFalse();
+        assertThat(request.requiresDeviceIdle()).isFalse();
+    }
+
+    @Test
     public void testExact() {
         JobRequest request = getBuilder()
                 .setBackoffCriteria(4_000, JobRequest.BackoffPolicy.LINEAR)

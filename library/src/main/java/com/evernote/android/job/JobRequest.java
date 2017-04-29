@@ -26,6 +26,7 @@
 package com.evernote.android.job;
 
 import android.app.AlarmManager;
+import android.app.Service;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
@@ -111,6 +112,8 @@ public final class JobRequest {
     /*package*/ static long getMinFlex() {
         return JobConfig.isAllowSmallerIntervalsForMarshmallow() ? TimeUnit.SECONDS.toMillis(30) : MIN_FLEX;
     }
+
+    /*package*/ static final long START_NOW = 1;
 
     private final Builder mBuilder;
 
@@ -809,6 +812,23 @@ public final class JobRequest {
             }
 
             return setExecutionWindow(exactInMs, exactInMs);
+        }
+
+        /**
+         * Specify that the job should start immediately. This is similar to an exact job and has
+         * the same constraints, e.g. no other requirements like a specific network condition
+         * are allowed. This method overrides any specified time window.
+         *
+         * <br>
+         * <br>
+         *
+         * The advantage if a job that starts immediately compared to implementing your own
+         * {@link Service} is that jobs run in parallel and can be rescheduled if necessary.
+         *
+         * @see #setExact(long)
+         */
+        public Builder startNow() {
+            return setExact(START_NOW);
         }
 
         /**

@@ -105,9 +105,16 @@ private void schedulePeriodicJob() {
 }
 
 private void scheduleExactJob() {
-    int jobId = new JobRequest.Builder(DemoSyncJob.class)
+    int jobId = new JobRequest.Builder(DemoSyncJob.TAG)
             .setExact(20_000L)
             .setPersisted(true)
+            .build()
+            .schedule();
+}
+
+private void runJobImmediately() {
+    int jobId = new JobRequest.Builder(DemoSyncJob.TAG)
+            .startNow()
             .build()
             .schedule();
 }
