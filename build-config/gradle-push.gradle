@@ -34,6 +34,7 @@ def getRepositoryPassword() {
     return hasProperty('SONATYPE_PASSWORD') ? SONATYPE_PASSWORD : ""
 }
 
+/*
 android.libraryVariants.all { variant ->
     variant.outputs.each { output ->
         File outputFile = output.outputFile
@@ -43,6 +44,7 @@ android.libraryVariants.all { variant ->
         }
     }
 }
+*/
 
 version = VERSION_NAME
 
