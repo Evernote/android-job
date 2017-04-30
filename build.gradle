@@ -15,11 +15,11 @@ allprojects {
 }
 
 ext {
-    compileSdkVersion = 25
-    targetSdkVersion = compileSdkVersion
+    compileSdkVersion = 'android-O'
+    targetSdkVersion = 'O'
     minSdkVersion = 14
 
-    buildToolsVersion = '25.0.2'
+    buildToolsVersion = '26.0.0-rc1'
 
     supportLibVersion = '25.0.0'
     playServicesVersion = '10.2.1'
