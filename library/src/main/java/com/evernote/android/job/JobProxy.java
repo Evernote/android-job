@@ -29,8 +29,10 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.evernote.android.job.util.JobUtil;
 
@@ -59,6 +61,7 @@ public interface JobProxy {
 
     boolean isPlatformJobScheduled(JobRequest request);
 
+    @SuppressWarnings("UnusedReturnValue")
     /*package*/ final class Common {
 
         public static final ThreadFactory COMMON_THREAD_FACTORY = new ThreadFactory() {
@@ -66,7 +69,7 @@ public interface JobProxy {
             private final AtomicInteger mThreadNumber = new AtomicInteger();
 
             @Override
-            public Thread newThread(Runnable r) {
+            public Thread newThread(@NonNull Runnable r) {
                 Thread thread = new Thread(r, "AndroidJob-" + mThreadNumber.incrementAndGet());
                 if (thread.isDaemon()) {
                     thread.setDaemon(false);
@@ -142,7 +145,7 @@ public interface JobProxy {
             mJobManager = JobManager.create(context);
         }
 
-        public JobRequest getPendingRequest(boolean cleanUpOrphanedJob) {
+        public JobRequest getPendingRequest(@SuppressWarnings("SameParameterValue") boolean cleanUpOrphanedJob) {
             // order is important for logging purposes
             JobRequest request = mJobManager.getJobRequest(mJobId, true);
             Job job = mJobManager.getJob(mJobId);
@@ -180,7 +183,7 @@ public interface JobProxy {
         }
 
         @NonNull
-        public Job.Result executeJobRequest(@NonNull JobRequest request) {
+        public Job.Result executeJobRequest(@NonNull JobRequest request, @Nullable Bundle transientExtras) {
             long waited = System.currentTimeMillis() - request.getScheduledAt();
             String timeWindow;
             if (request.isPeriodic()) {
@@ -209,7 +212,11 @@ public interface JobProxy {
                     request.setStarted(true);
                 }
 
-                Future<Job.Result> future = jobExecutor.execute(mContext, request, job);
+                if (transientExtras == null) {
+                    transientExtras = Bundle.EMPTY;
+                }
+
+                Future<Job.Result> future = jobExecutor.execute(mContext, request, job, transientExtras);
                 if (future == null) {
                     return Job.Result.FAILURE;
                 }
@@ -246,7 +253,7 @@ public interface JobProxy {
             }
         }
 
-        public static void cleanUpOrphanedJob(Context context, int jobId) {
+        /*package*/ static void cleanUpOrphanedJob(Context context, int jobId) {
             /*
              * That's necessary if the database was deleted and jobs (especially the JobScheduler) are still around.
              * Then if a new job is being scheduled, it's possible that the new job has the ID of the old one. Here

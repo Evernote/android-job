@@ -1,15 +1,10 @@
 package com.evernote.android.job;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
-
-import com.evernote.android.job.gcm.PlatformGcmService;
-import com.evernote.android.job.v14.PlatformAlarmService;
-import com.evernote.android.job.v21.PlatformJobService;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -27,7 +22,7 @@ import static org.junit.Assume.assumeTrue;
  */
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class PlatformTest {
+public class TransientBundleTest {
 
     private JobManager mManager;
 
@@ -74,10 +69,11 @@ public class PlatformTest {
 
     @Test
     public void testExact() throws Exception {
-        mJob = new TestJob(PlatformAlarmService.class);
+        mJob = new TestJob();
 
         new JobRequest.Builder("tag")
                 .setExact(2_000)
+                .setTransientExtras(createTransientBundle())
                 .build()
                 .schedule();
 
@@ -86,10 +82,11 @@ public class PlatformTest {
 
     @Test
     public void testStartNow() throws Exception {
-        mJob = new TestJob(PlatformAlarmService.class);
+        mJob = new TestJob();
 
         new JobRequest.Builder("tag")
                 .startNow()
+                .setTransientExtras(createTransientBundle())
                 .build()
                 .schedule();
 
@@ -101,22 +98,7 @@ public class PlatformTest {
     }
 
     private void testOneOff(JobApi api, long wait, TimeUnit timeUnit) throws Exception {
-        switch (api) {
-            case V_14:
-            case V_19:
-                mJob = new TestJob(PlatformAlarmService.class);
-                break;
-            case GCM:
-                mJob = new TestJob(PlatformGcmService.class);
-                break;
-            case V_21:
-            case V_24:
-            case V_26:
-                mJob = new TestJob(PlatformJobService.class);
-                break;
-            default:
-                throw new IllegalStateException("not implemented");
-        }
+        mJob = new TestJob();
 
         // ignore test if not supported
         assumeTrue(api.isSupported(InstrumentationRegistry.getTargetContext()));
@@ -125,8 +107,15 @@ public class PlatformTest {
 
         int jobId = new JobRequest.Builder("tag")
                 .setExecutionWindow(2_000, 3_000)
+                .setTransientExtras(createTransientBundle())
                 .build()
                 .schedule();
+
+        JobRequest request = mManager.getJobRequest(jobId);
+        assertThat(request).isNotNull();
+
+        boolean scheduled = api.getProxy(InstrumentationRegistry.getContext()).isPlatformJobScheduled(request);
+        assertThat(scheduled).isTrue();
 
         mJob.verifyJob(wait, timeUnit);
 
@@ -140,19 +129,12 @@ public class PlatformTest {
     private final class TestJob extends Job {
 
         private final CountDownLatch mLatch = new CountDownLatch(1);
-        private final Class<? extends Context> mExpectedContext;
 
-        private Context mContext;
         private Params mParams;
-
-        private TestJob(Class<? extends Context> expectedContext) {
-            mExpectedContext = expectedContext;
-        }
 
         @NonNull
         @Override
         protected Result onRunJob(Params params) {
-            mContext = getContext();
             mParams = params;
 
             mLatch.countDown();
@@ -162,10 +144,9 @@ public class PlatformTest {
         private void verifyJob(long wait, TimeUnit timeUnit) throws InterruptedException {
             assertThat(mJob.mLatch.await(wait, timeUnit)).isTrue();
 
-            assertThat(mContext).isInstanceOf(mExpectedContext);
-
             Bundle extras = mParams.getTransientExtras();
             assertThat(extras).isNotNull();
+            assertThat(extras.getString("Key")).isEqualTo("Value");
         }
     }
 
@@ -174,5 +155,11 @@ public class PlatformTest {
         public Job create(String tag) {
             return mJob;
         }
+    }
+
+    private static Bundle createTransientBundle() {
+        Bundle bundle = new Bundle();
+        bundle.putString("Key", "Value");
+        return bundle;
     }
 }

@@ -60,7 +60,7 @@ public class JobProxy24 extends JobProxy21 {
     @Override
     public boolean isPlatformJobScheduled(JobRequest request) {
         try {
-            return getJobScheduler().getPendingJob(request.getJobId()) != null;
+            return isJobInfoScheduled(getJobScheduler().getPendingJob(request.getJobId()), request);
         } catch (Exception e) {
             mCat.e(e);
             return false;

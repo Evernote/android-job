@@ -27,12 +27,11 @@ package com.evernote.android.job.v14;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.evernote.android.job.JobProxy;
-import com.evernote.android.job.util.JobCat;
-
-import net.vrallev.android.cat.CatLog;
 
 /**
  * @author rwondratschek
@@ -40,22 +39,25 @@ import net.vrallev.android.cat.CatLog;
 public class PlatformAlarmReceiver extends WakefulBroadcastReceiver {
 
     /*package*/ static final String EXTRA_JOB_ID = "EXTRA_JOB_ID";
+    /*package*/ static final String EXTRA_TRANSIENT_EXTRAS = "EXTRA_TRANSIENT_EXTRAS";
 
-    private static final CatLog CAT = new JobCat("PlatformAlarmReceiver");
-
-    /*package*/ static Intent createIntent(Context context, int jobId) {
-        return new Intent(context, PlatformAlarmReceiver.class).putExtra(EXTRA_JOB_ID, jobId);
+    /*package*/ static Intent createIntent(Context context, int jobId, @Nullable Bundle transientExtras) {
+        Intent intent = new Intent(context, PlatformAlarmReceiver.class).putExtra(EXTRA_JOB_ID, jobId);
+        if (transientExtras != null) {
+            intent.putExtra(EXTRA_TRANSIENT_EXTRAS, transientExtras);
+        }
+        return intent;
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent != null && intent.hasExtra(EXTRA_JOB_ID)) {
-            startService(context, intent.getIntExtra(EXTRA_JOB_ID, -1));
+            startService(context, intent.getIntExtra(EXTRA_JOB_ID, -1), intent.getBundleExtra(EXTRA_TRANSIENT_EXTRAS));
         }
     }
 
-    /*package*/ static void startService(Context context, int requestId) {
-        Intent serviceIntent = PlatformAlarmService.createIntent(context, requestId);
+    /*package*/ static void startService(Context context, int requestId, @Nullable Bundle transientExtras) {
+        Intent serviceIntent = PlatformAlarmService.createIntent(context, requestId, transientExtras);
         JobProxy.Common.startWakefulService(context, serviceIntent);
     }
 }

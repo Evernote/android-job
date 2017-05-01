@@ -28,6 +28,7 @@ package com.evernote.android.job;
 import android.app.AlarmManager;
 import android.app.Service;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -114,6 +115,10 @@ public final class JobRequest {
     }
 
     /*package*/ static final long START_NOW = 1;
+
+    private static Context context() {
+        return JobManager.instance().getContext();
+    }
 
     private final Builder mBuilder;
 
@@ -285,7 +290,7 @@ public final class JobRequest {
     }
 
     /*package*/ JobApi getJobApi() {
-        return mBuilder.mExact ? JobApi.V_14 : JobApi.getDefault(JobManager.instance().getContext());
+        return mBuilder.mExact ? JobApi.V_14 : JobApi.getDefault(context());
     }
 
     /*package*/ void setScheduledAt(long timeStamp) {
@@ -370,12 +375,13 @@ public final class JobRequest {
      * <br>
      *
      * This will never be {@code null}. If you did not set any extras this will be an empty bundle.
+     * The returned bundle will also be empty, if the request isn't cached anymore.
      *
      * @return The transient extras you passed in when constructing this job.
      */
     @NonNull
     public Bundle getTransientExtras() {
-        return new Bundle(); // TODO
+        return mBuilder.mTransientExtras;
     }
 
     /**
@@ -482,7 +488,7 @@ public final class JobRequest {
 
     @Override
     public String toString() {
-        return "request{id=" + getJobId() + ", tag=" + getTag() + '}';
+        return "request{id=" + getJobId() + ", tag=" + getTag() + ", transient=" + isTransient() + '}';
     }
 
     /**
@@ -517,7 +523,7 @@ public final class JobRequest {
         private boolean mUpdateCurrent;
 
         private boolean mTransient;
-        private Bundle mTransientExtras;
+        private Bundle mTransientExtras = Bundle.EMPTY;
 
         /**
          * Creates a new instance to build a {@link JobRequest}. Note that the {@code tag} doesn't
@@ -608,6 +614,7 @@ public final class JobRequest {
 
             mUpdateCurrent = builder.mUpdateCurrent;
             mTransient = builder.mTransient;
+            mTransientExtras = builder.mTransientExtras;
         }
 
         private void fillContentValues(ContentValues contentValues) {
@@ -937,14 +944,14 @@ public final class JobRequest {
          * <br>
          * <br>
          *
-         * If the passed in bundle is {@code null}, then the previous extras are reset to the default
+         * If the passed in bundle is {@code null} or empty, then the previous extras are reset to the default
          * and the job won't be transient.
          *
          * @param extras  Bundle containing extras you want the scheduler to hold on to for you.
          */
         public Builder setTransientExtras(@Nullable Bundle extras) {
-            mTransient = extras != null;
-            mTransientExtras = extras;
+            mTransient = extras != null && !extras.isEmpty();
+            mTransientExtras = extras != null ? extras : Bundle.EMPTY;
             return this;
         }
 

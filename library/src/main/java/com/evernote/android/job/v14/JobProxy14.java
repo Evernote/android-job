@@ -30,6 +30,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobProxy;
@@ -42,6 +43,7 @@ import net.vrallev.android.cat.CatLog;
 /**
  * @author rwondratschek
  */
+@SuppressWarnings("WeakerAccess")
 public class JobProxy14 implements JobProxy {
 
     private static final String TAG = "JobProxy14";
@@ -73,7 +75,7 @@ public class JobProxy14 implements JobProxy {
             if (request.isExact()) {
                 if (request.getStartMs() == 1) {
                     // this job should start immediately
-                    PlatformAlarmReceiver.startService(mContext, request.getJobId());
+                    PlatformAlarmReceiver.startService(mContext, request.getJobId(), request.getTransientExtras());
                 } else {
                     plantOneOffExact(request, alarmManager, pendingIntent);
                 }
@@ -153,8 +155,8 @@ public class JobProxy14 implements JobProxy {
         AlarmManager alarmManager = getAlarmManager();
         if (alarmManager != null) {
             try {
-                alarmManager.cancel(getPendingIntent(jobId, createPendingIntentFlags(true)));
-                alarmManager.cancel(getPendingIntent(jobId, createPendingIntentFlags(false)));
+                alarmManager.cancel(getPendingIntent(jobId, null, createPendingIntentFlags(true)));
+                alarmManager.cancel(getPendingIntent(jobId, null, createPendingIntentFlags(false)));
             } catch (Exception e) {
                 // java.lang.SecurityException: get application info: Neither user 1010133 nor
                 // current process has android.permission.INTERACT_ACROSS_USERS.
@@ -182,11 +184,11 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected PendingIntent getPendingIntent(JobRequest request, int flags) {
-        return getPendingIntent(request.getJobId(), flags);
+        return getPendingIntent(request.getJobId(), request.getTransientExtras(), flags);
     }
 
-    protected PendingIntent getPendingIntent(int jobId, int flags) {
-        Intent intent = PlatformAlarmReceiver.createIntent(mContext, jobId);
+    protected PendingIntent getPendingIntent(int jobId, @Nullable Bundle transientExtras, int flags) {
+        Intent intent = PlatformAlarmReceiver.createIntent(mContext, jobId, transientExtras);
 
         // repeating PendingIntent with service seams to have problems
         try {

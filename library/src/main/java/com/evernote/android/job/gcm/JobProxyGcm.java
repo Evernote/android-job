@@ -125,7 +125,8 @@ public class JobProxyGcm implements JobProxy {
                 .setUpdateCurrent(true)
                 .setRequiredNetwork(convertNetworkType(request.requiredNetworkType()))
                 .setPersisted(JobUtil.hasBootPermission(mContext))
-                .setRequiresCharging(request.requiresCharging());
+                .setRequiresCharging(request.requiresCharging())
+                .setExtras(request.getTransientExtras());
         return builder;
     }
 

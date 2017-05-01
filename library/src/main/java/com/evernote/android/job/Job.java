@@ -194,8 +194,8 @@ public abstract class Job {
         }
     }
 
-    /*package*/ final Job setRequest(JobRequest request) {
-        mParams = new Params(request);
+    /*package*/ final Job setRequest(JobRequest request, @NonNull Bundle transientExtras) {
+        mParams = new Params(request, transientExtras);
         return this;
     }
 
@@ -339,9 +339,11 @@ public abstract class Job {
 
         private final JobRequest mRequest;
         private PersistableBundleCompat mExtras;
+        private Bundle mTransientExtras;
 
-        private Params(@NonNull JobRequest request) {
+        private Params(@NonNull JobRequest request, @NonNull Bundle transientExtras) {
             mRequest = request;
+            mTransientExtras = transientExtras;
         }
 
         /**
@@ -540,7 +542,7 @@ public abstract class Job {
          */
         @NonNull
         public Bundle getTransientExtras() {
-            return mRequest.getTransientExtras();
+            return mTransientExtras;
         }
 
         /**

@@ -109,4 +109,16 @@ public final class Device {
             return JobRequest.NetworkType.NOT_ROAMING;
         }
     }
+
+    /**
+     * This method will be removed once Android O is being released. Don't use it.
+     *
+     * @return Returns if the device is running the Android O preview.
+     */
+    public static boolean isAtLeastO() {
+        // remove the 2nd statement when O is out of preview
+        return Build.VERSION.SDK_INT == Build.VERSION_CODES.O
+                || (!"REL".equals(Build.VERSION.CODENAME) && ("O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR")));
+
+    }
 }

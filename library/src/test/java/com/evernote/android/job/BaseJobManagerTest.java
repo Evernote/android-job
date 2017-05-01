@@ -60,7 +60,7 @@ public abstract class BaseJobManagerTest {
         Future<Job.Result> future = executor.submit(new Callable<Job.Result>() {
             @Override
             public Job.Result call() throws Exception {
-                Job.Result result = common.executeJobRequest(pendingRequest);
+                Job.Result result = common.executeJobRequest(pendingRequest, null);
                 assertThat(result).isEqualTo(expected);
                 assertThat(common.getPendingRequest(true)).isNull();
 

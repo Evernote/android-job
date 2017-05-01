@@ -32,6 +32,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.gcm.JobProxyGcm;
+import com.evernote.android.job.util.Device;
 import com.evernote.android.job.v14.JobProxy14;
 import com.evernote.android.job.v19.JobProxy19;
 import com.evernote.android.job.v21.JobProxy21;
@@ -97,9 +98,7 @@ public enum JobApi {
     public boolean isSupported(Context context) {
         switch (this) {
             case V_26:
-                // remove the 2nd statement when O is out of preview
-                return Build.VERSION.SDK_INT == Build.VERSION_CODES.O
-                        || (!"REL".equals(Build.VERSION.CODENAME) && ("O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR")));
+                return Device.isAtLeastO();
             case V_24:
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
             case V_21:

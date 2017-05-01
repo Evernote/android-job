@@ -29,14 +29,16 @@ import android.annotation.TargetApi;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.Build;
+import android.os.Bundle;
 
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
+import com.evernote.android.job.util.Device;
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,7 +53,7 @@ public class PlatformJobService extends JobService {
      * JobScheduler can have issues: http://stackoverflow.com/questions/32079407/android-jobscheduler-onstartjob-called-multiple-times
      */
 
-    private static final CatLog CAT = new JobCat("PlatformJobService");
+    private static final JobCat CAT = new JobCat("PlatformJobService");
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
 
     @Override
@@ -64,11 +66,25 @@ public class PlatformJobService extends JobService {
             return false;
         }
 
+        if (request.isTransient()) {
+            if (TransientBundleCompat.startWithTransientBundle(this, request)) {
+                if (Device.isAtLeastO()) {
+                    // should only happen during testing if an API is disabled
+                    Cat.d("PendingIntent for transient bundle is not null although running on O, using compat mode");
+                }
+                return false;
+
+            } else if (!Device.isAtLeastO()) {
+                CAT.d("PendingIntent for transient job %s expired", request);
+                return false;
+            }
+        }
+
         EXECUTOR_SERVICE.execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    common.executeJobRequest(request);
+                    common.executeJobRequest(request, getTransientBundle(params));
 
                 } finally {
                     // do not reschedule
@@ -94,5 +110,13 @@ public class PlatformJobService extends JobService {
 
         // do not reschedule
         return false;
+    }
+
+    private Bundle getTransientBundle(JobParameters params) {
+        if (Device.isAtLeastO()) {
+            return params.getTransientExtras();
+        } else {
+            return Bundle.EMPTY;
+        }
     }
 }

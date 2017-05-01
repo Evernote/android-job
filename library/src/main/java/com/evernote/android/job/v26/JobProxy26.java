@@ -26,15 +26,20 @@
 package com.evernote.android.job.v26;
 
 import android.annotation.TargetApi;
+import android.app.job.JobInfo;
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.v24.JobProxy24;
 
 
 /**
  * @author rwondratschek
  */
+@SuppressWarnings("unused")
 @TargetApi(Build.VERSION_CODES.O)
 public class JobProxy26 extends JobProxy24 {
 
@@ -48,4 +53,13 @@ public class JobProxy26 extends JobProxy24 {
         super(context, tag);
     }
 
+    @Override
+    protected JobInfo.Builder setTransientBundle(JobRequest request, JobInfo.Builder builder) {
+        return builder.setTransientExtras(request.getTransientExtras());
+    }
+
+    @Override
+    protected boolean isJobInfoScheduled(@Nullable JobInfo info, @NonNull JobRequest request) {
+        return info != null && info.getId() == request.getJobId();
+    }
 }

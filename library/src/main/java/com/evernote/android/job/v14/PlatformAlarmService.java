@@ -28,6 +28,7 @@ package com.evernote.android.job.v14;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
@@ -49,9 +50,12 @@ public final class PlatformAlarmService extends Service {
 
     private static final CatLog CAT = new JobCat("PlatformAlarmService");
 
-    /*package*/ static Intent createIntent(Context context, int jobId) {
+    public static Intent createIntent(Context context, int jobId, @Nullable Bundle transientExtras) {
         Intent intent = new Intent(context, PlatformAlarmService.class);
         intent.putExtra(PlatformAlarmReceiver.EXTRA_JOB_ID, jobId);
+        if (transientExtras != null) {
+            intent.putExtra(PlatformAlarmReceiver.EXTRA_TRANSIENT_EXTRAS, transientExtras);
+        }
         return intent;
     }
 
@@ -113,12 +117,13 @@ public final class PlatformAlarmService extends Service {
         }
 
         int jobId = intent.getIntExtra(PlatformAlarmReceiver.EXTRA_JOB_ID, -1);
+        Bundle transientExtras = intent.getBundleExtra(PlatformAlarmReceiver.EXTRA_TRANSIENT_EXTRAS);
         final JobProxy.Common common = new JobProxy.Common(this, CAT, jobId);
 
         // create the JobManager. Seeing sometimes exceptions, that it wasn't created, yet.
         final JobRequest request = common.getPendingRequest(true);
         if (request != null) {
-            common.executeJobRequest(request);
+            common.executeJobRequest(request, transientExtras);
         }
     }
 

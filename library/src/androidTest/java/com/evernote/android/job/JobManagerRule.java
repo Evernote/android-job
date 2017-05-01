@@ -20,6 +20,8 @@ public class JobManagerRule extends ExternalResource {
     protected void after() {
         mManager.cancelAll();
         mManager.destroy();
+
+        JobConfig.reset();
     }
 
     public JobManager getManager() {
