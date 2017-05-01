@@ -54,26 +54,35 @@ public class JobConfigTest extends BaseJobManagerTest {
     }
 
     @Test
-    @Config(sdk = 24)
+    @Config(sdk = Build.VERSION_CODES.O)
+    public void verifyApi26Supported() {
+        assertThat(JobApi.getDefault(context())).isEqualTo(JobApi.V_26);
+    }
+
+    @Test
+    @Config(sdk = Build.VERSION_CODES.N)
     public void verifyApi24Supported() {
         assertThat(JobApi.getDefault(context())).isEqualTo(JobApi.V_24);
     }
 
     @Test
-    @Config(sdk = 21)
+    @Config(sdk = Build.VERSION_CODES.LOLLIPOP)
     public void verifyApi21Supported() {
         assertThat(JobApi.getDefault(context())).isEqualTo(JobApi.V_21);
     }
 
     @Test
-    @Config(sdk = 19)
+    @Config(sdk = Build.VERSION_CODES.KITKAT)
     public void verifyApi19Supported() {
         assertThat(JobApi.getDefault(context())).isEqualTo(JobApi.V_19);
     }
 
     @Test
-    @Config(sdk = 24)
+    @Config(sdk = Build.VERSION_CODES.O)
     public void verifyApiDisabled() {
+        assertThat(JobApi.getDefault(context())).isEqualTo(JobApi.V_26);
+
+        JobConfig.setApiEnabled(JobApi.V_26, false);
         assertThat(JobApi.getDefault(context())).isEqualTo(JobApi.V_24);
 
         JobConfig.setApiEnabled(JobApi.V_24, false);

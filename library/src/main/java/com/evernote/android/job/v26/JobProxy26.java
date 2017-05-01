@@ -23,62 +23,29 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evernote.android.job.v24;
+package com.evernote.android.job.v26;
 
 import android.annotation.TargetApi;
-import android.app.job.JobInfo;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
 
-import com.evernote.android.job.JobRequest;
-import com.evernote.android.job.v21.JobProxy21;
+import com.evernote.android.job.v24.JobProxy24;
 
 
 /**
  * @author rwondratschek
  */
-@TargetApi(Build.VERSION_CODES.N)
-public class JobProxy24 extends JobProxy21 {
+@TargetApi(Build.VERSION_CODES.O)
+public class JobProxy26 extends JobProxy24 {
 
-    private static final String TAG = "JobProxy24";
+    private static final String TAG = "JobProxy26";
 
-    public JobProxy24(Context context) {
-        this(context, TAG);
+    public JobProxy26(Context context) {
+        super(context, TAG);
     }
 
-    public JobProxy24(Context context, String tag) {
+    public JobProxy26(Context context, String tag) {
         super(context, tag);
     }
 
-    @Override
-    public void plantPeriodicFlexSupport(JobRequest request) {
-        mCat.w("plantPeriodicFlexSupport called although flex is supported");
-        super.plantPeriodicFlexSupport(request);
-    }
-
-    @Override
-    public boolean isPlatformJobScheduled(JobRequest request) {
-        try {
-            return getJobScheduler().getPendingJob(request.getJobId()) != null;
-        } catch (Exception e) {
-            mCat.e(e);
-            return false;
-        }
-    }
-
-    @Override
-    protected JobInfo.Builder createBuilderPeriodic(JobInfo.Builder builder, long intervalMs, long flexMs) {
-        return builder.setPeriodic(intervalMs, flexMs);
-    }
-
-    @Override
-    protected int convertNetworkType(@NonNull JobRequest.NetworkType networkType) {
-        switch (networkType) {
-            case NOT_ROAMING:
-                return JobInfo.NETWORK_TYPE_NOT_ROAMING;
-            default:
-                return super.convertNetworkType(networkType);
-        }
-    }
 }

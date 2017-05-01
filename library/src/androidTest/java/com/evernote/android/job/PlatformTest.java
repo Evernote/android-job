@@ -67,6 +67,11 @@ public class PlatformTest {
     }
 
     @Test
+    public void testApi26() throws Exception {
+        testOneOff(JobApi.V_26);
+    }
+
+    @Test
     public void testExact() throws Exception {
         mJob = new TestJob(PlatformAlarmService.class);
 
@@ -105,6 +110,7 @@ public class PlatformTest {
                 break;
             case V_21:
             case V_24:
+            case V_26:
                 mJob = new TestJob(PlatformJobService.class);
                 break;
             default:

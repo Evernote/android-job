@@ -36,6 +36,7 @@ import com.evernote.android.job.v14.JobProxy14;
 import com.evernote.android.job.v19.JobProxy19;
 import com.evernote.android.job.v21.JobProxy21;
 import com.evernote.android.job.v24.JobProxy24;
+import com.evernote.android.job.v26.JobProxy26;
 import com.google.android.gms.gcm.GcmNetworkManager;
 
 /**
@@ -47,32 +48,38 @@ public enum JobApi {
     /**
      * Uses the {@link JobScheduler} for scheduling jobs.
      */
-    V_24(true, false),
+    V_26(true, false, true),
     /**
      * Uses the {@link JobScheduler} for scheduling jobs.
      */
-    V_21(true, true),
+    V_24(true, false, false),
+    /**
+     * Uses the {@link JobScheduler} for scheduling jobs.
+     */
+    V_21(true, true, false),
     /**
      * Uses the {@link AlarmManager} for scheduling jobs.
      */
-    V_19(true, true),
+    V_19(true, true, true),
     /**
      * Uses the {@link AlarmManager} for scheduling jobs.
      */
-    V_14(false, true),
+    V_14(false, true, true),
     /**
      * Uses the {@link GcmNetworkManager} for scheduling jobs.
      */
-    GCM(true, false);
+    GCM(true, false, true);
 
     private JobProxy mCachedProxy;
 
     private final boolean mSupportsExecutionWindow;
     private final boolean mFlexSupport;
+    private final boolean mSupportsTransientJobs;
 
-    JobApi(boolean supportsExecutionWindow, boolean flexSupport) {
+    JobApi(boolean supportsExecutionWindow, boolean flexSupport, boolean supportsTransientJobs) {
         mSupportsExecutionWindow = supportsExecutionWindow;
         mFlexSupport = flexSupport;
+        mSupportsTransientJobs = supportsTransientJobs;
     }
 
     /*package*/ boolean supportsExecutionWindow() {
@@ -83,8 +90,16 @@ public enum JobApi {
         return mFlexSupport;
     }
 
+    /*package*/ boolean supportsTransientJobs() {
+        return mSupportsTransientJobs;
+    }
+
     public boolean isSupported(Context context) {
         switch (this) {
+            case V_26:
+                // remove the 2nd statement when O is out of preview
+                return Build.VERSION.SDK_INT == Build.VERSION_CODES.O
+                        || (!"REL".equals(Build.VERSION.CODENAME) && ("O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR")));
             case V_24:
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
             case V_21:
@@ -103,6 +118,8 @@ public enum JobApi {
     @NonNull
     private JobProxy createProxy(Context context) {
         switch (this) {
+            case V_26:
+                return new JobProxy26(context);
             case V_24:
                 return new JobProxy24(context);
             case V_21:
@@ -128,7 +145,9 @@ public enum JobApi {
 
     @NonNull
     public static JobApi getDefault(Context context) {
-        if (V_24.isSupported(context) && JobConfig.isApiEnabled(V_24)) {
+        if (V_26.isSupported(context) && JobConfig.isApiEnabled(V_26)) {
+            return V_26;
+        } else if (V_24.isSupported(context) && JobConfig.isApiEnabled(V_24)) {
             return V_24;
         } else if (V_21.isSupported(context) && JobConfig.isApiEnabled(V_21)) {
             return V_21;

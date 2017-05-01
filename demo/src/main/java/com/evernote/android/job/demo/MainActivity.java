@@ -80,6 +80,11 @@ public class MainActivity extends Activity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
+        if (JobApi.V_26.isSupported(this)) {
+            menu.findItem(R.id.action_force_26).setChecked(false);
+        } else {
+            menu.findItem(R.id.action_force_26).setVisible(false);
+        }
         if (JobApi.V_24.isSupported(this)) {
             menu.findItem(R.id.action_force_24).setChecked(false);
         } else {
@@ -107,6 +112,9 @@ public class MainActivity extends Activity {
         }
 
         switch (JobApi.getDefault(this)) {
+            case V_26:
+                menu.findItem(R.id.action_force_26).setChecked(true);
+                break;
             case V_24:
                 menu.findItem(R.id.action_force_24).setChecked(true);
                 break;
@@ -132,6 +140,9 @@ public class MainActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_force_26:
+                JobConfig.forceApi(JobApi.V_26);
+                return true;
             case R.id.action_force_24:
                 JobConfig.forceApi(JobApi.V_24);
                 return true;
