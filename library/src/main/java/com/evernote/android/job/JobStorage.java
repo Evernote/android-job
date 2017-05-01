@@ -62,7 +62,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     public static final String PREF_FILE_NAME = "evernote_jobs";
     public static final String DATABASE_NAME = PREF_FILE_NAME + ".db";
-    public static final int DATABASE_VERSION = 4;
+    public static final int DATABASE_VERSION = 5;
 
     public static final String JOB_TABLE_NAME = "jobs";
 
@@ -80,21 +80,26 @@ import java.util.concurrent.atomic.AtomicInteger;
     public static final String COLUMN_NETWORK_TYPE = "networkType";
     public static final String COLUMN_EXTRAS = "extras";
 
-    /*
-     * SQLite can't delete columns, so always initialize this old deprecated column with true.
-     * Create this column for consistency even for new installs.
-     */
-    public static final String COLUMN_PERSISTED = "persisted";
+    @SuppressWarnings("unused")
+    @Deprecated
+    private static final String COLUMN_PERSISTED = "persisted";
+
     public static final String COLUMN_NUM_FAILURES = "numFailures";
     public static final String COLUMN_SCHEDULED_AT = "scheduledAt";
-    public static final String COLUMN_TRANSIENT = "isTransient";
+
+    @SuppressWarnings("DeprecatedIsStillUsed")
+    @Deprecated
+    private static final String COLUMN_TRANSIENT_OLD = "isTransient";
+
+    public static final String COLUMN_STARTED = "started";
     public static final String COLUMN_FLEX_MS = "flexMs";
     public static final String COLUMN_FLEX_SUPPORT = "flexSupport";
     public static final String COLUMN_LAST_RUN = "lastRun";
+    public static final String COLUMN_TRANSIENT = "transient";
 
     private static final int CACHE_SIZE = 30;
 
-    private static final String WHERE_NOT_TRANSIENT = "ifnull(" + COLUMN_TRANSIENT + ", 0)<=0";
+    private static final String WHERE_NOT_STARTED = "ifnull(" + COLUMN_STARTED + ", 0)<=0";
 
     private final SharedPreferences mPreferences;
     private final JobCacheId mCacheId;
@@ -156,19 +161,19 @@ import java.util.concurrent.atomic.AtomicInteger;
         return mCacheId.get(id);
     }
 
-    public synchronized Set<JobRequest> getAllJobRequests(@Nullable String tag, boolean includeTransient) {
+    public synchronized Set<JobRequest> getAllJobRequests(@Nullable String tag, boolean includeStarted) {
         Set<JobRequest> result = new HashSet<>();
 
         SQLiteDatabase database = null;
         Cursor cursor = null;
         try {
-            String where; // filter transient requests
+            String where; // filter started requests
             String[] args;
             if (TextUtils.isEmpty(tag)) {
-                where = includeTransient ? null : WHERE_NOT_TRANSIENT;
+                where = includeStarted ? null : WHERE_NOT_STARTED;
                 args = null;
             } else {
-                where = includeTransient ? "" : (WHERE_NOT_TRANSIENT + " AND ");
+                where = includeStarted ? "" : (WHERE_NOT_STARTED + " AND ");
                 where += COLUMN_TAG + "=?";
                 args = new String[]{tag};
             }
@@ -253,7 +258,8 @@ import java.util.concurrent.atomic.AtomicInteger;
         }
     }
 
-    private JobRequest load(int id, boolean includeTransient) {
+    @SuppressWarnings("SameParameterValue")
+    private JobRequest load(int id, boolean includeStarted) {
         if (didFailToDelete(id)) {
             return null;
         }
@@ -262,8 +268,8 @@ import java.util.concurrent.atomic.AtomicInteger;
         Cursor cursor = null;
         try {
             String where = COLUMN_ID + "=?";
-            if (!includeTransient) {
-                where += " AND " + COLUMN_TRANSIENT + "<=0";
+            if (!includeStarted) {
+                where += " AND " + COLUMN_STARTED + "<=0";
             }
 
             database = getDatabase();
@@ -398,7 +404,11 @@ import java.util.concurrent.atomic.AtomicInteger;
                         oldVersion++;
                         break;
                     case 3:
-                        upgradeFrom3to4(db);
+                        upgradeFrom3To4(db);
+                        oldVersion++;
+                        break;
+                    case 4:
+                        upgradeFrom4To5(db);
                         oldVersion++;
                         break;
                     default:
@@ -422,17 +432,18 @@ import java.util.concurrent.atomic.AtomicInteger;
                     + COLUMN_EXACT + " integer, "
                     + COLUMN_NETWORK_TYPE + " text not null, "
                     + COLUMN_EXTRAS + " text, "
-                    + COLUMN_PERSISTED + " integer, "
                     + COLUMN_NUM_FAILURES + " integer, "
                     + COLUMN_SCHEDULED_AT + " integer, "
-                    + COLUMN_TRANSIENT + " integer, "
+                    + COLUMN_STARTED + " integer, "
                     + COLUMN_FLEX_MS + " integer, "
                     + COLUMN_FLEX_SUPPORT + " integer, "
-                    + COLUMN_LAST_RUN + " integer);");
+                    + COLUMN_LAST_RUN + " integer, "
+                    + COLUMN_TRANSIENT + " integer);");
         }
 
+        @SuppressWarnings("deprecation")
         private void upgradeFrom1To2(SQLiteDatabase db) {
-            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_TRANSIENT + " integer;");
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_TRANSIENT_OLD + " integer;");
         }
 
         private void upgradeFrom2To3(SQLiteDatabase db) {
@@ -448,8 +459,69 @@ import java.util.concurrent.atomic.AtomicInteger;
             db.execSQL("update " + JOB_TABLE_NAME + " set " + COLUMN_FLEX_MS + " = " + COLUMN_INTERVAL_MS + ";");
         }
 
-        private void upgradeFrom3to4(SQLiteDatabase db) {
+        private void upgradeFrom3To4(SQLiteDatabase db) {
             db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_LAST_RUN + " integer;");
+        }
+
+        @SuppressWarnings("deprecation")
+        private void upgradeFrom4To5(SQLiteDatabase db) {
+            // remove "persisted" column and rename "isTransient" to "started", add "transient" column for O
+            try {
+                db.beginTransaction();
+
+                String newTable = JOB_TABLE_NAME + "_new";
+
+                db.execSQL("create table " + newTable + " ("
+                        + COLUMN_ID + " integer primary key, "
+                        + COLUMN_TAG + " text not null, "
+                        + COLUMN_START_MS + " integer, "
+                        + COLUMN_END_MS + " integer, "
+                        + COLUMN_BACKOFF_MS + " integer, "
+                        + COLUMN_BACKOFF_POLICY + " text not null, "
+                        + COLUMN_INTERVAL_MS + " integer, "
+                        + COLUMN_REQUIREMENTS_ENFORCED + " integer, "
+                        + COLUMN_REQUIRES_CHARGING + " integer, "
+                        + COLUMN_REQUIRES_DEVICE_IDLE + " integer, "
+                        + COLUMN_EXACT + " integer, "
+                        + COLUMN_NETWORK_TYPE + " text not null, "
+                        + COLUMN_EXTRAS + " text, "
+                        + COLUMN_NUM_FAILURES + " integer, "
+                        + COLUMN_SCHEDULED_AT + " integer, "
+                        + COLUMN_STARTED + " integer, "
+                        + COLUMN_FLEX_MS + " integer, "
+                        + COLUMN_FLEX_SUPPORT + " integer, "
+                        + COLUMN_LAST_RUN + " integer);");
+
+                db.execSQL("INSERT INTO " + newTable + " SELECT "
+                        + COLUMN_ID + ","
+                        + COLUMN_TAG + ","
+                        + COLUMN_START_MS + ","
+                        + COLUMN_END_MS + ","
+                        + COLUMN_BACKOFF_MS + ","
+                        + COLUMN_BACKOFF_POLICY + ","
+                        + COLUMN_INTERVAL_MS + ","
+                        + COLUMN_REQUIREMENTS_ENFORCED + ","
+                        + COLUMN_REQUIRES_CHARGING + ","
+                        + COLUMN_REQUIRES_DEVICE_IDLE + ","
+                        + COLUMN_EXACT + ","
+                        + COLUMN_NETWORK_TYPE + ","
+                        + COLUMN_EXTRAS + ","
+                        + COLUMN_NUM_FAILURES + ","
+                        + COLUMN_SCHEDULED_AT + ","
+                        + COLUMN_TRANSIENT_OLD + ","
+                        + COLUMN_FLEX_MS + ","
+                        + COLUMN_FLEX_SUPPORT + ","
+                        + COLUMN_LAST_RUN + " FROM " + JOB_TABLE_NAME);
+
+                db.execSQL("DROP TABLE " + JOB_TABLE_NAME);
+                db.execSQL("ALTER TABLE " + newTable + " RENAME TO " + JOB_TABLE_NAME);
+
+                db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_TRANSIENT + " integer;");
+
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
         }
     }
 

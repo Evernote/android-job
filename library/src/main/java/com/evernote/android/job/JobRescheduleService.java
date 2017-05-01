@@ -46,7 +46,7 @@ public final class JobRescheduleService extends IntentService {
             int rescheduledCount = 0;
             for (JobRequest request : requests) {
                 boolean reschedule;
-                if (request.isTransient()) {
+                if (request.isStarted()) {
                     Job job = manager.getJob(request.getJobId());
                     reschedule = job == null;
                 } else {

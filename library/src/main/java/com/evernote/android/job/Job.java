@@ -29,6 +29,7 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.PowerManager.WakeLock;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
@@ -511,6 +512,35 @@ public abstract class Job {
          */
         public long getLastRun() {
             return mRequest.getLastRun();
+        }
+
+        /**
+         * Returns whether this is a transient jobs. <b>WARNING:</b> It's not guaranteed that a transient job
+         * will run at all, e.g. rebooting the device or force closing the app will cancel the
+         * job.
+         *
+         * @return If this is a transient job.
+         */
+        public boolean isTransient() {
+            return mRequest.isTransient();
+        }
+
+        /**
+         * Returns the transient extras you passed in when constructing this job with
+         * {@link JobRequest.Builder#setTransientExtras(Bundle)}. <b>WARNING:</b> It's not guaranteed that a transient job
+         * will run at all, e.g. rebooting the device or force closing the app will cancel the
+         * job.
+         *
+         * <br>
+         * <br>
+         *
+         * This will never be {@code null}. If you did not set any extras this will be an empty bundle.
+         *
+         * @return The transient extras you passed in when constructing this job.
+         */
+        @NonNull
+        public Bundle getTransientExtras() {
+            return mRequest.getTransientExtras();
         }
 
         /**

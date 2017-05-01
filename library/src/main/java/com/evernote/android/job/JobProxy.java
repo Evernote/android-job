@@ -165,9 +165,9 @@ public interface JobProxy {
                 // don't clean up, periodic job
                 return null;
 
-            } else if (request != null && request.isTransient()) {
-                mCat.d("Request %d is transient, %s", mJobId, request);
-                // not necessary to clean up, the JobManager will do this for transient jobs
+            } else if (request != null && request.isStarted()) {
+                mCat.d("Request %d already started, %s", mJobId, request);
+                // not necessary to clean up, the JobManager will do this for started jobs
                 return null;
 
             } else if (request == null) {
@@ -202,11 +202,11 @@ public interface JobProxy {
             Job job = null;
 
             try {
-                // create job first before setting it transient, avoids a race condition while rescheduling jobs
+                // create job first before setting it started, avoids a race condition while rescheduling jobs
                 job = mJobManager.getJobCreatorHolder().createJob(request.getTag());
 
                 if (!request.isPeriodic()) {
-                    request.setTransient(true);
+                    request.setStarted(true);
                 }
 
                 Future<Job.Result> future = jobExecutor.execute(mContext, request, job);

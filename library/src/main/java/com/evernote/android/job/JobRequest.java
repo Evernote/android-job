@@ -29,6 +29,7 @@ import android.app.AlarmManager;
 import android.app.Service;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -118,7 +119,7 @@ public final class JobRequest {
 
     private int mFailureCount;
     private long mScheduledAt;
-    private boolean mTransient;
+    private boolean mStarted;
     private boolean mFlexSupport;
     private long mLastRun;
 
@@ -318,16 +319,16 @@ public final class JobRequest {
     }
 
     /**
-     * Only non-periodic jobs can be in a transient state. The transient state means, that
-     * the job is running and is about to be removed. A job can get stuck in a transient state,
+     * Only non-periodic jobs can be in a started state. The started state means, that
+     * the job is running and is about to be removed. A job can get stuck in a started state,
      * if the app terminates while the job is running. Then the job isn't scheduled anymore, but
      * the entry is still in the database. Since the job didn't finish successfully, reschedule
      * the job if necessary and treat it as it wouldn't have run, yet.
      *
-     * @return Whether the job is in a transient state.
+     * @return Whether the job is in a started state.
      */
-    /*package*/ boolean isTransient() {
-        return mTransient;
+    /*package*/ boolean isStarted() {
+        return mStarted;
     }
 
     /*package*/ boolean isFlexSupport() {
@@ -346,6 +347,35 @@ public final class JobRequest {
      */
     public long getLastRun() {
         return mLastRun;
+    }
+
+    /**
+     * Returns whether this is a transient jobs. <b>WARNING:</b> It's not guaranteed that a transient job
+     * will run at all, e.g. rebooting the device or force closing the app will cancel the
+     * job.
+     *
+     * @return If this is a transient job.
+     */
+    public boolean isTransient() {
+        return mBuilder.mTransient;
+    }
+
+    /**
+     * Returns the transient extras you passed in when constructing this job with
+     * {@link Builder#setTransientExtras(Bundle)}. <b>WARNING:</b> It's not guaranteed that a transient job
+     * will run at all, e.g. rebooting the device or force closing the app will cancel the
+     * job.
+     *
+     * <br>
+     * <br>
+     *
+     * This will never be {@code null}. If you did not set any extras this will be an empty bundle.
+     *
+     * @return The transient extras you passed in when constructing this job.
+     */
+    @NonNull
+    public Bundle getTransientExtras() {
+        return new Bundle(); // TODO
     }
 
     /**
@@ -370,7 +400,7 @@ public final class JobRequest {
     public Builder cancelAndEdit() {
         JobManager.instance().cancel(getJobId());
         Builder builder = new Builder(this.mBuilder);
-        mTransient = false;
+        mStarted = false;
 
         if (!isPeriodic()) {
             long offset = System.currentTimeMillis() - mScheduledAt;
@@ -403,10 +433,10 @@ public final class JobRequest {
         JobManager.instance().getJobStorage().update(this, contentValues);
     }
 
-    /*package*/ void setTransient(boolean isTransient) {
-        mTransient = isTransient;
+    /*package*/ void setStarted(boolean started) {
+        mStarted = started;
         ContentValues contentValues = new ContentValues();
-        contentValues.put(JobStorage.COLUMN_TRANSIENT, mTransient);
+        contentValues.put(JobStorage.COLUMN_STARTED, mStarted);
         JobManager.instance().getJobStorage().update(this, contentValues);
     }
 
@@ -415,7 +445,7 @@ public final class JobRequest {
         mBuilder.fillContentValues(contentValues);
         contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mFailureCount);
         contentValues.put(JobStorage.COLUMN_SCHEDULED_AT, mScheduledAt);
-        contentValues.put(JobStorage.COLUMN_TRANSIENT, mTransient);
+        contentValues.put(JobStorage.COLUMN_STARTED, mStarted);
         contentValues.put(JobStorage.COLUMN_FLEX_SUPPORT, mFlexSupport);
         contentValues.put(JobStorage.COLUMN_LAST_RUN, mLastRun);
         return contentValues;
@@ -425,7 +455,7 @@ public final class JobRequest {
         JobRequest request = new Builder(cursor).build();
         request.mFailureCount = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_NUM_FAILURES));
         request.mScheduledAt = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_SCHEDULED_AT));
-        request.mTransient = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_TRANSIENT)) > 0;
+        request.mStarted = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_STARTED)) > 0;
         request.mFlexSupport = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_FLEX_SUPPORT)) > 0;
         request.mLastRun = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_LAST_RUN));
 
@@ -486,6 +516,9 @@ public final class JobRequest {
 
         private boolean mUpdateCurrent;
 
+        private boolean mTransient;
+        private Bundle mTransientExtras;
+
         /**
          * Creates a new instance to build a {@link JobRequest}. Note that the {@code tag} doesn't
          * need to be unique. Each created request has an unique ID to differentiate between jobs
@@ -543,6 +576,7 @@ public final class JobRequest {
             }
 
             mExtrasXml = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_EXTRAS));
+            mTransient = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_TRANSIENT)) > 0;
         }
 
         // copy constructor
@@ -573,6 +607,7 @@ public final class JobRequest {
             mExtrasXml = builder.mExtrasXml;
 
             mUpdateCurrent = builder.mUpdateCurrent;
+            mTransient = builder.mTransient;
         }
 
         private void fillContentValues(ContentValues contentValues) {
@@ -599,7 +634,8 @@ public final class JobRequest {
             } else if (!TextUtils.isEmpty(mExtrasXml)) {
                 contentValues.put(JobStorage.COLUMN_EXTRAS, mExtrasXml);
             }
-            contentValues.put(JobStorage.COLUMN_PERSISTED, true);
+
+            contentValues.put(JobStorage.COLUMN_TRANSIENT, mTransient);
         }
 
         /**
@@ -890,6 +926,25 @@ public final class JobRequest {
          */
         public Builder setUpdateCurrent(boolean updateCurrent) {
             mUpdateCurrent = updateCurrent;
+            return this;
+        }
+
+        /**
+         * Set optional transient extras. <b>WARNING:</b> It's not guaranteed that a transient job will
+         * run at all, e.g. rebooting the device or force closing the app will cancel the job. This is
+         * only helpful for jobs which should start soon and can be cancelled automatically.
+         *
+         * <br>
+         * <br>
+         *
+         * If the passed in bundle is {@code null}, then the previous extras are reset to the default
+         * and the job won't be transient.
+         *
+         * @param extras  Bundle containing extras you want the scheduler to hold on to for you.
+         */
+        public Builder setTransientExtras(@Nullable Bundle extras) {
+            mTransient = extras != null;
+            mTransientExtras = extras;
             return this;
         }
 

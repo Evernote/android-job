@@ -48,7 +48,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
     }
 
     @Test
-    public void testTransientState() throws Throwable {
+    public void testStartedState() throws Throwable {
         int jobId = DummyJobs.createBuilder(DummyJobs.TwoSecondPauseJob.class)
                 .setExecutionWindow(300_000, 400_000)
                 .build()
@@ -59,14 +59,14 @@ public class JobExecutionTest extends BaseJobManagerTest {
         // wait until the job is started
         Thread.sleep(100);
 
-        // request should be in transient state, running but not removed from DB
-        JobRequest transientRequest = manager().getJobRequest(jobId, true);
-        assertThat(transientRequest).isNotNull();
-        assertThat(transientRequest.isTransient()).isTrue();
+        // request should be in started state, running but not removed from DB
+        JobRequest startedRequest = manager().getJobRequest(jobId, true);
+        assertThat(startedRequest).isNotNull();
+        assertThat(startedRequest.isStarted()).isTrue();
     }
 
     @Test
-    public void testPeriodicJobNotInTransientState() throws Throwable {
+    public void testPeriodicJobNotInStartedState() throws Throwable {
         int jobId = DummyJobs.createBuilder(DummyJobs.TwoSecondPauseJob.class)
                 .setPeriodic(TimeUnit.MINUTES.toMillis(15))
                 .build()
@@ -77,9 +77,9 @@ public class JobExecutionTest extends BaseJobManagerTest {
         // wait until the job is started
         Thread.sleep(100);
 
-        // request should be in transient state, running but not removed from DB
-        JobRequest transientRequest = manager().getJobRequest(jobId, true);
-        assertThat(transientRequest).isNotNull();
-        assertThat(transientRequest.isTransient()).isFalse();
+        // request should be in started state, running but not removed from DB
+        JobRequest startedRequest = manager().getJobRequest(jobId, true);
+        assertThat(startedRequest).isNotNull();
+        assertThat(startedRequest.isStarted()).isFalse();
     }
 }

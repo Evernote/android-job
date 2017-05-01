@@ -201,9 +201,9 @@ public final class JobManager {
         return getJobRequest(jobId, false);
     }
 
-    /*package*/ JobRequest getJobRequest(int jobId, boolean includeTransient) {
+    /*package*/ JobRequest getJobRequest(int jobId, boolean includeStarted) {
         JobRequest jobRequest = mJobStorage.get(jobId);
-        if (!includeTransient && jobRequest != null && jobRequest.isTransient()) {
+        if (!includeStarted && jobRequest != null && jobRequest.isStarted()) {
             return null;
         } else {
             return jobRequest;
