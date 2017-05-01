@@ -27,51 +27,29 @@ android {
             signingConfig signingConfigs.debug
         }
 
-        /*
         gcm.initWith(buildTypes.debug)
         gcm {
             applicationIdSuffix ".gcm"
         }
-        */
-    }
-
-    flavorDimensions "gcm"
-
-    productFlavors {
-        withGcm {
-            dimension "gcm"
-            applicationId "com.evernote.android.job.demo.gcm"
-        }
-
-        withoutGcm {
-            dimension "gcm"
-        }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
     }
 
     lintOptions {
         abortOnError true
     }
-
-    variantFilter { variant ->
-        if (variant.buildType.name == 'release' && variant.flavors.get(0).name == "withoutGcm") {
-            variant.setIgnore(true)
-        }
-    }
 }
 
 dependencies {
-    implementation project(':library')
-    implementation 'net.vrallev.android:cat:1.0.5'
-    implementation "com.android.support:support-v4:$supportLibVersion"
-    implementation "com.android.support:appcompat-v7:$supportLibVersion"
-    implementation "com.facebook.stetho:stetho:$stethoVersion"
+    compile project(':library')
+    compile "com.android.support:support-v4:$supportLibVersion"
+    compile "com.android.support:appcompat-v7:$supportLibVersion"
+    compile "com.facebook.stetho:stetho:$stethoVersion"
 
-    withGcmImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
+    gcmCompile "com.google.android.gms:play-services-gcm:$playServicesVersion"
 }
 
 uploadArchives.enabled false

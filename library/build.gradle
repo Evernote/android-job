@@ -5,25 +5,24 @@ apply from: '../build-config/gradle-quality.gradle'
 archivesBaseName = 'android-job'
 
 dependencies {
-    compileOnly "com.google.android.gms:play-services-gcm:$playServicesVersion"
+    provided "com.google.android.gms:play-services-gcm:$playServicesVersion"
 
     //noinspection GradleDependency
-    compileOnly "com.android.support:support-annotations:$supportLibVersion"
-    implementation 'net.vrallev.android:cat:1.0.5'
+    compile "com.android.support:support-annotations:$supportLibVersion"
+    compile 'net.vrallev.android:cat:1.0.5'
 
-    androidTestImplementation 'com.android.support.test:runner:0.5'
-    androidTestImplementation 'com.android.support.test:rules:0.5'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
-    androidTestImplementation 'com.squareup.assertj:assertj-android:1.1.1'
-    androidTestImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
+    androidTestCompile 'com.squareup.assertj:assertj-android:1.1.1'
+    androidTestCompile "com.google.android.gms:play-services-gcm:$playServicesVersion"
 
-    androidTestImplementation "com.facebook.stetho:stetho:$stethoVersion"
+    androidTestCompile "com.facebook.stetho:stetho:$stethoVersion"
 
-    testImplementation "junit:junit:$junitVersion"
-    testImplementation "org.mockito:mockito-core:$mockitoVersion"
-    testImplementation "org.assertj:assertj-core:$assertjVersion"
-    testImplementation "org.robolectric:robolectric:$robolectricVersion"
-    testImplementation "com.android.support:support-v4:$supportLibVersion"
+    testCompile "junit:junit:$junitVersion"
+    testCompile "org.mockito:mockito-core:$mockitoVersion"
+    testCompile "org.assertj:assertj-core:$assertjVersion"
+    testCompile "org.robolectric:robolectric:$robolectricVersion"
 }
 
 android {
