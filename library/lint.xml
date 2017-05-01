@@ -12,4 +12,5 @@
     <issue id="Registered">
         <ignore path="src/main/java/com/evernote/android/job/gcm/PlatformGcmService.java"/>
     </issue>
+    <issue id="GradleDependency" severity="ignore"/>
 </lint>
