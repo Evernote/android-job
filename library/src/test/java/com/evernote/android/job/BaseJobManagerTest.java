@@ -10,6 +10,7 @@ import org.junit.Rule;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -50,23 +51,30 @@ public abstract class BaseJobManagerTest {
         }
     }
 
-    protected Future<Job.Result> executeJobAsync(int jobId, @NonNull final Job.Result expected) {
+    protected Future<Job.Result> executeJobAsync(int jobId, @NonNull final Job.Result expected) throws InterruptedException {
         final JobProxy.Common common = new JobProxy.Common(RuntimeEnvironment.application, TestCat.INSTANCE, jobId);
 
-        final JobRequest pendingRequest = common.getPendingRequest(true);
+        final JobRequest pendingRequest = common.getPendingRequest(true, true);
         assertThat(pendingRequest).isNotNull();
+
+        final CountDownLatch latch = new CountDownLatch(1);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<Job.Result> future = executor.submit(new Callable<Job.Result>() {
             @Override
             public Job.Result call() throws Exception {
+                latch.countDown();
+
                 Job.Result result = common.executeJobRequest(pendingRequest, null);
                 assertThat(result).isEqualTo(expected);
-                assertThat(common.getPendingRequest(true)).isNull();
+                assertThat(common.getPendingRequest(true, false)).isNull();
 
                 return result;
             }
         });
+
+        // wait until the thread actually started
+        assertThat(latch.await(3, TimeUnit.SECONDS)).isTrue();
 
         executor.shutdown();
         return future;

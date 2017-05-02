@@ -6,6 +6,10 @@
 * Add the `startNow()` method to run a job immediately
 * Remove the persisted parameter, which didn't work reliable. All jobs are persisted anyway.
 
+## 1.1.11
+
+* Fix a race condition when canceling jobs, see #178
+
 ## 1.1.10 (2017-04-29)
 
 * Fix a race condition when canceling jobs, see #178

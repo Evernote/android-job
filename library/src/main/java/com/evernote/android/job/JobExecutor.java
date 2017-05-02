@@ -61,13 +61,17 @@ import java.util.concurrent.TimeUnit;
     private final SparseArray<Job> mJobs; // only cached in memory, that's fine
     private final LruCache<Integer, Job> mFinishedJobsCache;
 
+    private final Set<JobRequest> mStartingRequests;
+
     public JobExecutor() {
         mExecutorService = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
         mJobs = new SparseArray<>();
         mFinishedJobsCache = new LruCache<>(20);
+        mStartingRequests = new HashSet<>();
     }
 
     public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @Nullable Job job, @NonNull Bundle transientExtras) {
+        mStartingRequests.remove(request);
         if (job == null) {
             CAT.w("JobCreator returned null for tag %s", request.getTag());
             return null;
@@ -112,6 +116,14 @@ import java.util.concurrent.TimeUnit;
         return result;
     }
 
+    public synchronized void markJobRequestStarting(@NonNull JobRequest request) {
+        mStartingRequests.add(request);
+    }
+
+    public synchronized boolean isRequestStarting(JobRequest request) {
+        return request != null && mStartingRequests.contains(request);
+    }
+
     private synchronized void markJobAsFinished(Job job) {
         int id = job.getParams().getId();
         mJobs.remove(id);
@@ -153,7 +165,7 @@ import java.util.concurrent.TimeUnit;
                 result = mJob.runJob();
                 CAT.i("Finished %s", mJob);
 
-                handleResult(result);
+                handleResult(mJob, result);
 
             } catch (Throwable t) {
                 CAT.e(t, "Crashed %s", mJob);
@@ -163,7 +175,7 @@ import java.util.concurrent.TimeUnit;
             return result;
         }
 
-        private void handleResult(Job.Result result) {
+        private void handleResult(Job job, Job.Result result) {
             JobRequest request = mJob.getParams().getRequest();
             boolean incFailureCount = false;
             boolean updateLastRun = false;
@@ -181,9 +193,12 @@ import java.util.concurrent.TimeUnit;
 
             }
 
-            if (incFailureCount || updateLastRun) {
-                //noinspection ConstantConditions
-                request.updateStats(incFailureCount, updateLastRun);
+            if (!job.isDeleted()) {
+                // otherwise it would be persisted again
+                if (incFailureCount || updateLastRun) {
+                    //noinspection ConstantConditions
+                    request.updateStats(incFailureCount, updateLastRun);
+                }
             }
         }
     }

@@ -64,6 +64,8 @@ public interface JobProxy {
     @SuppressWarnings("UnusedReturnValue")
     /*package*/ final class Common {
 
+        private static final Object COMMON_MONITOR = new Object();
+
         public static final ThreadFactory COMMON_THREAD_FACTORY = new ThreadFactory() {
 
             private final AtomicInteger mThreadNumber = new AtomicInteger();
@@ -145,41 +147,51 @@ public interface JobProxy {
             mJobManager = JobManager.create(context);
         }
 
-        public JobRequest getPendingRequest(@SuppressWarnings("SameParameterValue") boolean cleanUpOrphanedJob) {
-            // order is important for logging purposes
-            JobRequest request = mJobManager.getJobRequest(mJobId, true);
-            Job job = mJobManager.getJob(mJobId);
-            boolean periodic = request != null && request.isPeriodic();
+        public JobRequest getPendingRequest(@SuppressWarnings("SameParameterValue") boolean cleanUpOrphanedJob, boolean markStarting) {
+            synchronized (COMMON_MONITOR) {
+                // order is important for logging purposes
+                JobRequest request = mJobManager.getJobRequest(mJobId, true);
+                Job job = mJobManager.getJob(mJobId);
+                boolean periodic = request != null && request.isPeriodic();
 
-            if (job != null && !job.isFinished()) {
-                // that's probably a platform bug http://stackoverflow.com/questions/33235754/jobscheduler-posting-jobs-twice-not-expected
-                mCat.d("Job %d is already running, %s", mJobId, request);
-                // not necessary to clean up, the running instance will do that
-                return null;
+                if (job != null && !job.isFinished()) {
+                    // that's probably a platform bug http://stackoverflow.com/questions/33235754/jobscheduler-posting-jobs-twice-not-expected
+                    mCat.d("Job %d is already running, %s", mJobId, request);
+                    // not necessary to clean up, the running instance will do that
+                    return null;
 
-            } else if (job != null && !periodic) {
-                mCat.d("Job %d already finished, %s", mJobId, request);
-                cleanUpOrphanedJob(cleanUpOrphanedJob);
-                return null;
+                } else if (job != null && !periodic) {
+                    mCat.d("Job %d already finished, %s", mJobId, request);
+                    cleanUpOrphanedJob(cleanUpOrphanedJob);
+                    return null;
 
-            } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < 2_000) {
-                // that's probably a platform bug http://stackoverflow.com/questions/33235754/jobscheduler-posting-jobs-twice-not-expected
-                mCat.d("Job %d is periodic and just finished, %s", mJobId, request);
-                // don't clean up, periodic job
-                return null;
+                } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < 2_000) {
+                    // that's probably a platform bug http://stackoverflow.com/questions/33235754/jobscheduler-posting-jobs-twice-not-expected
+                    mCat.d("Job %d is periodic and just finished, %s", mJobId, request);
+                    // don't clean up, periodic job
+                    return null;
 
-            } else if (request != null && request.isStarted()) {
-                mCat.d("Request %d already started, %s", mJobId, request);
-                // not necessary to clean up, the JobManager will do this for started jobs
-                return null;
+                } else if (request != null && request.isStarted()) {
+                    mCat.d("Request %d already started, %s", mJobId, request);
+                    // not necessary to clean up, the JobManager will do this for started jobs
+                    return null;
 
-            } else if (request == null) {
-                mCat.d("Request for ID %d was null", mJobId);
-                cleanUpOrphanedJob(cleanUpOrphanedJob);
-                return null;
+                } else if (request != null && mJobManager.getJobExecutor().isRequestStarting(request)) {
+                    mCat.d("Request %d is in the queue to start, %s", mJobId, request);
+                    return null;
+
+                } else if (request == null) {
+                    mCat.d("Request for ID %d was null", mJobId);
+                    cleanUpOrphanedJob(cleanUpOrphanedJob);
+                    return null;
+                }
+
+                if (markStarting) {
+                    mJobManager.getJobExecutor().markJobRequestStarting(request);
+                }
+
+                return request;
             }
-
-            return request;
         }
 
         @NonNull

@@ -341,7 +341,7 @@ public final class JobManager {
     private boolean cancelInner(@Nullable Job job) {
         if (job != null && !job.isFinished() && !job.isCanceled()) {
             CAT.i("Cancel running %s", job);
-            job.cancel();
+            job.cancel(true);
             return true;
         } else {
             return false;
