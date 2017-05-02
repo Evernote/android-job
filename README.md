@@ -16,6 +16,8 @@ If you didn't turn off the manifest merger from the Gradle build tools, then no 
 
 You can read the [JavaDoc here](https://evernote.github.io/android-job/javadoc/).
 
+Testing Android O? You can give version `1.2.0` a try. You find the instruction in the [wiki](https://github.com/evernote/android-job/wiki/Version-1.2.0-and-Android-O).
+
 ## Usage
 
 The class `JobManager` serves as entry point. Your jobs need to extend the class `Job`. Create a `JobRequest` with the corresponding builder class and schedule this request with the `JobManager`.
