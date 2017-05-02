@@ -74,6 +74,7 @@ public abstract class Job {
     private Context mApplicationContext;
 
     private boolean mCanceled;
+    private boolean mDeleted;
     private long mFinishedTimeStamp = -1;
 
     private Result mResult = Result.FAILURE;
@@ -227,8 +228,13 @@ public abstract class Job {
      * Cancel this {@link Job} if it hasn't finished, yet.
      */
     public final void cancel() {
+        cancel(false);
+    }
+
+    /*package*/ final void cancel(boolean deleted) {
         if (!isFinished()) {
             mCanceled = true;
+            mDeleted = deleted;
         }
     }
 
@@ -252,6 +258,10 @@ public abstract class Job {
 
     /*package*/ final Result getResult() {
         return mResult;
+    }
+
+    /*package*/ final boolean isDeleted() {
+        return mDeleted;
     }
 
     /**

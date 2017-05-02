@@ -116,7 +116,7 @@ public final class PlatformAlarmService extends Service {
         final JobProxy.Common common = new JobProxy.Common(this, CAT, jobId);
 
         // create the JobManager. Seeing sometimes exceptions, that it wasn't created, yet.
-        final JobRequest request = common.getPendingRequest(true);
+        final JobRequest request = common.getPendingRequest(true, true);
         if (request != null) {
             common.executeJobRequest(request);
         }

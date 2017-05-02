@@ -2,12 +2,15 @@ package com.evernote.android.job;
 
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
+import com.evernote.android.job.test.TestCat;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.robolectric.RuntimeEnvironment;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -82,5 +85,71 @@ public class JobExecutionTest extends BaseJobManagerTest {
         JobRequest transientRequest = manager().getJobRequest(jobId, true);
         assertThat(transientRequest).isNotNull();
         assertThat(transientRequest.isTransient()).isFalse();
+    }
+
+    @Test
+    public void verifyNoRaceConditionOneOff() throws Exception {
+        final int jobId = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExecutionWindow(TimeUnit.MINUTES.toMillis(15), TimeUnit.MINUTES.toMillis(20))
+                .build()
+                .schedule();
+
+        final JobProxy.Common common = new JobProxy.Common(RuntimeEnvironment.application, TestCat.INSTANCE, jobId);
+        final JobRequest request = common.getPendingRequest(true, true);
+        assertThat(request).isNotNull();
+
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ignored) {
+                }
+
+                common.executeJobRequest(request);
+                latch.countDown();
+            }
+        }.start();
+
+        assertThat(common.getPendingRequest(true, false)).isNull();
+        assertThat(latch.await(3, TimeUnit.SECONDS)).isTrue();
+
+        Thread.sleep(2_000);
+        assertThat(common.getPendingRequest(true, false)).isNull();
+    }
+
+    @Test
+    public void verifyNoRaceConditionPeriodic() throws Exception {
+        final int jobId = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setPeriodic(TimeUnit.MINUTES.toMillis(15))
+                .build()
+                .schedule();
+
+        final JobProxy.Common common = new JobProxy.Common(RuntimeEnvironment.application, TestCat.INSTANCE, jobId);
+        final JobRequest request = common.getPendingRequest(true, true);
+        assertThat(request).isNotNull();
+
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ignored) {
+                }
+
+                common.executeJobRequest(request);
+                latch.countDown();
+            }
+        }.start();
+
+        assertThat(common.getPendingRequest(true, false)).isNull();
+        assertThat(latch.await(3, TimeUnit.SECONDS)).isTrue();
+
+        Thread.sleep(2_000);
+        assertThat(common.getPendingRequest(true, false)).isNotNull();
     }
 }
