@@ -951,7 +951,7 @@ public final class JobRequest {
          */
         public Builder setTransientExtras(@Nullable Bundle extras) {
             mTransient = extras != null && !extras.isEmpty();
-            mTransientExtras = extras != null ? extras : Bundle.EMPTY;
+            mTransientExtras = mTransient ? new Bundle(extras) : Bundle.EMPTY;
             return this;
         }
 

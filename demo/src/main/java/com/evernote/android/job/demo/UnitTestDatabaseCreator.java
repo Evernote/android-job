@@ -1,7 +1,5 @@
 package com.evernote.android.job.demo;
 
-import android.os.Bundle;
-
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
@@ -33,7 +31,7 @@ public final class UnitTestDatabaseCreator {
     }
 
     public void createV5() {
-        createJobs(new DummyJobCreatorV5());
+        createJobs(new DummyJobCreatorV3());
     }
 
     private void createJobs(DummyJobCreator creator) {
@@ -119,73 +117,6 @@ public final class UnitTestDatabaseCreator {
                         .setRequiresDeviceIdle(random())
                         .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
                         .setRequirementsEnforced(random());
-
-                if (random()) {
-                    PersistableBundleCompat extras = new PersistableBundleCompat();
-                    extras.putString("key", "Hello world");
-                    builder.setExtras(extras);
-                }
-                if (random()) {
-                    builder.setPeriodic(JobRequest.MIN_INTERVAL);
-                } else {
-                    builder.setPeriodic(JobRequest.MIN_INTERVAL, JobRequest.MIN_FLEX);
-                }
-
-                builder.build().schedule();
-            }
-        }
-    }
-
-    private static class DummyJobCreatorV5 implements DummyJobCreator {
-        @Override
-        public void createOneOff() {
-            for (int i = 0; i < 10; i++) {
-                JobRequest.Builder builder = new JobRequest.Builder("tag")
-                        .setExecutionWindow(300_000, 400_000)
-                        .setBackoffCriteria(5_000L, random() ? JobRequest.BackoffPolicy.EXPONENTIAL : JobRequest.BackoffPolicy.LINEAR)
-                        .setRequiresCharging(random())
-                        .setRequiresDeviceIdle(random())
-                        .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
-                        .setRequirementsEnforced(random())
-                        .setTransientExtras(random() ? null : new Bundle());
-
-                if (random()) {
-                    PersistableBundleCompat extras = new PersistableBundleCompat();
-                    extras.putString("key", "Hello world");
-                    builder.setExtras(extras);
-                }
-
-                builder.build().schedule();
-            }
-        }
-
-        @Override
-        public void createExact() {
-            for (int i = 0; i < 10; i++) {
-                JobRequest.Builder builder = new JobRequest.Builder("tag")
-                        .setExact(400_000)
-                        .setBackoffCriteria(5_000L, random() ? JobRequest.BackoffPolicy.EXPONENTIAL : JobRequest.BackoffPolicy.LINEAR)
-                        .setTransientExtras(random() ? null : new Bundle());
-
-                if (random()) {
-                    PersistableBundleCompat extras = new PersistableBundleCompat();
-                    extras.putString("key", "Hello world");
-                    builder.setExtras(extras);
-                }
-
-                builder.build().schedule();
-            }
-        }
-
-        @Override
-        public void createPeriodic() {
-            for (int i = 0; i < 10; i++) {
-                JobRequest.Builder builder = new JobRequest.Builder("tag")
-                        .setRequiresCharging(random())
-                        .setRequiresDeviceIdle(random())
-                        .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
-                        .setRequirementsEnforced(random())
-                        .setTransientExtras(random() ? null : new Bundle());
 
                 if (random()) {
                     PersistableBundleCompat extras = new PersistableBundleCompat();

@@ -70,7 +70,7 @@ public class PlatformJobService extends JobService {
             if (TransientBundleCompat.startWithTransientBundle(this, request)) {
                 if (Device.isAtLeastO()) {
                     // should only happen during testing if an API is disabled
-                    Cat.d("PendingIntent for transient bundle is not null although running on O, using compat mode");
+                    Cat.d("PendingIntent for transient bundle is not null although running on O, using compat mode, request %s", request);
                 }
                 return false;
 
@@ -112,6 +112,7 @@ public class PlatformJobService extends JobService {
         return false;
     }
 
+    @TargetApi(Build.VERSION_CODES.O)
     private Bundle getTransientBundle(JobParameters params) {
         if (Device.isAtLeastO()) {
             return params.getTransientExtras();

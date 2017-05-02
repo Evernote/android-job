@@ -7,7 +7,6 @@ import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,13 +20,16 @@ import static org.junit.Assume.assumeTrue;
 /**
  * @author rwondratschek
  */
+@SuppressWarnings("SameParameterValue")
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class TransientBundleTest {
+public class TransientBundleRescheduleTest {
 
     private JobManager mManager;
 
-    private TestJob mJob;
+    private CountDownLatch mLatch;
+    private Job.Params mParams;
+    private int mCount;
 
     @Rule
     public JobManagerRule mJobManagerRule = new JobManagerRule();
@@ -36,80 +38,24 @@ public class TransientBundleTest {
     public void prepare() {
         mManager = mJobManagerRule.getManager();
         mManager.addJobCreator(new TestJobCreator());
+        mLatch = new CountDownLatch(1);
     }
 
     @Test
-    public void testApi14() throws Exception {
-        testOneOff(JobApi.V_14);
-    }
-
-    @Test
-    public void testApi19() throws Exception {
-        testOneOff(JobApi.V_19);
-    }
-
-    @Test
-    @Ignore
-    public void testApiGcm() throws Exception {
-        testOneOff(JobApi.GCM, 60, TimeUnit.SECONDS);
-    }
-
-    @Test
-    public void testApi21() throws Exception {
-        testOneOff(JobApi.V_21);
-    }
-
-    @Test
-    public void testApi24() throws Exception {
-        testOneOff(JobApi.V_24);
-    }
-
-    @Test
-    public void testApi26() throws Exception {
-        testOneOff(JobApi.V_26);
-    }
-
-    @Test
-    public void testExact() throws Exception {
-        mJob = new TestJob();
-
-        new JobRequest.Builder("tag")
-                .setExact(1_000)
-                .setTransientExtras(createTransientBundle())
-                .build()
-                .schedule();
-
-        mJob.verifyJob(12, TimeUnit.SECONDS);
-    }
-
-    @Test
-    public void testStartNow() throws Exception {
-        mJob = new TestJob();
-
-        new JobRequest.Builder("tag")
-                .startNow()
-                .setTransientExtras(createTransientBundle())
-                .build()
-                .schedule();
-
-        mJob.verifyJob(3, TimeUnit.SECONDS);
-    }
-
-    private void testOneOff(JobApi api) throws Exception {
-        testOneOff(api, 15, TimeUnit.SECONDS);
+    public void testRescheduleHasTransientBundle() throws Exception {
+        testOneOff(JobApi.V_21, 30, TimeUnit.SECONDS);
     }
 
     private void testOneOff(JobApi api, long wait, TimeUnit timeUnit) throws Exception {
-        mJob = new TestJob();
-
         // ignore test if not supported
         assumeTrue(api.isSupported(InstrumentationRegistry.getTargetContext()));
 
         JobConfig.forceApi(api);
 
         int jobId = new JobRequest.Builder("tag")
-                .setExecutionWindow(1_000, 2_000)
+                .setExecutionWindow(500, 1_000)
                 .setTransientExtras(createTransientBundle())
+                .setBackoffCriteria(500, JobRequest.BackoffPolicy.LINEAR)
                 .build()
                 .schedule();
 
@@ -119,37 +65,36 @@ public class TransientBundleTest {
         boolean scheduled = api.getProxy(InstrumentationRegistry.getContext()).isPlatformJobScheduled(request);
         assertThat(scheduled).isTrue();
 
-        mJob.verifyJob(wait, timeUnit);
+        assertThat(mLatch.await(wait, timeUnit)).isTrue();
+
+        Bundle extras = mParams.getTransientExtras();
+        assertThat(extras).isNotNull();
+        assertThat(extras.getString("Key")).isEqualTo("Value");
     }
 
     private final class TestJob extends Job {
 
-        private final CountDownLatch mLatch = new CountDownLatch(1);
-
-        private Params mParams;
-
         @NonNull
         @Override
         protected Result onRunJob(Params params) {
-            mParams = params;
-
-            mLatch.countDown();
-            return Result.SUCCESS;
-        }
-
-        private void verifyJob(long wait, TimeUnit timeUnit) throws InterruptedException {
-            assertThat(mJob.mLatch.await(wait, timeUnit)).isTrue();
-
-            Bundle extras = mParams.getTransientExtras();
+            Bundle extras = params.getTransientExtras();
             assertThat(extras).isNotNull();
             assertThat(extras.getString("Key")).isEqualTo("Value");
+
+            if (++mCount < 3) {
+                return Result.RESCHEDULE;
+            }
+
+            mParams = params;
+            mLatch.countDown();
+            return Result.SUCCESS;
         }
     }
 
     private final class TestJobCreator implements JobCreator {
         @Override
         public Job create(String tag) {
-            return mJob;
+            return new TestJob();
         }
     }
 

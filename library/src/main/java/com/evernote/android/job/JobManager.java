@@ -44,6 +44,7 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 
 import net.vrallev.android.cat.CatLog;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -198,7 +199,13 @@ public final class JobManager {
      * @return The {@link JobRequest} if it's pending or {@code null} otherwise.
      */
     public JobRequest getJobRequest(int jobId) {
-        return getJobRequest(jobId, false);
+        JobRequest request = getJobRequest(jobId, false);
+        if (request != null && request.isTransient() && !request.getJobApi().getProxy(mContext).isPlatformJobScheduled(request)) {
+            getJobStorage().remove(request);
+            return null;
+        } else {
+            return request;
+        }
     }
 
     /*package*/ JobRequest getJobRequest(int jobId, boolean includeStarted) {
@@ -218,7 +225,7 @@ public final class JobManager {
      */
     @NonNull
     public Set<JobRequest> getAllJobRequests() {
-        return mJobStorage.getAllJobRequests(null, false);
+        return getAllJobRequests(null, false, true);
     }
 
     /**
@@ -228,7 +235,24 @@ public final class JobManager {
      * direct effects to the actual backing store.
      */
     public Set<JobRequest> getAllJobRequestsForTag(@NonNull String tag) {
-        return mJobStorage.getAllJobRequests(tag, false);
+        return getAllJobRequests(tag, false, true);
+    }
+
+    /*package*/ Set<JobRequest> getAllJobRequests(@Nullable String tag, boolean includeStarted, boolean cleanUpTransient) {
+        Set<JobRequest> requests = mJobStorage.getAllJobRequests(tag, includeStarted);
+
+        if (cleanUpTransient) {
+            Iterator<JobRequest> iterator = requests.iterator();
+            while (iterator.hasNext()) {
+                JobRequest request = iterator.next();
+                if (request.isTransient() && !request.getJobApi().getProxy(mContext).isPlatformJobScheduled(request)) {
+                    mJobStorage.remove(request);
+                    iterator.remove();
+                }
+            }
+        }
+
+        return requests;
     }
 
     /**
@@ -327,7 +351,7 @@ public final class JobManager {
     private synchronized int cancelAllInner(@Nullable String tag) {
         int canceled = 0;
 
-        Set<JobRequest> requests = mJobStorage.getAllJobRequests(tag, true);
+        Set<JobRequest> requests = getAllJobRequests(tag, true, false);
         for (JobRequest request : requests) {
             if (cancelInner(request)) {
                 canceled++;

@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
  *
  * Created by rwondratschek on 01.05.17.
  */
-/*package*/ class TransientBundleCompat {
+/*package*/ final class TransientBundleCompat {
 
     private static final JobCat CAT = new JobCat("TransientBundleCompat");
 

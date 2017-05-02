@@ -12,6 +12,7 @@ import com.evernote.android.job.v14.PlatformAlarmService;
 import com.evernote.android.job.v21.PlatformJobService;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,6 +54,7 @@ public class PlatformTest {
     }
 
     @Test
+    @Ignore
     public void testApiGcm() throws Exception {
         testOneOff(JobApi.GCM, 60, TimeUnit.SECONDS);
     }
@@ -77,11 +79,11 @@ public class PlatformTest {
         mJob = new TestJob(PlatformAlarmService.class);
 
         new JobRequest.Builder("tag")
-                .setExact(2_000)
+                .setExact(1_000)
                 .build()
                 .schedule();
 
-        mJob.verifyJob(6, TimeUnit.SECONDS);
+        mJob.verifyJob(12, TimeUnit.SECONDS);
     }
 
     @Test
@@ -97,7 +99,7 @@ public class PlatformTest {
     }
 
     private void testOneOff(JobApi api) throws Exception {
-        testOneOff(api, 10, TimeUnit.SECONDS);
+        testOneOff(api, 15, TimeUnit.SECONDS);
     }
 
     private void testOneOff(JobApi api, long wait, TimeUnit timeUnit) throws Exception {
@@ -124,7 +126,7 @@ public class PlatformTest {
         JobConfig.forceApi(api);
 
         int jobId = new JobRequest.Builder("tag")
-                .setExecutionWindow(2_000, 3_000)
+                .setExecutionWindow(1_000, 2_000)
                 .build()
                 .schedule();
 

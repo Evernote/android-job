@@ -194,12 +194,12 @@ public class DatabaseManualUpgradeTest {
 
         jobRequest.setStarted(true);
         assertThat(JobManager.instance().getAllJobRequests()).isEmpty();
-        assertThat(JobManager.instance().getJobStorage().getAllJobRequests(null, true)).hasSize(1);
+        assertThat(JobManager.instance().getAllJobRequests(null, true, true)).hasSize(1);
 
         JobManager.instance().cancelAll();
 
         assertThat(JobManager.instance().getAllJobRequests()).isEmpty();
-        assertThat(JobManager.instance().getJobStorage().getAllJobRequests(null, true)).isEmpty();
+        assertThat(JobManager.instance().getAllJobRequests(null, true, true)).isEmpty();
 
         JobManager.instance().destroy();
     }

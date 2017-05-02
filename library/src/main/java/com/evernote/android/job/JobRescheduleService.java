@@ -9,6 +9,7 @@ import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.CatLog;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -41,33 +42,41 @@ public final class JobRescheduleService extends IntentService {
             SystemClock.sleep(10_000L);
 
             JobManager manager = JobManager.create(this);
-            Set<JobRequest> requests = manager.getJobStorage().getAllJobRequests(null, true);
+            Set<JobRequest> requests = manager.getAllJobRequests(null, true, true);
 
-            int rescheduledCount = 0;
-            for (JobRequest request : requests) {
-                boolean reschedule;
-                if (request.isStarted()) {
-                    Job job = manager.getJob(request.getJobId());
-                    reschedule = job == null;
-                } else {
-                    reschedule = !manager.getJobProxy(request).isPlatformJobScheduled(request);
-                }
-
-                if (reschedule) {
-                    // update execution window
-                    request.cancelAndEdit()
-                            .build()
-                            .schedule();
-
-                    rescheduledCount++;
-                }
-            }
+            int rescheduledCount = rescheduleJobs(manager, requests);
 
             CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
 
         } finally {
             WakeLockUtil.completeWakefulIntent(intent);
         }
+    }
 
+    /*package*/ int rescheduleJobs(JobManager manager) {
+        return rescheduleJobs(manager, manager.getAllJobRequests(null, true, true));
+    }
+
+    /*package*/ int rescheduleJobs(JobManager manager, Collection<JobRequest> requests) {
+        int rescheduledCount = 0;
+        for (JobRequest request : requests) {
+            boolean reschedule;
+            if (request.isStarted()) {
+                Job job = manager.getJob(request.getJobId());
+                reschedule = job == null;
+            } else {
+                reschedule = !manager.getJobProxy(request).isPlatformJobScheduled(request);
+            }
+
+            if (reschedule) {
+                // update execution window
+                request.cancelAndEdit()
+                        .build()
+                        .schedule();
+
+                rescheduledCount++;
+            }
+        }
+        return rescheduledCount;
     }
 }
