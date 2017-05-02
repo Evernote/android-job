@@ -107,7 +107,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
                 } catch (InterruptedException ignored) {
                 }
 
-                common.executeJobRequest(request);
+                common.executeJobRequest(request, null);
                 latch.countDown();
             }
         }.start();
@@ -140,7 +140,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
                 } catch (InterruptedException ignored) {
                 }
 
-                common.executeJobRequest(request);
+                common.executeJobRequest(request, null);
                 latch.countDown();
             }
         }.start();
@@ -150,5 +150,24 @@ public class JobExecutionTest extends BaseJobManagerTest {
 
         Thread.sleep(2_000);
         assertThat(common.getPendingRequest(true, false)).isNotNull();
+    }
+
+    @Test
+    public void verifyPendingRequestNullWhenMarkedStated() {
+        final int jobId = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setPeriodic(TimeUnit.MINUTES.toMillis(15))
+                .build()
+                .schedule();
+
+        final JobProxy.Common common = new JobProxy.Common(RuntimeEnvironment.application, TestCat.INSTANCE, jobId);
+
+        assertThat(common.getPendingRequest(true, false)).isNotNull();
+        assertThat(common.getPendingRequest(true, false)).isNotNull();
+
+        JobRequest request = common.getPendingRequest(true, false);
+        assertThat(request).isNotNull();
+
+        common.markStarting(request);
+        assertThat(common.getPendingRequest(true, false)).isNull();
     }
 }

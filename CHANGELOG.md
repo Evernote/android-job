@@ -5,6 +5,7 @@
 * Remove deprecated methods
 * Add the `startNow()` method to run a job immediately
 * Remove the persisted parameter, which didn't work reliable. All jobs are persisted anyway.
+* Add feature to make jobs transient and to add a `Bundle`, see `setTransientExtras(bundle)`
 
 ## 1.1.11
 

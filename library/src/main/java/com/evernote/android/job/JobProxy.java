@@ -187,11 +187,15 @@ public interface JobProxy {
                 }
 
                 if (markStarting) {
-                    mJobManager.getJobExecutor().markJobRequestStarting(request);
+                    markStarting(request);
                 }
 
                 return request;
             }
+        }
+
+        public void markStarting(@NonNull JobRequest request) {
+            mJobManager.getJobExecutor().markJobRequestStarting(request);
         }
 
         @NonNull

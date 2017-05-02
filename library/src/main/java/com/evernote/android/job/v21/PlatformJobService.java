@@ -61,7 +61,8 @@ public class PlatformJobService extends JobService {
         final int jobId = params.getJobId();
         final JobProxy.Common common = new JobProxy.Common(this, CAT, jobId);
 
-        final JobRequest request = common.getPendingRequest(true, true);
+        // don't mark starting!
+        final JobRequest request = common.getPendingRequest(true, false);
         if (request == null) {
             return false;
         }
@@ -79,6 +80,8 @@ public class PlatformJobService extends JobService {
                 return false;
             }
         }
+
+        common.markStarting(request);
 
         EXECUTOR_SERVICE.execute(new Runnable() {
             @Override
