@@ -65,6 +65,9 @@ public final class JobRescheduleService extends IntentService {
 
             CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
 
+        } catch (Exception ignore) {
+            // IllegalArgumentException No such service ComponentInfo
+            // JobService component disabled by third party app on rooted devices
         } finally {
             WakeLockUtil.completeWakefulIntent(intent);
         }
