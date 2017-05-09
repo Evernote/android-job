@@ -104,7 +104,7 @@ public enum JobApi {
     public boolean isSupported(Context context) {
         switch (this) {
             case V_26:
-                return Device.isAtLeastO();
+                return Device.isAtLeastO() && isServiceEnabled(context, PlatformJobService.class);
             case V_24:
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isServiceEnabled(context, PlatformJobService.class);
             case V_21:

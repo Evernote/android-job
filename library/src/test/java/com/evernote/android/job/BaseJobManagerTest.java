@@ -1,6 +1,9 @@
 package com.evernote.android.job;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.test.DummyJobs;
@@ -9,6 +12,7 @@ import com.evernote.android.job.test.TestCat;
 import org.junit.Rule;
 import org.robolectric.RuntimeEnvironment;
 
+import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -17,7 +21,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 /**
  * @author rwondratschek
@@ -40,7 +49,15 @@ public abstract class BaseJobManagerTest {
 
     @NonNull
     protected final Context context() {
-        return RuntimeEnvironment.application;
+        // otherwise the JobScheduler isn't supported we check if the service is enable
+        // Robolectric doesn't parse services from the manifest, see https://github.com/robolectric/robolectric/issues/416
+        PackageManager packageManager = mock(PackageManager.class);
+        when(packageManager.queryIntentServices(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
+
+        Context context = spy(RuntimeEnvironment.application);
+        when(context.getPackageManager()).thenReturn(packageManager);
+
+        return context;
     }
 
     protected void executeJob(int jobId, @NonNull Job.Result expected) {
