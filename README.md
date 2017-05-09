@@ -1,6 +1,6 @@
 # Android-Job
 
-An utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post](https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/) or in [these slides](https://speakerdeck.com/vrallev/scheduling-background-job-on-android-at-the-right-time-1) why you should prefer this library than each separate API. All features from Android Nougat are backward compatible.
+A utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post](https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/) or in [these slides](https://speakerdeck.com/vrallev/scheduling-background-job-on-android-at-the-right-time-1) why you should prefer this library than each separate API. All features from Android Nougat are backward compatible.
 
 ## Download
 
@@ -15,6 +15,8 @@ dependencies {
 If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest](library/src/main/AndroidManifest.xml).
 
 You can read the [JavaDoc here](https://evernote.github.io/android-job/javadoc/).
+
+Testing Android O? You can give version `1.2.0` a try. You find the instruction in the [wiki](https://github.com/evernote/android-job/wiki/Version-1.2.0-and-Android-O).
 
 ## Usage
 
