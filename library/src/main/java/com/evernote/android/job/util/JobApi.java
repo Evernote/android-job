@@ -26,8 +26,11 @@
 package com.evernote.android.job.util;
 
 import android.app.AlarmManager;
+import android.app.Service;
 import android.app.job.JobScheduler;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
@@ -37,8 +40,11 @@ import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.v14.JobProxy14;
 import com.evernote.android.job.v19.JobProxy19;
 import com.evernote.android.job.v21.JobProxy21;
+import com.evernote.android.job.v21.PlatformJobService;
 import com.evernote.android.job.v24.JobProxy24;
 import com.google.android.gms.gcm.GcmNetworkManager;
+
+import java.util.List;
 
 /**
  * All available APIs.
@@ -88,9 +94,9 @@ public enum JobApi {
     public boolean isSupported(Context context) {
         switch (this) {
             case V_24:
-                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
+                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isServiceEnabled(context, PlatformJobService.class);
             case V_21:
-                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isServiceEnabled(context, PlatformJobService.class);
             case V_19:
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
             case V_14:
@@ -126,6 +132,17 @@ public enum JobApi {
             mCachedProxy = createProxy(context);
         }
         return mCachedProxy;
+    }
+
+    private boolean isServiceEnabled(@NonNull Context context, @NonNull Class<? extends Service> clazz) {
+        // on some rooted devices user can disable services
+        try {
+            Intent intent = new Intent(context, clazz);
+            List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(intent, 0);
+            return resolveInfos != null && !resolveInfos.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

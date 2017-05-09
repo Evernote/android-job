@@ -1,6 +1,7 @@
 ## 1.1.11
 
 * Fix a race condition when canceling jobs, see #178
+* Disable the JobScheduler API if the service is disabled, see #190
 
 ## 1.1.10 (2017-04-29)
 
