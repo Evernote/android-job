@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
+import android.support.annotation.VisibleForTesting;
 
 import com.evernote.android.job.util.JobCat;
 
@@ -11,6 +12,7 @@ import net.vrallev.android.cat.CatLog;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author rwondratschek
@@ -23,7 +25,11 @@ public final class JobRescheduleService extends IntentService {
     /*package*/ static void startService(Context context) {
         Intent intent = new Intent(context, JobRescheduleService.class);
         WakeLockUtil.startWakefulService(context, intent);
+        latch = new CountDownLatch(1);
     }
+
+    @VisibleForTesting
+    /*package*/ static CountDownLatch latch;
 
     public JobRescheduleService() {
         super(TAG);
@@ -41,12 +47,19 @@ public final class JobRescheduleService extends IntentService {
             CAT.d("Reschedule service started");
             SystemClock.sleep(10_000L);
 
-            JobManager manager = JobManager.create(this);
+            JobManager manager;
+            try {
+                manager = JobManager.create(this);
+            } catch (JobManagerCreateException e) {
+                return;
+            }
+
             Set<JobRequest> requests = manager.getAllJobRequests(null, true, true);
 
             int rescheduledCount = rescheduleJobs(manager, requests);
 
             CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
+            latch.countDown();
 
         } finally {
             WakeLockUtil.completeWakefulIntent(intent);
@@ -57,22 +70,28 @@ public final class JobRescheduleService extends IntentService {
         return rescheduleJobs(manager, manager.getAllJobRequests(null, true, true));
     }
 
-    /*package*/ int rescheduleJobs(JobManager manager, Collection<JobRequest> requests) {
-        int rescheduledCount = 0;
-        for (JobRequest request : requests) {
-            boolean reschedule;
-            if (request.isStarted()) {
-                Job job = manager.getJob(request.getJobId());
-                reschedule = job == null;
-            } else {
-                reschedule = !manager.getJobProxy(request).isPlatformJobScheduled(request);
-            }
+    /*package*/ int rescheduleJobs(JobManager manager, Collection<JobRequest> requests) {int rescheduledCount = 0;
+            boolean exceptionThrown = false;for (JobRequest request : requests) {
+                boolean reschedule;
+                if (request.isStarted()) {
+                    Job job = manager.getJob(request.getJobId());
+                    reschedule = job == null;
+                } else {
+                    reschedule = !manager.getJobProxy(request).isPlatformJobScheduled(request);
+                }
 
-            if (reschedule) {
-                // update execution window
-                request.cancelAndEdit()
-                        .build()
-                        .schedule();
+                if (reschedule) {
+                    // update execution window
+                    try {request.cancelAndEdit()
+                            .build()
+                            .schedule();} catch (Exception e) {
+                        // this may crash (e.g. more than 100 jobs with JobScheduler), but it's not catchable for the user
+                        // better catch here, otherwise app will end in a crash loop
+                        if (!exceptionThrown) {
+                            CAT.e(e);
+                            exceptionThrown = true;
+                        }
+                    }
 
                 rescheduledCount++;
             }

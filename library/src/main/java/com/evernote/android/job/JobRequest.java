@@ -422,7 +422,12 @@ public final class JobRequest {
         if (failure) {
             newRequest.mFailureCount = mFailureCount + 1;
         }
-        newRequest.schedule();
+        try {
+            newRequest.schedule();
+        } catch (Exception e) {
+            CAT.e(e);
+            // this may crash (e.g. more than 100 jobs with JobScheduler), but it's not catchable for the user, wait for reschedule
+        }
         return newRequest;
     }
 

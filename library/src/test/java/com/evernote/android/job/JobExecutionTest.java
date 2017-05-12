@@ -8,7 +8,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.robolectric.RuntimeEnvironment;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -93,7 +92,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
                 .build()
                 .schedule();
 
-        final JobProxy.Common common = new JobProxy.Common(RuntimeEnvironment.application, TestCat.INSTANCE, jobId);
+        final JobProxy.Common common = new JobProxy.Common(context(), TestCat.INSTANCE, jobId);
         final JobRequest request = common.getPendingRequest(true, true);
         assertThat(request).isNotNull();
 
@@ -126,7 +125,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
                 .build()
                 .schedule();
 
-        final JobProxy.Common common = new JobProxy.Common(RuntimeEnvironment.application, TestCat.INSTANCE, jobId);
+        final JobProxy.Common common = new JobProxy.Common(context(), TestCat.INSTANCE, jobId);
         final JobRequest request = common.getPendingRequest(true, true);
         assertThat(request).isNotNull();
 

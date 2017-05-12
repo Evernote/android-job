@@ -144,11 +144,22 @@ public interface JobProxy {
             mJobId = jobId;
             mCat = cat;
 
-            mJobManager = JobManager.create(context);
+            JobManager manager;
+            try {
+                manager = JobManager.create(context);
+            } catch (JobManagerCreateException e) {
+                mCat.e(e);
+                manager = null;
+            }
+            mJobManager = manager;
         }
 
         public JobRequest getPendingRequest(@SuppressWarnings("SameParameterValue") boolean cleanUpOrphanedJob, boolean markStarting) {
             synchronized (COMMON_MONITOR) {
+                if (mJobManager == null) {
+                    return null;
+                }
+
                 // order is important for logging purposes
                 JobRequest request = mJobManager.getJobRequest(mJobId, true);
                 Job job = mJobManager.getJob(mJobId);

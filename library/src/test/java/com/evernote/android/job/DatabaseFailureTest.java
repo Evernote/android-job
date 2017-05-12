@@ -11,13 +11,13 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.robolectric.RuntimeEnvironment;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
@@ -34,7 +34,7 @@ public class DatabaseFailureTest extends BaseJobManagerTest {
     public void testInsertFails() {
         SQLiteDatabase database = mock(SQLiteDatabase.class);
         when(database.insert(anyString(), nullable(String.class), any(ContentValues.class))).thenReturn(-1L);
-        when(database.insertOrThrow(anyString(), nullable(String.class), any(ContentValues.class))).thenThrow(SQLException.class);
+        when(database.insertWithOnConflict(anyString(), nullable(String.class), any(ContentValues.class), anyInt())).thenThrow(SQLException.class);
 
         manager().getJobStorage().injectDatabase(database);
 
@@ -114,7 +114,7 @@ public class DatabaseFailureTest extends BaseJobManagerTest {
 
         // initialize the job storage again and clean up the old finished job
         manager().destroy();
-        JobManager manager = JobManager.create(RuntimeEnvironment.application);
+        JobManager manager = createManager();
 
         assertThat(manager.getJobRequest(jobId)).isNull();
 

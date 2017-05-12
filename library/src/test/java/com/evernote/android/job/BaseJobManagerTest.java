@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.support.annotation.NonNull;
+import android.test.mock.MockContext;
 
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.TestCat;
@@ -35,7 +36,25 @@ import static org.mockito.Mockito.when;
 public abstract class BaseJobManagerTest {
 
     @Rule
-    public final JobManagerRule mJobManagerRule = new JobManagerRule(provideJobCreator());
+    public final JobManagerRule mJobManagerRule;
+
+    private final Context mContext;
+
+    public BaseJobManagerTest() {
+        // otherwise the JobScheduler isn't supported we check if the service is enable
+        // Robolectric doesn't parse services from the manifest, see https://github.com/robolectric/robolectric/issues/416
+        PackageManager packageManager = mock(PackageManager.class);
+        when(packageManager.queryIntentServices(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
+        when(packageManager.queryBroadcastReceivers(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
+
+        mContext = spy(RuntimeEnvironment.application);
+        when(mContext.getPackageManager()).thenReturn(packageManager);
+
+        Context mockContext = mock(MockContext.class);
+        when(mockContext.getApplicationContext()).thenReturn(mContext);
+
+        mJobManagerRule = new JobManagerRule(provideJobCreator(), mockContext);
+    }
 
     @NonNull
     protected JobCreator provideJobCreator() {
@@ -45,6 +64,17 @@ public abstract class BaseJobManagerTest {
     @NonNull
     protected final JobManager manager() {
         return mJobManagerRule.getJobManager();
+    }
+
+    @NonNull
+    protected final Context context() {
+        return mContext;
+    }
+
+    protected final JobManager createManager() {
+        Context mockContext = mock(MockContext.class);
+        when(mockContext.getApplicationContext()).thenReturn(mContext);
+        return JobManager.create(mockContext);
     }
 
     @NonNull
@@ -69,7 +99,7 @@ public abstract class BaseJobManagerTest {
     }
 
     protected Future<Job.Result> executeJobAsync(int jobId, @NonNull final Job.Result expected) throws InterruptedException {
-        final JobProxy.Common common = new JobProxy.Common(RuntimeEnvironment.application, TestCat.INSTANCE, jobId);
+        final JobProxy.Common common = new JobProxy.Common(context(), TestCat.INSTANCE, jobId);
 
         final JobRequest pendingRequest = common.getPendingRequest(true, true);
         assertThat(pendingRequest).isNotNull();

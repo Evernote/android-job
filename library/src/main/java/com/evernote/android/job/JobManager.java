@@ -90,8 +90,9 @@ public final class JobManager {
      *
      * @param context Any {@link Context} to instantiate the singleton object.
      * @return The new or existing singleton object.
+     * @throws JobManagerCreateException When the singleton couldn't be created.
      */
-    public static JobManager create(@NonNull Context context) {
+    public static JobManager create(@NonNull Context context) throws JobManagerCreateException {
         if (instance == null) {
             synchronized (JobManager.class) {
                 if (instance == null) {
@@ -148,6 +149,13 @@ public final class JobManager {
         mJobStorage = new JobStorage(context);
         mJobExecutor = new JobExecutor();
 
+        JobApi api = JobApi.getDefault(mContext, mConfig.isGcmApiEnabled());
+        if (api == JobApi.V_14 && !api.isSupported(mContext)) {
+            throw new JobManagerCreateException("All APIs are disabled, cannot schedule any job");
+        }
+
+        setJobProxy(api);
+
         JobRescheduleService.startService(mContext);
     }
 
@@ -182,15 +190,21 @@ public final class JobManager {
         request.setFlexSupport(flexSupport);
         mJobStorage.put(request);
 
-        JobProxy proxy = getJobProxy(jobApi);
-        if (periodic) {
-            if (flexSupport) {
-                proxy.plantPeriodicFlexSupport(request);
+        try {
+            JobProxy proxy = getJobProxy(jobApi);
+            if (periodic) {
+                if (flexSupport) {
+                    proxy.plantPeriodicFlexSupport(request);
+                } else {
+                    proxy.plantPeriodic(request);
+                }
             } else {
-                proxy.plantPeriodic(request);
+                proxy.plantOneOff(request);
             }
-        } else {
-            proxy.plantOneOff(request);
+        } catch (Exception e) {
+            // if something fails, don't keep the job in the database, it would be rescheduled later
+            mJobStorage.remove(request);
+            throw e;
         }
     }
 

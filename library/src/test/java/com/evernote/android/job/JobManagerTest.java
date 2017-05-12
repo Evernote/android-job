@@ -193,4 +193,55 @@ public class JobManagerTest extends BaseJobManagerTest {
 
         assertThat(manager().getAllJobRequests()).hasSize(jobs);
     }
+
+    @Test
+    public void testCancelAndEditTwice() throws Exception {
+        final JobRequest.Builder builder = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setRequiredNetworkType(JobRequest.NetworkType.UNMETERED)
+                .setExecutionWindow(300_000, 400_000);
+
+        int jobId = builder.build().schedule();
+        builder.build().schedule();
+
+        assertThat(manager().getAllJobRequests()).hasSize(2);
+
+        JobRequest request = manager().getJobRequest(jobId);
+        assertThat(request.requiredNetworkType()).isEqualTo(JobRequest.NetworkType.UNMETERED);
+
+        JobRequest.Builder cancelBuilder1 = request.cancelAndEdit();
+        JobRequest.Builder cancelBuilder2 = request.cancelAndEdit();
+
+        cancelBuilder1
+                .setRequiredNetworkType(JobRequest.NetworkType.CONNECTED)
+                .build()
+                .schedule();
+
+        assertThat(manager().getJobRequest(jobId).requiredNetworkType()).isEqualTo(JobRequest.NetworkType.CONNECTED);
+
+        JobRequest builtRequest = cancelBuilder2.build();
+        assertThat(builtRequest.requiredNetworkType()).isEqualTo(JobRequest.NetworkType.UNMETERED);
+
+        builtRequest.schedule();
+
+        assertThat(manager().getAllJobRequests()).hasSize(2);
+        assertThat(manager().getJobRequest(jobId).requiredNetworkType()).isEqualTo(JobRequest.NetworkType.UNMETERED);
+    }
+
+    @Test
+    public void testJobIdIncremented() throws Exception {
+        assertThat(manager().getJobStorage().getMaxJobId()).isEqualTo(0);
+        assertThat(manager().getAllJobRequests()).isEmpty();
+
+        DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExecutionWindow(300_000, 400_000)
+                .build().schedule();
+
+        assertThat(manager().getJobStorage().getMaxJobId()).isEqualTo(1);
+
+        // that does increase the ID, but that doesn't matter anymore what's in the memory after the app terminated
+        assertThat(manager().getJobStorage().nextJobId()).isEqualTo(2);
+        assertThat(manager().getJobStorage().nextJobId()).isEqualTo(3);
+
+        assertThat(manager().getJobStorage().getMaxJobId()).isEqualTo(1);
+    }
 }
