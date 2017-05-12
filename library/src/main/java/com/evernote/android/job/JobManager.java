@@ -91,8 +91,9 @@ public final class JobManager {
      *
      * @param context Any {@link Context} to instantiate the singleton object.
      * @return The new or existing singleton object.
+     * @throws JobManagerCreateException When the singleton couldn't be created.
      */
-    public static JobManager create(@NonNull Context context) {
+    public static JobManager create(@NonNull Context context) throws JobManagerCreateException {
         if (instance == null) {
             synchronized (JobManager.class) {
                 if (instance == null) {
@@ -178,7 +179,12 @@ public final class JobManager {
         mJobExecutor = new JobExecutor();
         mConfig = new Config();
 
-        setJobProxy(JobApi.getDefault(mContext, mConfig.isGcmApiEnabled()));
+        JobApi api = JobApi.getDefault(mContext, mConfig.isGcmApiEnabled());
+        if (api == JobApi.V_14 && !api.isSupported(mContext)) {
+            throw new JobManagerCreateException("All APIs are disabled, cannot schedule any job");
+        }
+
+        setJobProxy(api);
 
         JobRescheduleService.startService(mContext);
     }

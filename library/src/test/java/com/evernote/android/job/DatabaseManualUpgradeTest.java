@@ -44,7 +44,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
  */
 @RunWith(JobRobolectricTestRunner.class)
 @FixMethodOrder(MethodSorters.JVM)
-public class DatabaseManualUpgradeTest {
+public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
 
     @Test
     public void testDatabaseUpgrade1to4() {
@@ -55,7 +55,7 @@ public class DatabaseManualUpgradeTest {
         createDatabase(openHelper, false);
         createJobs(openHelper);
 
-        checkJob(context);
+        checkJob();
     }
 
     @Test
@@ -67,7 +67,7 @@ public class DatabaseManualUpgradeTest {
         createDatabase(openHelper, false);
         createJobs(openHelper);
 
-        checkJob(context);
+        checkJob();
     }
 
     @Test
@@ -79,7 +79,7 @@ public class DatabaseManualUpgradeTest {
         createDatabase(openHelper, false);
         createJobs(openHelper, true);
 
-        checkJob(context);
+        checkJob();
     }
 
     @Test
@@ -94,7 +94,7 @@ public class DatabaseManualUpgradeTest {
         createDatabase(new JobOpenHelper2(context), true);
         createDatabase(new JobOpenHelper3(context), true);
 
-        checkJob(context);
+        checkJob();
     }
 
     private void createDatabase(UpgradeAbleJobOpenHelper openHelper, boolean checkUpgraded) {
@@ -136,8 +136,8 @@ public class DatabaseManualUpgradeTest {
         database.insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
     }
 
-    private void checkJob(Context context) {
-        JobManager.create(context).addJobCreator(new JobCreator() {
+    private void checkJob() {
+        createManager().addJobCreator(new JobCreator() {
             @Override
             public Job create(String tag) {
                 return null;

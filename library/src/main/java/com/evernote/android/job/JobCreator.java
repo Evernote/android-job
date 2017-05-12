@@ -49,7 +49,10 @@ public interface JobCreator {
                 return;
             }
 
-            addJobCreator(context, JobManager.create(context));
+            try {
+                addJobCreator(context, JobManager.create(context));
+            } catch (JobManagerCreateException e) {
+            }
         }
 
         /**

@@ -28,6 +28,7 @@ package com.evernote.android.job.util;
 import android.app.AlarmManager;
 import android.app.Service;
 import android.app.job.JobScheduler;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
@@ -38,6 +39,8 @@ import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.v14.JobProxy14;
+import com.evernote.android.job.v14.PlatformAlarmReceiver;
+import com.evernote.android.job.v14.PlatformAlarmService;
 import com.evernote.android.job.v19.JobProxy19;
 import com.evernote.android.job.v21.JobProxy21;
 import com.evernote.android.job.v21.PlatformJobService;
@@ -98,9 +101,10 @@ public enum JobApi {
             case V_21:
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isServiceEnabled(context, PlatformJobService.class);
             case V_19:
-                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && isServiceEnabled(context, PlatformAlarmService.class)
+                        && isBroadcastEnabled(context, PlatformAlarmReceiver.class);
             case V_14:
-                return true;
+                return isServiceEnabled(context, PlatformAlarmService.class) && isBroadcastEnabled(context, PlatformAlarmReceiver.class);
             case GCM:
                 return GcmAvailableHelper.isGcmApiSupported(context);
             default:
@@ -139,6 +143,17 @@ public enum JobApi {
         try {
             Intent intent = new Intent(context, clazz);
             List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(intent, 0);
+            return resolveInfos != null && !resolveInfos.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isBroadcastEnabled(@NonNull Context context, @NonNull Class<? extends BroadcastReceiver> clazz) {
+        // on some rooted devices user can disable receivers
+        try {
+            Intent intent = new Intent(context, clazz);
+            List<ResolveInfo> resolveInfos = context.getPackageManager().queryBroadcastReceivers(intent, 0);
             return resolveInfos != null && !resolveInfos.isEmpty();
         } catch (Exception e) {
             return false;

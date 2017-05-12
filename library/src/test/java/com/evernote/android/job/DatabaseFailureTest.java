@@ -11,7 +11,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.robolectric.RuntimeEnvironment;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -115,7 +114,7 @@ public class DatabaseFailureTest extends BaseJobManagerTest {
 
         // initialize the job storage again and clean up the old finished job
         manager().destroy();
-        JobManager manager = JobManager.create(RuntimeEnvironment.application);
+        JobManager manager = createManager();
 
         assertThat(manager.getJobRequest(jobId)).isNull();
 

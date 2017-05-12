@@ -6,7 +6,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.robolectric.RuntimeEnvironment;
 
 import java.io.File;
 import java.util.Set;
@@ -42,7 +41,7 @@ public class DatabaseExistingTest extends BaseJobManagerTest {
         String filePath = getClass().getResource("/databases/" + name).getPath();
         assertThat(new File(filePath).exists()).isTrue();
 
-        JobStorage storage = new JobStorage(RuntimeEnvironment.application, filePath);
+        JobStorage storage = new JobStorage(context(), filePath);
 
         Set<JobRequest> requests = storage.getAllJobRequests("tag", true);
         assertThat(requests).hasSize(30);

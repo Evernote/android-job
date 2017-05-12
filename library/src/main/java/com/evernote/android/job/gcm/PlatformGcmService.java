@@ -27,6 +27,7 @@ package com.evernote.android.job.gcm;
 
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobManager;
+import com.evernote.android.job.JobManagerCreateException;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
@@ -70,6 +71,9 @@ public class PlatformGcmService extends GcmTaskService {
          * calls this method to reschedule. Let's initialize the JobManager here, which will reschedule
          * jobs manually.
          */
-        JobManager.create(getApplicationContext());
+        try {
+            JobManager.create(getApplicationContext());
+        } catch (JobManagerCreateException ignored) {
+        }
     }
 }

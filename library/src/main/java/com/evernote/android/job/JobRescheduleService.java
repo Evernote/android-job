@@ -40,7 +40,13 @@ public final class JobRescheduleService extends IntentService {
             CAT.d("Reschedule service started");
             SystemClock.sleep(10_000L);
 
-            JobManager manager = JobManager.create(this);
+            JobManager manager;
+            try {
+                manager = JobManager.create(this);
+            } catch (JobManagerCreateException e) {
+                return;
+            }
+
             Set<JobRequest> requests = manager.getJobStorage().getAllJobRequests(null, true);
 
             int rescheduledCount = 0;

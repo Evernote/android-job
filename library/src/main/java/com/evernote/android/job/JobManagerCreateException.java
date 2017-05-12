@@ -25,30 +25,13 @@
  */
 package com.evernote.android.job;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-
-import com.evernote.android.job.util.JobApi;
-
 /**
- * A {@code BroadcastReceiver} rescheduling jobs after a reboot, if the underlying {@link JobApi} can't
- * handle it.
+ * Indicates illegal states during the creation of the {@link JobManager}.
  *
  * @author rwondratschek
  */
-public final class JobBootReceiver extends BroadcastReceiver {
-
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        /*
-         * Create the job manager. We may need to reschedule jobs and some applications aren't initializing the
-         * manager in Application.onCreate(). It may happen that some jobs can't be created if the JobCreator
-         * wasn't registered, yet. Apps / Libraries need to figure out how to solve this themselves.
-         */
-        try {
-            JobManager.create(context);
-        } catch (JobManagerCreateException ignored) {
-        }
+public class JobManagerCreateException extends IllegalStateException {
+    public JobManagerCreateException(String s) {
+        super(s);
     }
 }
