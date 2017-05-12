@@ -236,15 +236,21 @@ public final class JobManager {
         request.setFlexSupport(flexSupport);
         mJobStorage.put(request);
 
-        JobProxy proxy = getJobProxy(jobApi);
-        if (periodic) {
-            if (flexSupport) {
-                proxy.plantPeriodicFlexSupport(request);
+        try {
+            JobProxy proxy = getJobProxy(jobApi);
+            if (periodic) {
+                if (flexSupport) {
+                    proxy.plantPeriodicFlexSupport(request);
+                } else {
+                    proxy.plantPeriodic(request);
+                }
             } else {
-                proxy.plantPeriodic(request);
+                proxy.plantOneOff(request);
             }
-        } else {
-            proxy.plantOneOff(request);
+        } catch (Exception e) {
+            // if something fails, don't keep the job in the database, it would be rescheduled later
+            mJobStorage.remove(request);
+            throw e;
         }
     }
 

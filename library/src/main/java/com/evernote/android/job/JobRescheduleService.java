@@ -4,12 +4,14 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
+import android.support.annotation.VisibleForTesting;
 
 import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.CatLog;
 
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author rwondratschek
@@ -22,7 +24,11 @@ public final class JobRescheduleService extends IntentService {
     /*package*/ static void startService(Context context) {
         Intent intent = new Intent(context, JobRescheduleService.class);
         WakeLockUtil.startWakefulService(context, intent);
+        latch = new CountDownLatch(1);
     }
+
+    @VisibleForTesting
+    /*package*/ static CountDownLatch latch;
 
     public JobRescheduleService() {
         super(TAG);
@@ -50,6 +56,8 @@ public final class JobRescheduleService extends IntentService {
             Set<JobRequest> requests = manager.getJobStorage().getAllJobRequests(null, true);
 
             int rescheduledCount = 0;
+            boolean exceptionThrown = false;
+
             for (JobRequest request : requests) {
                 boolean reschedule;
                 if (request.isTransient()) {
@@ -61,15 +69,25 @@ public final class JobRescheduleService extends IntentService {
 
                 if (reschedule) {
                     // update execution window
-                    request.cancelAndEdit()
-                            .build()
-                            .schedule();
+                    try {
+                        request.cancelAndEdit()
+                                .build()
+                                .schedule();
+                    } catch (Exception e) {
+                        // this may crash (e.g. more than 100 jobs with JobScheduler), but it's not catchable for the user
+                        // better catch here, otherwise app will end in a crash loop
+                        if (!exceptionThrown) {
+                            CAT.e(e);
+                            exceptionThrown = true;
+                        }
+                    }
 
                     rescheduledCount++;
                 }
             }
 
             CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
+            latch.countDown();
 
         } finally {
             WakeLockUtil.completeWakefulIntent(intent);
