@@ -240,7 +240,12 @@ import java.util.concurrent.atomic.AtomicInteger;
         SQLiteDatabase database = null;
         try {
             database = getDatabase();
-            if (database.insertOrThrow(JOB_TABLE_NAME, null, contentValues) < 0) {
+            /*
+             * It could happen that a conflict with the job ID occurs, when a job was cancelled (cancelAndEdit())
+             * the builder object scheduled twice. In this case the last call wins and the value in the database
+             * will be overwritten.
+             */
+            if (database.insertWithOnConflict(JOB_TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE) < 0) {
                 throw new SQLException("Couldn't insert job request into database");
             }
         } finally {

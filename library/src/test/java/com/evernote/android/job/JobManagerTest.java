@@ -193,4 +193,37 @@ public class JobManagerTest extends BaseJobManagerTest {
 
         assertThat(manager().getAllJobRequests()).hasSize(jobs);
     }
+
+    @Test
+    public void testCancelAndEditTwice() throws Exception {
+        final JobRequest.Builder builder = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setRequiredNetworkType(JobRequest.NetworkType.UNMETERED)
+                .setExecutionWindow(300_000, 400_000);
+
+        int jobId = builder.build().schedule();
+        builder.build().schedule();
+
+        assertThat(manager().getAllJobRequests()).hasSize(2);
+
+        JobRequest request = manager().getJobRequest(jobId);
+        assertThat(request.requiredNetworkType()).isEqualTo(JobRequest.NetworkType.UNMETERED);
+
+        JobRequest.Builder cancelBuilder1 = request.cancelAndEdit();
+        JobRequest.Builder cancelBuilder2 = request.cancelAndEdit();
+
+        cancelBuilder1
+                .setRequiredNetworkType(JobRequest.NetworkType.CONNECTED)
+                .build()
+                .schedule();
+
+        assertThat(manager().getJobRequest(jobId).requiredNetworkType()).isEqualTo(JobRequest.NetworkType.CONNECTED);
+
+        JobRequest builtRequest = cancelBuilder2.build();
+        assertThat(builtRequest.requiredNetworkType()).isEqualTo(JobRequest.NetworkType.UNMETERED);
+
+        builtRequest.schedule();
+
+        assertThat(manager().getAllJobRequests()).hasSize(2);
+        assertThat(manager().getJobRequest(jobId).requiredNetworkType()).isEqualTo(JobRequest.NetworkType.UNMETERED);
+    }
 }
