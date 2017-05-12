@@ -57,7 +57,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     private static final CatLog CAT = new JobCat("JobStorage");
 
-    private static final String JOB_ID_COUNTER = "JOB_ID_COUNTER";
     private static final String FAILED_DELETE_IDS = "FAILED_DELETE_IDS";
 
     public static final String PREF_FILE_NAME = "evernote_jobs";
@@ -94,7 +93,7 @@ import java.util.concurrent.atomic.AtomicInteger;
     private final SharedPreferences mPreferences;
     private final JobCacheId mCacheId;
 
-    private final AtomicInteger mJobCounter;
+    private AtomicInteger mJobCounter;
     private final Set<String> mFailedDeleteIds;
 
     private final JobOpenHelper mDbHelper;
@@ -108,9 +107,6 @@ import java.util.concurrent.atomic.AtomicInteger;
         mPreferences = context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE);
 
         mCacheId = new JobCacheId();
-
-        int lastJobId = mPreferences.getInt(JOB_ID_COUNTER, 0);
-        mJobCounter = new AtomicInteger(lastJobId);
 
         mDbHelper = new JobOpenHelper(context, databasePath);
 
@@ -217,6 +213,10 @@ import java.util.concurrent.atomic.AtomicInteger;
     }
 
     public synchronized int nextJobId() {
+        if (mJobCounter == null) {
+            mJobCounter = new AtomicInteger(getMaxJobId());
+        }
+
         int id = mJobCounter.incrementAndGet();
 
         if (id < 0) {
@@ -227,10 +227,6 @@ import java.util.concurrent.atomic.AtomicInteger;
             id = 1;
             mJobCounter.set(id);
         }
-
-        mPreferences.edit()
-                .putInt(JOB_ID_COUNTER, id)
-                .apply();
 
         return id;
     }
@@ -301,6 +297,26 @@ import java.util.concurrent.atomic.AtomicInteger;
     @VisibleForTesting
     /*package*/ Set<String> getFailedDeleteIds() {
         return mFailedDeleteIds;
+    }
+
+    @VisibleForTesting
+    /*package*/ int getMaxJobId() {
+        SQLiteDatabase database = null;
+        Cursor cursor = null;
+
+        try {
+            database = getDatabase();
+            cursor = database.rawQuery("SELECT MAX(" + COLUMN_ID + ") FROM " + JOB_TABLE_NAME, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getInt(0);
+            } else {
+                return 0;
+            }
+
+        } finally {
+            closeCursor(cursor);
+            closeDatabase(database);
+        }
     }
 
     private void addFailedDeleteId(int id) {
