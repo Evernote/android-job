@@ -3,6 +3,7 @@
 * Fix a race condition when canceling jobs, see #178
 * Disable the JobScheduler API if the service is disabled, see #190
 * Fix `SQLiteConstraintException` when rescheduling jobs, because job is already present in the database, see #176
+* Improve job result documentation, see #192
 
 ## 1.1.10 (2017-04-29)
 

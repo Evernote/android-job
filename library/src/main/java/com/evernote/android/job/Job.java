@@ -59,12 +59,25 @@ public abstract class Job {
         SUCCESS,
         /**
          * Indicates that {@link #onRunJob(Params)} failed, but the {@link Job} shouldn't be rescheduled.
+         *
+         * <br>
+         * <br>
+         *
+         * Periodic jobs will continue to run. The failure count of the job is incremented, what
+         * can be helpful in the next interval.
+         *
+         * @see Params#getFailureCount()
          */
         FAILURE,
         /**
          * Indicates that {@link #onRunJob(Params)} failed and the {@link Job} should be rescheduled
          * with the defined back-off criteria. Note that returning {@code RESCHEDULE} for a periodic
          * {@link Job} is invalid and ignored.
+         *
+         * <br>
+         * <br>
+         *
+         * Returning RESCHEDULE for periodic jobs has the same effect as returning FAILURE.
          */
         RESCHEDULE
     }
