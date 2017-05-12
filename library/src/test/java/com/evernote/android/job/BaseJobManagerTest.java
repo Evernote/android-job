@@ -77,19 +77,6 @@ public abstract class BaseJobManagerTest {
         return JobManager.create(mockContext);
     }
 
-    @NonNull
-    protected final Context context() {
-        // otherwise the JobScheduler isn't supported we check if the service is enable
-        // Robolectric doesn't parse services from the manifest, see https://github.com/robolectric/robolectric/issues/416
-        PackageManager packageManager = mock(PackageManager.class);
-        when(packageManager.queryIntentServices(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
-
-        Context context = spy(RuntimeEnvironment.application);
-        when(context.getPackageManager()).thenReturn(packageManager);
-
-        return context;
-    }
-
     protected void executeJob(int jobId, @NonNull Job.Result expected) {
         try {
             executeJobAsync(jobId, expected).get(3, TimeUnit.SECONDS);

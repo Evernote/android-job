@@ -5,7 +5,6 @@ import android.app.job.JobScheduler;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -35,14 +34,13 @@ public class JobRescheduleTest extends BaseJobManagerTest {
     public void verifyOneOffJobRescheduled() throws Exception {
         assertThat(manager().getAllJobRequests()).isEmpty();
 
-        SQLiteDatabase database = manager().getJobStorage().getDatabase();
-
         ContentValues contentValues = new JobRequest.Builder("tag")
                 .setExecutionWindow(40_000, 50_000)
                 .build()
                 .toContentValues();
 
-        database.insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
+        manager().getJobStorage().getDatabase()
+                .insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
 
         Set<JobRequest> requests = manager().getAllJobRequests();
         assertThat(requests).isNotEmpty();
@@ -56,14 +54,13 @@ public class JobRescheduleTest extends BaseJobManagerTest {
     public void verifyPeriodicJobRescheduled() throws Exception {
         assertThat(manager().getAllJobRequests()).isEmpty();
 
-        SQLiteDatabase database = manager().getJobStorage().getDatabase();
-
         ContentValues contentValues = new JobRequest.Builder("tag")
                 .setPeriodic(TimeUnit.HOURS.toMillis(1))
                 .build()
                 .toContentValues();
 
-        database.insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
+        manager().getJobStorage().getDatabase()
+                .insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
 
         Set<JobRequest> requests = manager().getAllJobRequests();
         assertThat(requests).isNotEmpty();
@@ -80,14 +77,13 @@ public class JobRescheduleTest extends BaseJobManagerTest {
     public void verifyExactJobRescheduled() throws Exception {
         assertThat(manager().getAllJobRequests()).isEmpty();
 
-        SQLiteDatabase database = manager().getJobStorage().getDatabase();
-
         ContentValues contentValues = new JobRequest.Builder("tag")
                 .setExact(TimeUnit.HOURS.toMillis(1))
                 .build()
                 .toContentValues();
 
-        database.insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
+        manager().getJobStorage().getDatabase()
+                .insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
 
         Set<JobRequest> requests = manager().getAllJobRequests();
         assertThat(requests).isNotEmpty();
@@ -107,8 +103,6 @@ public class JobRescheduleTest extends BaseJobManagerTest {
     public void verifyTransientJobNotRescheduled() throws Exception {
         assertThat(manager().getAllJobRequests()).isEmpty();
 
-        SQLiteDatabase database = manager().getJobStorage().getDatabase();
-
         Bundle bundle = new Bundle();
         bundle.putString("key", "value");
 
@@ -118,7 +112,8 @@ public class JobRescheduleTest extends BaseJobManagerTest {
                 .build()
                 .toContentValues();
 
-        database.insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
+        manager().getJobStorage().getDatabase()
+                .insert(JobStorage.JOB_TABLE_NAME, null, contentValues);
 
         Set<JobRequest> requests = manager().getAllJobRequests();
         assertThat(requests).isEmpty();

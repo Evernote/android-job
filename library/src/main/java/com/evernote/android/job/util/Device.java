@@ -118,7 +118,7 @@ public final class Device {
     public static boolean isAtLeastO() {
         // remove the 2nd statement when O is out of preview
         return Build.VERSION.SDK_INT == Build.VERSION_CODES.O
-                || (!"REL".equals(Build.VERSION.CODENAME) && ("O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR")));
-
+                || (Build.VERSION.CODENAME != null && !"REL".equals(Build.VERSION.CODENAME)
+                && ("O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR")));
     }
 }

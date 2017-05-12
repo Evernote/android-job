@@ -93,7 +93,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
         createDatabase(openHelper, false);
         createJobs(openHelper, true);
 
-        checkJob(context);
+        checkJob();
     }
 
     @Test

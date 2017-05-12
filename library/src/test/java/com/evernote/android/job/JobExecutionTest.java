@@ -158,7 +158,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
                 .build()
                 .schedule();
 
-        final JobProxy.Common common = new JobProxy.Common(RuntimeEnvironment.application, TestCat.INSTANCE, jobId);
+        final JobProxy.Common common = new JobProxy.Common(context(), TestCat.INSTANCE, jobId);
 
         assertThat(common.getPendingRequest(true, false)).isNotNull();
         assertThat(common.getPendingRequest(true, false)).isNotNull();

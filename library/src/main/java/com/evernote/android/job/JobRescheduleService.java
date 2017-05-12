@@ -70,28 +70,32 @@ public final class JobRescheduleService extends IntentService {
         return rescheduleJobs(manager, manager.getAllJobRequests(null, true, true));
     }
 
-    /*package*/ int rescheduleJobs(JobManager manager, Collection<JobRequest> requests) {int rescheduledCount = 0;
-            boolean exceptionThrown = false;for (JobRequest request : requests) {
-                boolean reschedule;
-                if (request.isStarted()) {
-                    Job job = manager.getJob(request.getJobId());
-                    reschedule = job == null;
-                } else {
-                    reschedule = !manager.getJobProxy(request).isPlatformJobScheduled(request);
-                }
+    /*package*/ int rescheduleJobs(JobManager manager, Collection<JobRequest> requests) {
+        int rescheduledCount = 0;
+        boolean exceptionThrown = false;
+        for (JobRequest request : requests) {
+            boolean reschedule;
+            if (request.isStarted()) {
+                Job job = manager.getJob(request.getJobId());
+                reschedule = job == null;
+            } else {
+                reschedule = !manager.getJobProxy(request).isPlatformJobScheduled(request);
+            }
 
-                if (reschedule) {
-                    // update execution window
-                    try {request.cancelAndEdit()
+            if (reschedule) {
+                // update execution window
+                try {
+                    request.cancelAndEdit()
                             .build()
-                            .schedule();} catch (Exception e) {
-                        // this may crash (e.g. more than 100 jobs with JobScheduler), but it's not catchable for the user
-                        // better catch here, otherwise app will end in a crash loop
-                        if (!exceptionThrown) {
-                            CAT.e(e);
-                            exceptionThrown = true;
-                        }
+                            .schedule();
+                } catch (Exception e) {
+                    // this may crash (e.g. more than 100 jobs with JobScheduler), but it's not catchable for the user
+                    // better catch here, otherwise app will end in a crash loop
+                    if (!exceptionThrown) {
+                        CAT.e(e);
+                        exceptionThrown = true;
                     }
+                }
 
                 rescheduledCount++;
             }

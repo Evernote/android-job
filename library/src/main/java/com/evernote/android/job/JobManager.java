@@ -103,6 +103,11 @@ public final class JobManager {
                         context = context.getApplicationContext();
                     }
 
+                    JobApi api = JobApi.getDefault(context);
+                    if (api == JobApi.V_14 && !api.isSupported(context)) {
+                        throw new JobManagerCreateException("All APIs are disabled, cannot schedule any job");
+                    }
+
                     instance = new JobManager(context);
 
                     if (!JobUtil.hasWakeLockPermission(context)) {
@@ -148,13 +153,6 @@ public final class JobManager {
         mJobCreatorHolder = new JobCreatorHolder();
         mJobStorage = new JobStorage(context);
         mJobExecutor = new JobExecutor();
-
-        JobApi api = JobApi.getDefault(mContext, mConfig.isGcmApiEnabled());
-        if (api == JobApi.V_14 && !api.isSupported(mContext)) {
-            throw new JobManagerCreateException("All APIs are disabled, cannot schedule any job");
-        }
-
-        setJobProxy(api);
 
         JobRescheduleService.startService(mContext);
     }
