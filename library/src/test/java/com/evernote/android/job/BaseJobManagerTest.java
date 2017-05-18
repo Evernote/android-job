@@ -41,17 +41,8 @@ public abstract class BaseJobManagerTest {
     private final Context mContext;
 
     public BaseJobManagerTest() {
-        // otherwise the JobScheduler isn't supported we check if the service is enable
-        // Robolectric doesn't parse services from the manifest, see https://github.com/robolectric/robolectric/issues/416
-        PackageManager packageManager = mock(PackageManager.class);
-        when(packageManager.queryIntentServices(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
-        when(packageManager.queryBroadcastReceivers(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
-
-        mContext = spy(RuntimeEnvironment.application);
-        when(mContext.getPackageManager()).thenReturn(packageManager);
-
-        Context mockContext = mock(MockContext.class);
-        when(mockContext.getApplicationContext()).thenReturn(mContext);
+        Context mockContext = createMockContext();
+        mContext = mockContext.getApplicationContext();
 
         mJobManagerRule = new JobManagerRule(provideJobCreator(), mockContext);
     }
@@ -120,5 +111,24 @@ public abstract class BaseJobManagerTest {
         if (job != null) {
             doReturn(-1L).when(job).getFinishedTimeStamp();
         }
+    }
+
+    /**
+     * @return A mocked context which returns a spy of {@link RuntimeEnvironment#application} in
+     * {@link Context#getApplicationContext()}.
+     */
+    public static Context createMockContext() {
+        // otherwise the JobScheduler isn't supported we check if the service is enable
+        // Robolectric doesn't parse services from the manifest, see https://github.com/robolectric/robolectric/issues/416
+        PackageManager packageManager = mock(PackageManager.class);
+        when(packageManager.queryIntentServices(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
+        when(packageManager.queryBroadcastReceivers(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
+
+        Context context = spy(RuntimeEnvironment.application);
+        when(context.getPackageManager()).thenReturn(packageManager);
+
+        Context mockContext = mock(MockContext.class);
+        when(mockContext.getApplicationContext()).thenReturn(context);
+        return mockContext;
     }
 }

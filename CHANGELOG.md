@@ -14,6 +14,8 @@
 * Fix `SQLiteConstraintException` when rescheduling jobs, because job is already present in the database, see #176
 * Improve job result documentation, see #192
 * Prevent app ending in a crash loop, see #194
+* Fallback to an older API if the `JobScheduler` is null on the device
+* Don't persist jobs with the `JobScheduler`, if this device is weird and doesn't have the boot permission
 
 ## 1.1.10 (2017-04-29)
 

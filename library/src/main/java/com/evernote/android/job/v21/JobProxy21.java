@@ -35,6 +35,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobProxy;
+import com.evernote.android.job.JobProxyIllegalStateException;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
@@ -51,6 +52,8 @@ import java.util.List;
 public class JobProxy21 implements JobProxy {
 
     private static final String TAG = "JobProxy21";
+
+    private static final int ERROR_BOOT_PERMISSION = -123;
 
     protected final Context mContext;
     protected final CatLog mCat;
@@ -69,8 +72,13 @@ public class JobProxy21 implements JobProxy {
         long startMs = Common.getStartMs(request);
         long endMs = Common.getEndMs(request);
 
-        JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request), startMs, endMs).build();
+        JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request, true), startMs, endMs).build();
         int scheduleResult = schedule(jobInfo);
+
+        if (scheduleResult == ERROR_BOOT_PERMISSION) {
+            jobInfo = createBuilderOneOff(createBaseBuilder(request, false), startMs, endMs).build();
+            scheduleResult = schedule(jobInfo);
+        }
 
         mCat.d("Schedule one-off jobInfo %s, %s, start %s, end %s, reschedule count %d", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs), Common.getRescheduleCount(request));
@@ -81,8 +89,13 @@ public class JobProxy21 implements JobProxy {
         long intervalMs = request.getIntervalMs();
         long flexMs = request.getFlexMs();
 
-        JobInfo jobInfo = createBuilderPeriodic(createBaseBuilder(request), intervalMs, flexMs).build();
+        JobInfo jobInfo = createBuilderPeriodic(createBaseBuilder(request, true), intervalMs, flexMs).build();
         int scheduleResult = schedule(jobInfo);
+
+        if (scheduleResult == ERROR_BOOT_PERMISSION) {
+            jobInfo = createBuilderPeriodic(createBaseBuilder(request, false), intervalMs, flexMs).build();
+            scheduleResult = schedule(jobInfo);
+        }
 
         mCat.d("Schedule periodic jobInfo %s, %s, interval %s, flex %s", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(intervalMs), JobUtil.timeToString(flexMs));
@@ -93,8 +106,13 @@ public class JobProxy21 implements JobProxy {
         long startMs = Common.getStartMsSupportFlex(request);
         long endMs = Common.getEndMsSupportFlex(request);
 
-        JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request), startMs, endMs).build();
+        JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request, true), startMs, endMs).build();
         int scheduleResult = schedule(jobInfo);
+
+        if (scheduleResult == ERROR_BOOT_PERMISSION) {
+            jobInfo = createBuilderOneOff(createBaseBuilder(request, false), startMs, endMs).build();
+            scheduleResult = schedule(jobInfo);
+        }
 
         mCat.d("Schedule periodic (flex support) jobInfo %s, %s, start %s, end %s, flex %s", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs), JobUtil.timeToString(request.getFlexMs()));
@@ -146,12 +164,12 @@ public class JobProxy21 implements JobProxy {
         return !request.isTransient() || TransientBundleCompat.isScheduled(mContext, request.getJobId());
     }
 
-    protected JobInfo.Builder createBaseBuilder(JobRequest request) {
+    protected JobInfo.Builder createBaseBuilder(JobRequest request, boolean allowPersisting) {
         JobInfo.Builder builder = new JobInfo.Builder(request.getJobId(), new ComponentName(mContext, PlatformJobService.class))
                 .setRequiresCharging(request.requiresCharging())
                 .setRequiresDeviceIdle(request.requiresDeviceIdle())
                 .setRequiredNetworkType(convertNetworkType(request.requiredNetworkType()))
-                .setPersisted(!request.isTransient() && JobUtil.hasBootPermission(mContext));
+                .setPersisted(allowPersisting && !request.isTransient() && JobUtil.hasBootPermission(mContext));
 
         return setTransientBundle(request, builder);
     }
@@ -192,7 +210,22 @@ public class JobProxy21 implements JobProxy {
     }
 
     protected final int schedule(JobInfo jobInfo) {
-        return getJobScheduler().schedule(jobInfo);
+        JobScheduler jobScheduler = getJobScheduler();
+        if (jobScheduler == null) {
+            throw new JobProxyIllegalStateException("JobScheduler is null");
+        }
+
+        try {
+            return jobScheduler.schedule(jobInfo);
+        } catch (IllegalArgumentException e) {
+            mCat.e(e);
+
+            if (e.getMessage() != null && e.getMessage().contains("RECEIVE_BOOT_COMPLETED")) {
+                return ERROR_BOOT_PERMISSION;
+            } else {
+                throw e;
+            }
+        }
     }
 
     protected static String scheduleResultToString(int scheduleResult) {

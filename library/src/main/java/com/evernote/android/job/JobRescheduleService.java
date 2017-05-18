@@ -79,7 +79,7 @@ public final class JobRescheduleService extends IntentService {
                 Job job = manager.getJob(request.getJobId());
                 reschedule = job == null;
             } else {
-                reschedule = !manager.getJobProxy(request).isPlatformJobScheduled(request);
+                reschedule = !manager.getJobProxy(request.getJobApi()).isPlatformJobScheduled(request);
             }
 
             if (reschedule) {
