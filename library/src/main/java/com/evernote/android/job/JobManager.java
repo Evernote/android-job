@@ -237,20 +237,52 @@ public final class JobManager {
         mJobStorage.put(request);
 
         try {
-            JobProxy proxy = getJobProxy(jobApi);
-            if (periodic) {
-                if (flexSupport) {
-                    proxy.plantPeriodicFlexSupport(request);
-                } else {
-                    proxy.plantPeriodic(request);
-                }
-            } else {
-                proxy.plantOneOff(request);
-            }
+            scheduleWithApi(request, jobApi, periodic, flexSupport);
+            return;
+        } catch (JobProxyIllegalStateException e) {
+            // try again below, the other cases stop
+
         } catch (Exception e) {
             // if something fails, don't keep the job in the database, it would be rescheduled later
             mJobStorage.remove(request);
             throw e;
+        }
+
+        try {
+            // try to reload the proxy
+            jobApi.invalidateCachedProxy();
+
+            scheduleWithApi(request, jobApi, periodic, flexSupport);
+            return;
+        } catch (Exception e) {
+            if (jobApi == JobApi.V_14 || jobApi == JobApi.V_19) {
+                // at this stage we cannot do anything
+                mJobStorage.remove(request);
+                throw e;
+            } else {
+                jobApi = JobApi.V_19.isSupported(mContext) ? JobApi.V_19 : JobApi.V_14; // try one last time
+            }
+        }
+
+        try {
+            scheduleWithApi(request, jobApi, periodic, flexSupport);
+        } catch (Exception e) {
+            // if something fails, don't keep the job in the database, it would be rescheduled later
+            mJobStorage.remove(request);
+            throw e;
+        }
+    }
+
+    private void scheduleWithApi(JobRequest request, JobApi jobApi, boolean periodic, boolean flexSupport) {
+        JobProxy proxy = getJobProxy(jobApi);
+        if (periodic) {
+            if (flexSupport) {
+                proxy.plantPeriodicFlexSupport(request);
+            } else {
+                proxy.plantPeriodic(request);
+            }
+        } else {
+            proxy.plantOneOff(request);
         }
     }
 
@@ -387,7 +419,7 @@ public final class JobManager {
     private boolean cancelInner(@Nullable JobRequest request) {
         if (request != null) {
             CAT.i("Found pending job %s, canceling", request);
-            getJobProxy(request).cancel(request.getJobId());
+            getJobProxy(request.getJobApi()).cancel(request.getJobId());
             getJobStorage().remove(request);
             request.setScheduledAt(0); // reset value
             return true;
@@ -475,14 +507,13 @@ public final class JobManager {
     /*package*/ void destroy() {
         synchronized (JobManager.class) {
             instance = null;
+            for (JobApi api : JobApi.values()) {
+                api.invalidateCachedProxy();
+            }
         }
     }
 
-    /*package*/ JobProxy getJobProxy(JobRequest request) {
-        return getJobProxy(request.getJobApi());
-    }
-
-    private JobProxy getJobProxy(JobApi api) {
+    /*package*/ JobProxy getJobProxy(JobApi api) {
         return api.getCachedProxy(mContext);
     }
 

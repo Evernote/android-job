@@ -34,6 +34,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.JobProxy;
+import com.evernote.android.job.JobProxyIllegalStateException;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
@@ -171,7 +172,12 @@ public class JobProxy21 implements JobProxy {
     }
 
     protected final int schedule(JobInfo jobInfo) {
-        return getJobScheduler().schedule(jobInfo);
+        JobScheduler jobScheduler = getJobScheduler();
+        if (jobScheduler == null) {
+            throw new JobProxyIllegalStateException("JobScheduler is null");
+        }
+
+        return jobScheduler.schedule(jobInfo);
     }
 
     protected static String scheduleResultToString(int scheduleResult) {

@@ -76,7 +76,7 @@ public enum JobApi {
      */
     GCM(true, false);
 
-    private JobProxy mCachedProxy;
+    private volatile JobProxy mCachedProxy;
 
     private final boolean mSupportsExecutionWindow;
     private final boolean mFlexSupport;
@@ -136,6 +136,10 @@ public enum JobApi {
             mCachedProxy = createProxy(context);
         }
         return mCachedProxy;
+    }
+
+    public synchronized void invalidateCachedProxy() {
+        mCachedProxy = null;
     }
 
     private boolean isServiceEnabled(@NonNull Context context, @NonNull Class<? extends Service> clazz) {
