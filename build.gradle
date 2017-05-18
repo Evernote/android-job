@@ -22,7 +22,7 @@ ext {
     buildToolsVersion = '25.0.2'
 
     supportLibVersion = '25.0.0'
-    playServicesVersion = '10.2.1'
+    playServicesVersion = '10.2.4'
     stethoVersion = '1.4.2'
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
