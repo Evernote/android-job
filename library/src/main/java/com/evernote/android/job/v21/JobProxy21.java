@@ -52,6 +52,8 @@ public class JobProxy21 implements JobProxy {
 
     private static final String TAG = "JobProxy21";
 
+    private static final int ERROR_BOOT_PERMISSION = -123;
+
     protected final Context mContext;
     protected final CatLog mCat;
 
@@ -69,8 +71,13 @@ public class JobProxy21 implements JobProxy {
         long startMs = Common.getStartMs(request);
         long endMs = Common.getEndMs(request);
 
-        JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request), startMs, endMs).build();
+        JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request, true), startMs, endMs).build();
         int scheduleResult = schedule(jobInfo);
+
+        if (scheduleResult == ERROR_BOOT_PERMISSION) {
+            jobInfo = createBuilderOneOff(createBaseBuilder(request, false), startMs, endMs).build();
+            scheduleResult = schedule(jobInfo);
+        }
 
         mCat.d("Schedule one-off jobInfo %s, %s, start %s, end %s, reschedule count %d", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs), Common.getRescheduleCount(request));
@@ -81,8 +88,13 @@ public class JobProxy21 implements JobProxy {
         long intervalMs = request.getIntervalMs();
         long flexMs = request.getFlexMs();
 
-        JobInfo jobInfo = createBuilderPeriodic(createBaseBuilder(request), intervalMs, flexMs).build();
+        JobInfo jobInfo = createBuilderPeriodic(createBaseBuilder(request, true), intervalMs, flexMs).build();
         int scheduleResult = schedule(jobInfo);
+
+        if (scheduleResult == ERROR_BOOT_PERMISSION) {
+            jobInfo = createBuilderPeriodic(createBaseBuilder(request, false), intervalMs, flexMs).build();
+            scheduleResult = schedule(jobInfo);
+        }
 
         mCat.d("Schedule periodic jobInfo %s, %s, interval %s, flex %s", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(intervalMs), JobUtil.timeToString(flexMs));
@@ -93,8 +105,13 @@ public class JobProxy21 implements JobProxy {
         long startMs = Common.getStartMsSupportFlex(request);
         long endMs = Common.getEndMsSupportFlex(request);
 
-        JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request), startMs, endMs).build();
+        JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request, true), startMs, endMs).build();
         int scheduleResult = schedule(jobInfo);
+
+        if (scheduleResult == ERROR_BOOT_PERMISSION) {
+            jobInfo = createBuilderOneOff(createBaseBuilder(request, false), startMs, endMs).build();
+            scheduleResult = schedule(jobInfo);
+        }
 
         mCat.d("Schedule periodic (flex support) jobInfo %s, %s, start %s, end %s, flex %s", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs), JobUtil.timeToString(request.getFlexMs()));
@@ -136,12 +153,12 @@ public class JobProxy21 implements JobProxy {
         return false;
     }
 
-    protected JobInfo.Builder createBaseBuilder(JobRequest request) {
+    protected JobInfo.Builder createBaseBuilder(JobRequest request, boolean allowPersisting) {
         return new JobInfo.Builder(request.getJobId(), new ComponentName(mContext, PlatformJobService.class))
                 .setRequiresCharging(request.requiresCharging())
                 .setRequiresDeviceIdle(request.requiresDeviceIdle())
                 .setRequiredNetworkType(convertNetworkType(request.requiredNetworkType()))
-                .setPersisted(request.isPersisted());
+                .setPersisted(allowPersisting && request.isPersisted());
     }
 
     protected JobInfo.Builder createBuilderOneOff(JobInfo.Builder builder, long startMs, long endMs) {
@@ -177,7 +194,17 @@ public class JobProxy21 implements JobProxy {
             throw new JobProxyIllegalStateException("JobScheduler is null");
         }
 
-        return jobScheduler.schedule(jobInfo);
+        try {
+            return jobScheduler.schedule(jobInfo);
+        } catch (IllegalArgumentException e) {
+            mCat.e(e);
+
+            if (e.getMessage() != null && e.getMessage().contains("RECEIVE_BOOT_COMPLETED")) {
+                return ERROR_BOOT_PERMISSION;
+            } else {
+                throw e;
+            }
+        }
     }
 
     protected static String scheduleResultToString(int scheduleResult) {

@@ -1,6 +1,7 @@
 package com.evernote.android.job;
 
 import android.app.AlarmManager;
+import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.Context;
 
@@ -11,12 +12,16 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.mockito.ArgumentMatcher;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowAlarmManager;
 
 import java.lang.reflect.Field;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 /**
@@ -140,5 +145,35 @@ public class JobProxyTest {
         declaredField.setAccessible(true);
         ShadowAlarmManager shadowAlarmManager = (ShadowAlarmManager) declaredField.get(alarmManager);
         assertThat(shadowAlarmManager.getScheduledAlarms()).hasSize(count);
+    }
+
+    @Test
+    @Config(sdk = 21)
+    public void verifyRecoverWithoutBootPermissionJobScheduler() throws Exception {
+        Context context = BaseJobManagerTest.createMockContext();
+        Context applicationContext = context.getApplicationContext();
+
+        JobScheduler scheduler = spy((JobScheduler) applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE));
+        when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(scheduler);
+
+        doThrow(new IllegalArgumentException("Error: requested job be persisted without holding RECEIVE_BOOT_COMPLETED permission."))
+                .when(scheduler)
+                .schedule(argThat(new ArgumentMatcher<JobInfo>() {
+                    @Override
+                    public boolean matches(JobInfo argument) {
+                        return argument.isPersisted();
+                    }
+                }));
+
+        JobManager.create(context);
+
+        new JobRequest.Builder("tag")
+                .setExecutionWindow(200_000, 300_000)
+                .setPersisted(true)
+                .build()
+                .schedule();
+
+        assertThat(scheduler.getAllPendingJobs()).hasSize(1);
+        assertThat(scheduler.getAllPendingJobs().get(0).isPersisted()).isFalse();
     }
 }
