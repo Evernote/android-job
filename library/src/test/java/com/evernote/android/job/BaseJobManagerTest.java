@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.support.annotation.NonNull;
 import android.test.mock.MockContext;
 
@@ -121,8 +122,12 @@ public abstract class BaseJobManagerTest {
         // otherwise the JobScheduler isn't supported we check if the service is enable
         // Robolectric doesn't parse services from the manifest, see https://github.com/robolectric/robolectric/issues/416
         PackageManager packageManager = mock(PackageManager.class);
-        when(packageManager.queryIntentServices(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
         when(packageManager.queryBroadcastReceivers(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
+
+        ResolveInfo resolveInfo = new ResolveInfo();
+        resolveInfo.serviceInfo = new ServiceInfo();
+        resolveInfo.serviceInfo.permission = "android.permission.BIND_JOB_SERVICE";
+        when(packageManager.queryIntentServices(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(resolveInfo));
 
         Context context = spy(RuntimeEnvironment.application);
         when(context.getPackageManager()).thenReturn(packageManager);

@@ -19,7 +19,7 @@ ext {
     targetSdkVersion = 'O'
     minSdkVersion = 14
 
-    buildToolsVersion = '26.0.0-rc1'
+    buildToolsVersion = '26.0.0-rc2'
 
     supportLibVersion = '25.0.0'
     playServicesVersion = '10.2.4'

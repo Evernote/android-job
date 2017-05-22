@@ -77,4 +77,25 @@ public class DatabaseCorruptionTest {
 
         assertThat(file.exists()).isFalse();
     }
+
+    @Test
+    public void verifyDeleteWhileOpening() {
+        Context context = RuntimeEnvironment.application;
+
+        String filePath = getClass().getResource("/databases/corrupted.db").getPath();
+        final long originalLength = new File(filePath).length();
+
+        assertThat(new File(filePath).exists()).isTrue();
+
+        JobStorage jobStorage = new JobStorage(context, filePath);
+        SQLiteDatabase database = jobStorage.getDatabase();
+
+        assertThat(database).isNotNull();
+        assertThat(database.isOpen()).isTrue();
+        assertThat(originalLength).isNotEqualTo(new File(filePath).length());
+
+        File databaseFile = new File(database.getPath());
+        assertThat(databaseFile.exists()).isTrue();
+        assertThat(databaseFile.isFile()).isTrue();
+    }
 }
