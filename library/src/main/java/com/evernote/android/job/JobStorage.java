@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
@@ -285,7 +286,16 @@ import java.util.concurrent.atomic.AtomicInteger;
         if (mInjectedDatabase != null) {
             return mInjectedDatabase;
         } else {
-            return mDbHelper.getWritableDatabase();
+            try {
+                return mDbHelper.getWritableDatabase();
+
+            } catch (SQLiteCantOpenDatabaseException e) {
+                CAT.e(e);
+
+                // that's bad, delete the database and try again, otherwise users may get stuck in a loop
+                new JobStorageDatabaseErrorHandler().deleteDatabaseFile(DATABASE_NAME);
+                return mDbHelper.getWritableDatabase();
+            }
         }
     }
 
@@ -312,6 +322,9 @@ import java.util.concurrent.atomic.AtomicInteger;
             } else {
                 return 0;
             }
+        } catch (Exception e) {
+            CAT.e(e);
+            return 0;
 
         } finally {
             closeCursor(cursor);
