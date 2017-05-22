@@ -103,7 +103,7 @@ import java.util.List;
         }
     }
 
-    private void deleteDatabaseFile(String fileName) {
+    /*package*/ void deleteDatabaseFile(String fileName) {
         if (fileName.equalsIgnoreCase(":memory:") || fileName.trim().length() == 0) {
             return;
         }
