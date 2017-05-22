@@ -19,6 +19,7 @@ import org.robolectric.shadows.ShadowAlarmManager;
 import java.lang.reflect.Field;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
@@ -140,13 +141,6 @@ public class JobProxyTest {
         verifyAlarmCount(alarmManager, 0);
     }
 
-    private void verifyAlarmCount(AlarmManager alarmManager, int count) throws NoSuchFieldException, IllegalAccessException {
-        Field declaredField = alarmManager.getClass().getDeclaredField("__robo_data__");
-        declaredField.setAccessible(true);
-        ShadowAlarmManager shadowAlarmManager = (ShadowAlarmManager) declaredField.get(alarmManager);
-        assertThat(shadowAlarmManager.getScheduledAlarms()).hasSize(count);
-    }
-
     @Test
     @Config(sdk = 21)
     public void verifyRecoverWithoutBootPermissionJobScheduler() throws Exception {
@@ -175,5 +169,39 @@ public class JobProxyTest {
 
         assertThat(scheduler.getAllPendingJobs()).hasSize(1);
         assertThat(scheduler.getAllPendingJobs().get(0).isPersisted()).isFalse();
+    }
+
+    @Test
+    @Config(sdk = 21)
+    public void verifyRecoverWithoutServiceJobScheduler() throws Exception {
+        Context context = BaseJobManagerTest.createMockContext();
+        Context applicationContext = context.getApplicationContext();
+
+        AlarmManager alarmManager = (AlarmManager) applicationContext.getSystemService(Context.ALARM_SERVICE);
+
+        JobScheduler scheduler = spy((JobScheduler) applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE));
+        when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(scheduler);
+
+        doThrow(new IllegalArgumentException("No such service ComponentInfo{com.evernote/com.evernote.android.job.v21.PlatformJobService}"))
+                .when(scheduler)
+                .schedule(any(JobInfo.class));
+
+        JobManager.create(context);
+
+        new JobRequest.Builder("tag")
+                .setExecutionWindow(200_000, 300_000)
+                .setPersisted(true)
+                .build()
+                .schedule();
+
+        assertThat(scheduler.getAllPendingJobs()).isEmpty();
+        verifyAlarmCount(alarmManager, 1);
+    }
+
+    private void verifyAlarmCount(AlarmManager alarmManager, int count) throws NoSuchFieldException, IllegalAccessException {
+        Field declaredField = alarmManager.getClass().getDeclaredField("__robo_data__");
+        declaredField.setAccessible(true);
+        ShadowAlarmManager shadowAlarmManager = (ShadowAlarmManager) declaredField.get(alarmManager);
+        assertThat(shadowAlarmManager.getScheduledAlarms()).hasSize(count);
     }
 }

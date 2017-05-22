@@ -76,6 +76,8 @@ public enum JobApi {
      */
     GCM(true, false);
 
+    private static final String JOB_SCHEDULER_PERMISSION = "android.permission.BIND_JOB_SERVICE";
+
     private volatile JobProxy mCachedProxy;
 
     private final boolean mSupportsExecutionWindow;
@@ -97,9 +99,9 @@ public enum JobApi {
     public boolean isSupported(Context context) {
         switch (this) {
             case V_24:
-                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isServiceEnabled(context, PlatformJobService.class);
+                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isServiceEnabledAndHasPermission(context, PlatformJobService.class, JOB_SCHEDULER_PERMISSION);
             case V_21:
-                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isServiceEnabled(context, PlatformJobService.class);
+                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isServiceEnabledAndHasPermission(context, PlatformJobService.class, JOB_SCHEDULER_PERMISSION);
             case V_19:
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && isServiceEnabled(context, PlatformAlarmService.class)
                         && isBroadcastEnabled(context, PlatformAlarmReceiver.class);
@@ -148,6 +150,26 @@ public enum JobApi {
             Intent intent = new Intent(context, clazz);
             List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(intent, 0);
             return resolveInfos != null && !resolveInfos.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean isServiceEnabledAndHasPermission(@NonNull Context context, @NonNull Class<? extends Service> clazz, @NonNull String permission) {
+        try {
+            Intent intent = new Intent(context, clazz);
+            List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(intent, 0);
+            if (resolveInfos == null || resolveInfos.isEmpty()) {
+                return false;
+            }
+
+            for (ResolveInfo info : resolveInfos) {
+                if (info.serviceInfo != null && permission.equals(info.serviceInfo.permission)) {
+                    return true;
+                }
+            }
+            return false;
+
         } catch (Exception e) {
             return false;
         }

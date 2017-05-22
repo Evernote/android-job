@@ -199,8 +199,14 @@ public class JobProxy21 implements JobProxy {
         } catch (IllegalArgumentException e) {
             mCat.e(e);
 
-            if (e.getMessage() != null && e.getMessage().contains("RECEIVE_BOOT_COMPLETED")) {
+            String message = e.getMessage();
+            if (message != null && message.contains("RECEIVE_BOOT_COMPLETED")) {
                 return ERROR_BOOT_PERMISSION;
+
+            } else if (message != null && message.contains("No such service ComponentInfo")) {
+                // this will reset the proxy and in the worst case use the AlarmManager
+                throw new JobProxyIllegalStateException(e);
+
             } else {
                 throw e;
             }
