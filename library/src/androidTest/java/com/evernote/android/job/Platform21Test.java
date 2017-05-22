@@ -37,7 +37,7 @@ public class Platform21Test {
                     .schedule();
         }
 
-        assertThat(true).isFalse();
+        throw new AssertionError("It shouldn't be possible to create more than 100 distinct jobs with the JobScheduler");
     }
 
     @Test
@@ -76,8 +76,7 @@ public class Platform21Test {
                         .schedule();
             }
 
-            // not more than 100 allowed
-            assertThat(true).isFalse();
+            throw new AssertionError("It shouldn't be possible to create more than 100 distinct jobs with the JobScheduler");
 
         } catch (Exception ignored) {
         }
