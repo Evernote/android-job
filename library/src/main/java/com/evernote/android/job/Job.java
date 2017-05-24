@@ -357,7 +357,7 @@ public abstract class Job {
     /**
      * Holds several parameters for the {@link Job} execution.
      */
-    protected static final class Params {
+    public static final class Params {
 
         private final JobRequest mRequest;
         private PersistableBundleCompat mExtras;
