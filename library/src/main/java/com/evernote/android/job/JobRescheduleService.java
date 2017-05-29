@@ -22,9 +22,23 @@ public final class JobRescheduleService extends IntentService {
     private static final CatLog CAT = new JobCat(TAG);
 
     /*package*/ static void startService(Context context) {
-        Intent intent = new Intent(context, JobRescheduleService.class);
-        WakeLockUtil.startWakefulService(context, intent);
-        latch = new CountDownLatch(1);
+        try {
+            Intent intent = new Intent(context, JobRescheduleService.class);
+            WakeLockUtil.startWakefulService(context, intent);
+            latch = new CountDownLatch(1);
+        } catch (Exception e) {
+            /*
+             * Caused by: java.lang.SecurityException: Unable to start service Intent
+             * { cmp=com.evernote/.android.job.JobRescheduleService (has extras) }: Unable to launch
+             * app com.evernote/1210016 for service Intent { cmp=com.evernote/.android.job.JobRescheduleService }:
+             * user 12 is stopped
+             *
+             * It's bad to catch all exceptions. But this service is only a safety check and
+             * if it fails, then better try next time and don't handle the exception upstream
+             * where it's hard to deal with this case.
+             */
+            CAT.e(e);
+        }
     }
 
     @VisibleForTesting
