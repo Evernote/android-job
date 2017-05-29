@@ -25,8 +25,15 @@
  */
 package com.evernote.android.job;
 
+import com.evernote.android.job.util.JobApi;
+
 /**
  * Indicates illegal states during the creation of the {@link JobManager}.
+ *
+ * <br>
+ * <br>
+ *
+ * You can suppress this exception with {@link JobApi#setForceAllowApi14(boolean)}.
  *
  * @author rwondratschek
  */

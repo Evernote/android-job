@@ -7,6 +7,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.test.mock.MockContext;
 
+import com.evernote.android.job.util.JobApi;
+
 import org.junit.After;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -30,8 +32,10 @@ import static org.mockito.Mockito.when;
 @FixMethodOrder(MethodSorters.JVM)
 public class JobManagerCreateTest {
 
+    @SuppressWarnings("deprecation")
     @After
     public void cleanup() {
+        JobApi.setForceAllowApi14(false);
         try {
             JobManager.instance().destroy();
         } catch (Exception ignored) {
@@ -50,6 +54,19 @@ public class JobManagerCreateTest {
         when(packageManager.queryBroadcastReceivers(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(new ResolveInfo()));
 
         Context context = mockContext();
+        when(context.getPackageManager()).thenReturn(packageManager);
+
+        JobManager.create(context);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void verifyForceAllowApi14() {
+        JobApi.setForceAllowApi14(true);
+
+        Context context = mockContext();
+
+        PackageManager packageManager = mock(PackageManager.class);
         when(context.getPackageManager()).thenReturn(packageManager);
 
         JobManager.create(context);
