@@ -35,9 +35,6 @@ import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
-import com.evernote.android.job.JobManager;
-import com.evernote.android.job.JobManagerCreateException;
-import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.util.Device;
 import com.evernote.android.job.v14.JobProxy14;
@@ -85,39 +82,6 @@ public enum JobApi {
 
     private static final String JOB_SCHEDULER_PERMISSION = "android.permission.BIND_JOB_SERVICE";
 
-    private static volatile boolean forceAllowApi14 = false;
-
-    /**
-     * On some devices for some reason all broadcast receiver and services are disabled. This library
-     * cannot work properly in this case. This switch allows to use the AlarmManager as fallback even
-     * in such a weird state.
-     *
-     * <br>
-     * <br>
-     *
-     * If the value is {@code true}, then this suppresses the {@link JobManagerCreateException} during
-     * the creation of the job manager.
-     *
-     * @param forceAllowApi14 Whether API 14 should be used as fallback in all scenarios. The default value
-     *                   is {@code false}.
-     * @deprecated In version 1.2.0 this method will be moved to the Config class.
-     */
-    @SuppressWarnings("DeprecatedIsStillUsed")
-    @Deprecated
-    public static void setForceAllowApi14(boolean forceAllowApi14) {
-        JobApi.forceAllowApi14 = forceAllowApi14;
-    }
-
-    /**
-     * @return Whether API 14 should be used as fallback in all scenarios. The default value is {@code false}.
-     *
-     * @deprecated In version 1.2.0 this method will be moved to the Config class.
-     */
-    @Deprecated
-    public static boolean isForceAllowApi14() {
-        return forceAllowApi14;
-    }
-
     private volatile JobProxy mCachedProxy;
 
     private final boolean mSupportsExecutionWindow;
@@ -154,7 +118,7 @@ public enum JobApi {
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && isServiceEnabled(context, PlatformAlarmService.class)
                         && isBroadcastEnabled(context, PlatformAlarmReceiver.class);
             case V_14:
-                return forceAllowApi14
+                return JobConfig.isForceAllowApi14()
                         || (isServiceEnabled(context, PlatformAlarmService.class) && isBroadcastEnabled(context, PlatformAlarmReceiver.class));
             case GCM:
                 return GcmAvailableHelper.isGcmApiSupported(context);

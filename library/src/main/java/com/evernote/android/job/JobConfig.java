@@ -51,6 +51,7 @@ public final class JobConfig {
     private static final JobCat CAT = new JobCat("JobConfig");
 
     private static volatile boolean allowSmallerIntervals;
+    private static volatile boolean forceAllowApi14 = false;
 
     static {
         ENABLED_APIS = new EnumMap<>(JobApi.class);
@@ -121,6 +122,31 @@ public final class JobConfig {
     }
 
     /**
+     * On some devices for some reason all broadcast receiver and services are disabled. This library
+     * cannot work properly in this case. This switch allows to use the AlarmManager as fallback even
+     * in such a weird state.
+     *
+     * <br>
+     * <br>
+     *
+     * If the value is {@code true}, then this suppresses the {@link JobManagerCreateException} during
+     * the creation of the job manager.
+     *
+     * @param forceAllowApi14 Whether API 14 should be used as fallback in all scenarios. The default
+     *                        value is {@code false}.
+     */
+    public static void setForceAllowApi14(boolean forceAllowApi14) {
+        JobConfig.forceAllowApi14 = forceAllowApi14;
+    }
+
+    /**
+     * @return Whether API 14 should be used as fallback in all scenarios. The default value is {@code false}.
+     */
+    public static boolean isForceAllowApi14() {
+        return forceAllowApi14;
+    }
+
+    /**
      * Resets all adjustments in the config.
      */
     public static void reset() {
@@ -128,5 +154,6 @@ public final class JobConfig {
             ENABLED_APIS.put(api, Boolean.TRUE);
         }
         allowSmallerIntervals = false;
+        forceAllowApi14 = false;
     }
 }
