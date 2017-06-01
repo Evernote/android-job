@@ -44,7 +44,7 @@ public class JobCreatorHolderTest {
     }
 
     @Test
-    public void createJob_whenNoCreatorsAreAdded_logsWarning() {
+    public void createJobLogsWarningWhenNoCreatorsAreAdded() {
         holder.createJob("DOES_NOT_EXIST");
 
         verify(catPrinter).println(
@@ -55,7 +55,7 @@ public class JobCreatorHolderTest {
     }
 
     @Test
-    public void createJob_whenAtLeastOneCreatorIsAdded_logsNothing() {
+    public void createJobLogsNothingWhenAtLeastOneCreatorIsAdded() {
         holder.addJobCreator(mockJobCreator);
 
         holder.createJob("DOES_NOT_EXIST");
@@ -64,7 +64,7 @@ public class JobCreatorHolderTest {
     }
 
     @Test
-    public void createJob_whenCreatorListIsModifiedConcurrently_isThreadsafe() {
+    public void createJobSucceedsWhenCreatorListIsModifiedConcurrently() {
         // This test verifies that modifying the list of job-creators while
         // another thread is in the middle of JobCreatorHolder#createJob(String)
         // is safe, in that createJob will finish unexceptionally.

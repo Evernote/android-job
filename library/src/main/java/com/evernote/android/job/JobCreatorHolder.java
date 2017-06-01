@@ -4,7 +4,6 @@ import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.CatLog;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
