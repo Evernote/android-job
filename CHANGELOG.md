@@ -10,6 +10,7 @@
 * List `support-v4` as dependency, because it's required, see #200
 * Make `Job.Params` public for better test support, see #201
 * Allow to suppress the `JobManagerCreateException`, see `JobApi.setForceAllowApi14(boolean)`
+* Make SimpleDateFormat thread-local to avoid possible crash, see #208
 
 ## 1.1.10 (2017-04-29)
 
