@@ -179,8 +179,9 @@ public class JobManagerTest extends BaseJobManagerTest {
         final JobRequest.Builder builder = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
                 .setExecutionWindow(300_000, 400_000);
 
+        final CountDownLatch latch = new CountDownLatch(jobs);
+
         for (int i = 0; i < jobs; i++) {
-            final CountDownLatch latch = new CountDownLatch(1);
             new Thread() {
                 @Override
                 public void run() {
@@ -188,9 +189,9 @@ public class JobManagerTest extends BaseJobManagerTest {
                     latch.countDown();
                 }
             }.start();
-            latch.await(1, TimeUnit.SECONDS);
         }
 
+        assertThat(latch.await(3, TimeUnit.SECONDS)).isTrue();
         assertThat(manager().getAllJobRequests()).hasSize(jobs);
     }
 

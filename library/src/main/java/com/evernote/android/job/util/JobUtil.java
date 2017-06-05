@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class JobUtil {
 
-    private static final SimpleDateFormat FORMAT = new SimpleDateFormat("HH:mm:ss", Locale.US);
+    private static final ThreadLocal<SimpleDateFormat> FORMAT = new ThreadLocal<>();
 
     private static final long ONE_DAY = TimeUnit.DAYS.toMillis(1);
 
@@ -59,8 +59,14 @@ public final class JobUtil {
      * @return The time in the format HH:mm:ss.
      */
     public static String timeToString(long timeMs) {
-        FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-        String result = FORMAT.format(new Date(timeMs));
+        SimpleDateFormat simpleDateFormat = FORMAT.get();
+        if (simpleDateFormat == null) {
+            simpleDateFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+            FORMAT.set(simpleDateFormat);
+        }
+
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        String result = simpleDateFormat.format(new Date(timeMs));
 
         long days = timeMs / ONE_DAY;
         if (days == 1) {
