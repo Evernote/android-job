@@ -198,6 +198,33 @@ public class JobProxyTest {
         verifyAlarmCount(alarmManager, 1);
     }
 
+    @Test
+    @Config(sdk = 21)
+    public void verifyRecoverWithNpeInJobScheduler() throws Exception {
+        Context context = BaseJobManagerTest.createMockContext();
+        Context applicationContext = context.getApplicationContext();
+
+        AlarmManager alarmManager = (AlarmManager) applicationContext.getSystemService(Context.ALARM_SERVICE);
+
+        JobScheduler scheduler = spy((JobScheduler) applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE));
+        when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(scheduler);
+
+        doThrow(new NullPointerException("Attempt to invoke interface method 'int android.app.job.IJobScheduler.schedule(android.app.job.JobInfo)' on a null object reference"))
+                .when(scheduler)
+                .schedule(any(JobInfo.class));
+
+        JobManager.create(context);
+
+        new JobRequest.Builder("tag")
+                .setExecutionWindow(200_000, 300_000)
+                .setPersisted(true)
+                .build()
+                .schedule();
+
+        assertThat(scheduler.getAllPendingJobs()).isEmpty();
+        verifyAlarmCount(alarmManager, 1);
+    }
+
     private void verifyAlarmCount(AlarmManager alarmManager, int count) throws NoSuchFieldException, IllegalAccessException {
         Field declaredField = alarmManager.getClass().getDeclaredField("__robo_data__");
         declaredField.setAccessible(true);

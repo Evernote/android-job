@@ -1,3 +1,7 @@
+## 1.1.12
+
+* Handle NPE inside of `JobScheduler`
+
 ## 1.1.11 (2017-06-05)
 
 * Fix a race condition when canceling jobs, see #178
