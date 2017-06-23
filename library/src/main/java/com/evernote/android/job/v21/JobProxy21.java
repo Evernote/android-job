@@ -231,6 +231,14 @@ public class JobProxy21 implements JobProxy {
             } else {
                 throw e;
             }
+        } catch (NullPointerException e) {
+            /*
+            Attempt to invoke interface method 'int android.app.job.IJobScheduler.schedule(android.app.job.JobInfo)' on a null object reference
+            at android.app.JobSchedulerImpl.schedule(JobSchedulerImpl.java:42)
+            at com.evernote.android.job.v21.JobProxy21.schedule(JobProxy21.java:198)
+             */
+            mCat.e(e);
+            throw new JobProxyIllegalStateException(e);
         }
     }
 

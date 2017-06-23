@@ -7,6 +7,10 @@
 * Remove the persisted parameter, which didn't work reliable. All jobs are persisted anyway.
 * Add feature to make jobs transient and to add a `Bundle`, see `setTransientExtras(bundle)`
 
+## 1.1.12
+
+* Handle NPE inside of `JobScheduler`
+
 ## 1.1.11 (2017-06-05)
 
 * Fix a race condition when canceling jobs, see #178
