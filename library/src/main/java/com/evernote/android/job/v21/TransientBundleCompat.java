@@ -25,10 +25,12 @@
  */
 package com.evernote.android.job.v21;
 
+import android.annotation.TargetApi;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -47,6 +49,7 @@ import java.util.concurrent.TimeUnit;
  *
  * Created by rwondratschek on 01.05.17.
  */
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 /*package*/ final class TransientBundleCompat {
 
     private static final JobCat CAT = new JobCat("TransientBundleCompat");

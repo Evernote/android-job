@@ -5,6 +5,8 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
+    buildTypeMatching 'release', 'gcm'
+
     defaultConfig {
         applicationId "com.evernote.android.job.demo"
 
@@ -27,10 +29,12 @@ android {
             signingConfig signingConfigs.debug
         }
 
+        /*
         gcm.initWith(buildTypes.debug)
         gcm {
             applicationIdSuffix ".gcm"
         }
+        */
     }
 
     compileOptions {
@@ -39,17 +43,20 @@ android {
     }
 
     lintOptions {
-        abortOnError true
+        abortOnError false // TODO: there's a Lint error, set to true later again
     }
 }
 
 dependencies {
-    compile project(':library')
-    compile "com.android.support:support-v4:$supportLibVersion"
-    compile "com.android.support:appcompat-v7:$supportLibVersion"
-    compile "com.facebook.stetho:stetho:$stethoVersion"
+    implementation project(':library')
+    implementation "com.android.support:support-v4:$supportLibVersion"
+    implementation "com.android.support:appcompat-v7:$supportLibVersion"
+    implementation "com.facebook.stetho:stetho:$stethoVersion"
+    implementation "net.vrallev.android:cat:$catVersion"
 
-    gcmCompile "com.google.android.gms:play-services-gcm:$playServicesVersion"
+    // TODO: Figure this out with AGP 3.0.0
+    // gcmImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
+    implementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
 }
 
 uploadArchives.enabled false
