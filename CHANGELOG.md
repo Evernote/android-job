@@ -10,6 +10,7 @@
 ## 1.1.12
 
 * Handle NPE inside of `JobScheduler`
+* Handle 'Package manager has died' crash
 
 ## 1.1.11 (2017-06-05)
 

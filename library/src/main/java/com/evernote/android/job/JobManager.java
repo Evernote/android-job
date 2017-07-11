@@ -44,6 +44,7 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 
 import net.vrallev.android.cat.CatLog;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -461,9 +462,19 @@ public final class JobManager {
     }
 
     private static void sendAddJobCreatorIntent(@NonNull Context context) {
+        final String myPackage = context.getPackageName();
+
         Intent intent = new Intent(JobCreator.ACTION_ADD_JOB_CREATOR);
-        List<ResolveInfo> resolveInfos = context.getPackageManager().queryBroadcastReceivers(intent, 0);
-        String myPackage = context.getPackageName();
+        intent.setPackage(myPackage);
+
+        List<ResolveInfo> resolveInfos;
+        try {
+            resolveInfos = context.getPackageManager().queryBroadcastReceivers(intent, 0);
+        } catch (Exception e) {
+            // just in case this crashes, skip the intent, most apps don't use this mechanism anyways
+            // this also prevents crash loops (package manager has died)
+            resolveInfos = Collections.emptyList();
+        }
 
         for (ResolveInfo resolveInfo : resolveInfos) {
             ActivityInfo activityInfo = resolveInfo.activityInfo;
