@@ -431,6 +431,10 @@ public final class JobRequest {
         return builder;
     }
 
+    /*package*/ Builder createBuilder() {
+        return new Builder(mBuilder, true);
+    }
+
     /*package*/ JobRequest reschedule(boolean failure, boolean newJob) {
         JobRequest newRequest = new Builder(this.mBuilder, newJob).build();
         if (failure) {

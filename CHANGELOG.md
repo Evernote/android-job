@@ -9,6 +9,7 @@
 * Add feature to make jobs transient and to add a `Bundle`, see `setTransientExtras(bundle)`
 * Add new `METERED` network type
 * Add new requirements battery not low and storage not low
+* Add helper job class `DailyJob` to make it easier to run jobs once a day, see #223
 
 ## 1.1.12
 
