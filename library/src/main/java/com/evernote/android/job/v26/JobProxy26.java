@@ -62,4 +62,15 @@ public class JobProxy26 extends JobProxy24 {
     protected boolean isJobInfoScheduled(@Nullable JobInfo info, @NonNull JobRequest request) {
         return info != null && info.getId() == request.getJobId();
     }
+
+    @Override
+    protected int convertNetworkType(@NonNull JobRequest.NetworkType networkType) {
+        switch (networkType) {
+            case METERED:
+                return JobInfo.NETWORK_TYPE_METERED;
+            default:
+                return super.convertNetworkType(networkType);
+        }
+
+    }
 }

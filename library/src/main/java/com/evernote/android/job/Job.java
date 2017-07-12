@@ -197,9 +197,11 @@ public abstract class Job {
             case CONNECTED:
                 return current != JobRequest.NetworkType.ANY;
             case NOT_ROAMING:
-                return current == JobRequest.NetworkType.NOT_ROAMING || current == JobRequest.NetworkType.UNMETERED;
+                return current == JobRequest.NetworkType.NOT_ROAMING || current == JobRequest.NetworkType.UNMETERED || current == JobRequest.NetworkType.METERED;
             case UNMETERED:
                 return current == JobRequest.NetworkType.UNMETERED;
+            case METERED:
+                return current == JobRequest.NetworkType.CONNECTED || current == JobRequest.NetworkType.NOT_ROAMING;
             default:
                 throw new IllegalStateException("not implemented");
         }

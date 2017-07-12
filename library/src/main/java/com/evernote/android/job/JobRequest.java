@@ -1067,6 +1067,10 @@ public final class JobRequest {
         /**
          * Network must be connected and not roaming, but can be metered.
          */
-        NOT_ROAMING
+        NOT_ROAMING,
+        /**
+         * This job requires metered connectivity such as most cellular data networks.
+         */
+        METERED
     }
 }
