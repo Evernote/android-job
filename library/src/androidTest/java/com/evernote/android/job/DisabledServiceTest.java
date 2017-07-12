@@ -3,6 +3,7 @@ package com.evernote.android.job;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
@@ -46,7 +47,9 @@ public class DisabledServiceTest {
 
     @Test
     public void verifyJobApiNotSupportedWhenServiceIsDisabled() {
-        assertThat(JobApi.V_26.isSupported(mContext)).isTrue();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            assertThat(JobApi.V_26.isSupported(mContext)).isTrue();
+        }
         assertThat(JobApi.V_24.isSupported(mContext)).isTrue();
         assertThat(JobApi.V_21.isSupported(mContext)).isTrue();
 

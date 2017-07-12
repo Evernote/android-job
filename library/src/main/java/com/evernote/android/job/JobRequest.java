@@ -858,7 +858,9 @@ public final class JobRequest {
          * <br>
          *
          * The advantage if a job that starts immediately compared to implementing your own
-         * {@link Service} is that jobs run in parallel and can be rescheduled if necessary.
+         * {@link Service} is that jobs run in parallel and can be rescheduled if necessary. It
+         * also respect the background execution limit introduced in Android O, meaning that if
+         * it's not allowed to start a {@link Service}, then the work is delayed.
          *
          * @see #setExact(long)
          */

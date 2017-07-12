@@ -1,7 +1,7 @@
 package com.evernote.android.job;
 
+import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
-import android.content.Context;
 import android.os.Build;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
@@ -44,24 +44,19 @@ public class Platform21Test {
     public void testRescheduleService() throws Exception {
         assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
 
-        JobManager manager = mJobManagerRule.getManager();
-        Context context = InstrumentationRegistry.getTargetContext();
-
         int jobId = new JobRequest.Builder("tag")
                 .setExecutionWindow(300_000, 400_000)
                 .build()
                 .schedule();
 
-        assertThat(manager.getAllJobRequests()).hasSize(1);
+        assertThat(mJobManagerRule.getManager().getAllJobRequests()).hasSize(1);
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).hasSize(1);
 
-        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        assertThat(jobScheduler.getAllPendingJobs()).hasSize(1);
+        mJobManagerRule.getJobScheduler().cancel(jobId);
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).isEmpty();
 
-        jobScheduler.cancel(jobId);
-        assertThat(jobScheduler.getAllPendingJobs()).isEmpty();
-
-        JobRescheduleService.latch.await(15, TimeUnit.SECONDS);
-        assertThat(jobScheduler.getAllPendingJobs()).hasSize(1);
+        waitForJobRescheduleService();
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).hasSize(1);
     }
 
     @Test
@@ -82,16 +77,14 @@ public class Platform21Test {
         }
 
         JobManager manager = mJobManagerRule.getManager();
-        Context context = InstrumentationRegistry.getTargetContext();
 
         int jobCount = manager.getAllJobRequests().size();
         assertThat(manager.getAllJobRequests()).isNotEmpty();
 
-        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        assertThat(jobScheduler.getAllPendingJobs()).hasSize(jobCount);
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).hasSize(jobCount);
 
-        jobScheduler.cancelAll();
-        assertThat(jobScheduler.getAllPendingJobs()).isEmpty();
+        mJobManagerRule.getJobScheduler().cancelAll();
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).isEmpty();
 
         final int moreJobs = 50;
         for (int i = 0; i < moreJobs; i++) {
@@ -103,7 +96,25 @@ public class Platform21Test {
 
         assertThat(manager.getAllJobRequests()).hasSize(jobCount + moreJobs);
 
-        JobRescheduleService.latch.await(15, TimeUnit.SECONDS);
-        assertThat(jobScheduler.getAllPendingJobs()).hasSize(jobCount);
+        waitForJobRescheduleService();
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).hasSize(jobCount);
+    }
+
+    private void waitForJobRescheduleService() throws InterruptedException {
+        boolean await = JobRescheduleService.latch.await(15, TimeUnit.SECONDS);
+        if (!await) {
+            // must be O
+            assertThat(Build.VERSION.SDK_INT).isGreaterThanOrEqualTo(Build.VERSION_CODES.O);
+
+            JobScheduler jobScheduler = InstrumentationRegistry.getContext().getSystemService(JobScheduler.class);
+            JobInfo pendingJob = jobScheduler.getPendingJob(JobRescheduleService.JOB_ID);
+            if (pendingJob != null) {
+                // job was scheduled, that's what we want to verify, now manually call the reschedule
+                new JobRescheduleService().rescheduleJobs(mJobManagerRule.getManager());
+            } else {
+                // job probably running, give it another try
+                assertThat(JobRescheduleService.latch.await(15, TimeUnit.SECONDS)).isTrue();
+            }
+        }
     }
 }

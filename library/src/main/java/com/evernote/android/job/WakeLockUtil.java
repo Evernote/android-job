@@ -28,8 +28,9 @@ import java.util.concurrent.TimeUnit;
         // no op
     }
 
+    @SuppressWarnings("SameParameterValue")
     @Nullable
-    public static PowerManager.WakeLock acquireWakeLock(@NonNull Context context, @NonNull String tag, long timeoutMillis) {
+    static PowerManager.WakeLock acquireWakeLock(@NonNull Context context, @NonNull String tag, long timeoutMillis) {
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, tag);
@@ -38,7 +39,7 @@ import java.util.concurrent.TimeUnit;
         return acquireWakeLock(context, wakeLock, timeoutMillis) ? wakeLock : null;
     }
 
-    public static boolean acquireWakeLock(@NonNull Context context, @Nullable PowerManager.WakeLock wakeLock, long timeoutMillis) {
+    static boolean acquireWakeLock(@NonNull Context context, @Nullable PowerManager.WakeLock wakeLock, long timeoutMillis) {
         if (wakeLock != null && !wakeLock.isHeld() && JobUtil.hasWakeLockPermission(context)) {
             // Even if we have the permission, some devices throw an exception in the try block nonetheless,
             // I'm looking at you, Samsung SM-T805
@@ -55,7 +56,7 @@ import java.util.concurrent.TimeUnit;
         return false;
     }
 
-    public static void releaseWakeLock(@Nullable PowerManager.WakeLock wakeLock) {
+    static void releaseWakeLock(@Nullable PowerManager.WakeLock wakeLock) {
         try {
             if (wakeLock != null && wakeLock.isHeld()) {
                 wakeLock.release();

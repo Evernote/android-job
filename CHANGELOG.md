@@ -3,8 +3,9 @@
 * Extract `JobManager.Config` class into `JobConfig` class to make it possible to change settings before the `JobManager` is created
 * Add an option to disable any specific API and not just the GCM API (only useful for testing purposes)
 * Remove deprecated methods
-* Add the `startNow()` method to run a job immediately
-* Remove the persisted parameter, which didn't work reliable. All jobs are persisted anyway.
+* Add the `startNow()` method to run a job immediately respecting all constraints in Android O
+* Remove the persisted parameter, which didn't work reliable, all jobs are persisted anyway
+* Remove `startWakefulService` from the `Job` class, `WakefulBroadcastReceiver` is now deprecated with `JobIntentService` as the better option
 * Add feature to make jobs transient and to add a `Bundle`, see `setTransientExtras(bundle)`
 
 ## 1.1.12

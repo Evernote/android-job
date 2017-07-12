@@ -1,7 +1,6 @@
 package com.evernote.android.job.v21;
 
 import android.app.PendingIntent;
-import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,7 +11,7 @@ import com.evernote.android.job.JobApi;
 import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobManagerRule;
 import com.evernote.android.job.JobRequest;
-import com.evernote.android.job.v14.PlatformAlarmService;
+import com.evernote.android.job.v14.PlatformAlarmServiceExact;
 
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -28,6 +27,7 @@ import static org.junit.Assume.assumeTrue;
 /**
  * @author rwondratschek
  */
+@SuppressWarnings("ConstantConditions")
 @RunWith(AndroidJUnit4.class)
 @FixMethodOrder(MethodSorters.JVM)
 public class TransientBundleCompatTest {
@@ -41,7 +41,7 @@ public class TransientBundleCompatTest {
 
         int jobId = scheduleJob();
 
-        final Intent intent = PlatformAlarmService.createIntent(context(), jobId, null);
+        final Intent intent = PlatformAlarmServiceExact.createIntent(context(), jobId, null);
         PendingIntent pendingIntent = PendingIntent.getService(context(), jobId, intent, PendingIntent.FLAG_NO_CREATE);
         assertThat(pendingIntent).isNotNull();
 
@@ -57,7 +57,7 @@ public class TransientBundleCompatTest {
 
         int jobId = scheduleJob();
 
-        final Intent intent = PlatformAlarmService.createIntent(context(), jobId, null);
+        final Intent intent = PlatformAlarmServiceExact.createIntent(context(), jobId, null);
         PendingIntent pendingIntent = PendingIntent.getService(context(), jobId, intent, PendingIntent.FLAG_NO_CREATE);
         assertThat(pendingIntent).isNotNull();
 
@@ -81,12 +81,11 @@ public class TransientBundleCompatTest {
                 .build()
                 .schedule();
 
-        JobScheduler scheduler = (JobScheduler) context().getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        assertThat(scheduler.getAllPendingJobs()).isNotNull().isNotEmpty();
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).isNotNull().isNotEmpty();
 
         assertThat(mJobManagerRule.getManager().getJobRequest(jobId).isTransient()).isTrue();
 
-        final Intent intent = PlatformAlarmService.createIntent(context(), jobId, null);
+        final Intent intent = PlatformAlarmServiceExact.createIntent(context(), jobId, null);
         PendingIntent pendingIntent = PendingIntent.getService(context(), jobId, intent, PendingIntent.FLAG_NO_CREATE);
         assertThat(pendingIntent).isNotNull();
 
@@ -105,7 +104,7 @@ public class TransientBundleCompatTest {
 
         int jobId = scheduleJob();
 
-        final Intent intent = PlatformAlarmService.createIntent(context(), jobId, null);
+        final Intent intent = PlatformAlarmServiceExact.createIntent(context(), jobId, null);
         PendingIntent pendingIntent = PendingIntent.getService(context(), jobId, intent, PendingIntent.FLAG_NO_CREATE);
         assertThat(pendingIntent).isNull();
     }
@@ -124,8 +123,7 @@ public class TransientBundleCompatTest {
                 .build()
                 .schedule();
 
-        JobScheduler scheduler = (JobScheduler) context().getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        assertThat(scheduler.getAllPendingJobs()).isNotNull().isNotEmpty();
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).isNotNull().isNotEmpty();
 
         assertThat(mJobManagerRule.getManager().getJobRequest(jobId).isTransient()).isTrue();
 

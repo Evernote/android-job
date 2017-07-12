@@ -9,6 +9,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.evernote.android.job.gcm.PlatformGcmService;
 import com.evernote.android.job.v14.PlatformAlarmService;
+import com.evernote.android.job.v14.PlatformAlarmServiceExact;
 import com.evernote.android.job.v21.PlatformJobService;
 
 import org.junit.Before;
@@ -76,7 +77,7 @@ public class PlatformTest {
 
     @Test
     public void testExact() throws Exception {
-        mJob = new TestJob(PlatformAlarmService.class);
+        mJob = new TestJob(PlatformAlarmServiceExact.class);
 
         new JobRequest.Builder("tag")
                 .setExact(1_000)

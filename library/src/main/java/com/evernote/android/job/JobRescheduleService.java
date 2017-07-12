@@ -1,10 +1,11 @@
 package com.evernote.android.job;
 
-import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
+import android.support.v4.app.JobIntentService;
 
 import com.evernote.android.job.util.JobCat;
 
@@ -17,15 +18,15 @@ import java.util.concurrent.CountDownLatch;
 /**
  * @author rwondratschek
  */
-public final class JobRescheduleService extends IntentService {
+public final class JobRescheduleService extends JobIntentService {
 
-    private static final String TAG = "JobRescheduleService";
-    private static final CatLog CAT = new JobCat(TAG);
+    private static final CatLog CAT = new JobCat("JobRescheduleService");
+
+    /*package*/ static final int JOB_ID = 2147480000; // close to Integer.MAX_VALUE to avoid conflict with real jobs
 
     /*package*/ static void startService(Context context) {
         try {
-            Intent intent = new Intent(context, JobRescheduleService.class);
-            WakeLockUtil.startWakefulService(context, intent);
+            enqueueWork(context, JobRescheduleService.class, JOB_ID, new Intent());
             latch = new CountDownLatch(1);
         } catch (Exception e) {
             /*
@@ -45,19 +46,15 @@ public final class JobRescheduleService extends IntentService {
     @VisibleForTesting
     /*package*/ static CountDownLatch latch;
 
-    public JobRescheduleService() {
-        super(TAG);
-    }
-
     @Override
-    protected void onHandleIntent(Intent intent) {
+    protected void onHandleWork(@NonNull Intent intent) {
+        /*
+         * Delay this slightly. This avoids a race condition if the app was launched by the
+         * AlarmManager. Then the alarm was already removed, but the JobRequest might still
+         * be available in the storage. We still catch this case, because we never execute
+         * a job with the same ID twice. However, the still save resources with the delay.
+         */
         try {
-            /*
-             * Delay this slightly. This avoids a race condition if the app was launched by the
-             * AlarmManager. Then the alarm was already removed, but the JobRequest might still
-             * be available in the storage. We still catch this case, because we never execute
-             * a job with the same ID twice. However, the still save resources with the delay.
-             */
             CAT.d("Reschedule service started");
             SystemClock.sleep(10_000L);
 
@@ -73,10 +70,8 @@ public final class JobRescheduleService extends IntentService {
             int rescheduledCount = rescheduleJobs(manager, requests);
 
             CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
-            latch.countDown();
-
         } finally {
-            WakeLockUtil.completeWakefulIntent(intent);
+            latch.countDown();
         }
     }
 

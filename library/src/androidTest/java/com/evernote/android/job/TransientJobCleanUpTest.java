@@ -1,6 +1,5 @@
 package com.evernote.android.job;
 
-import android.app.job.JobScheduler;
 import android.content.Context;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -51,10 +50,9 @@ public class TransientJobCleanUpTest {
         assertThat(mManager.getAllJobRequests()).hasSize(1);
         assertThat(mManager.getJobRequest(jobId)).isNotNull();
 
-        JobScheduler jobScheduler = (JobScheduler) mContext.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        assertThat(jobScheduler.getAllPendingJobs()).hasSize(1);
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).hasSize(1);
 
-        jobScheduler.cancel(jobId);
+        mJobManagerRule.getJobScheduler().cancel(jobId);
 
         // cached request gone
         assertThat(mManager.getJobRequest(jobId)).isNull();
@@ -84,10 +82,9 @@ public class TransientJobCleanUpTest {
         assertThat(mManager.getAllJobRequests()).hasSize(1);
         assertThat(mManager.getJobRequest(jobId)).isNotNull();
 
-        JobScheduler jobScheduler = (JobScheduler) mContext.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        assertThat(jobScheduler.getAllPendingJobs()).hasSize(1);
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).hasSize(1);
 
-        jobScheduler.cancel(jobId);
+        mJobManagerRule.getJobScheduler().cancel(jobId);
 
         // cached request gone
         assertThat(mManager.getAllJobRequests()).isEmpty();

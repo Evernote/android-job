@@ -40,6 +40,7 @@ import com.evernote.android.job.util.Device;
 import com.evernote.android.job.v14.JobProxy14;
 import com.evernote.android.job.v14.PlatformAlarmReceiver;
 import com.evernote.android.job.v14.PlatformAlarmService;
+import com.evernote.android.job.v14.PlatformAlarmServiceExact;
 import com.evernote.android.job.v19.JobProxy19;
 import com.evernote.android.job.v21.JobProxy21;
 import com.evernote.android.job.v21.PlatformJobService;
@@ -119,7 +120,8 @@ public enum JobApi {
                         && isBroadcastEnabled(context, PlatformAlarmReceiver.class);
             case V_14:
                 return JobConfig.isForceAllowApi14()
-                        || (isServiceEnabled(context, PlatformAlarmService.class) && isBroadcastEnabled(context, PlatformAlarmReceiver.class));
+                        || (isServiceEnabled(context, PlatformAlarmService.class) && isServiceEnabled(context, PlatformAlarmServiceExact.class)
+                        && isBroadcastEnabled(context, PlatformAlarmReceiver.class));
             case GCM:
                 return GcmAvailableHelper.isGcmApiSupported(context);
             default:

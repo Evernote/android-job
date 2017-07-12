@@ -36,7 +36,7 @@ import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
-import com.evernote.android.job.v14.PlatformAlarmService;
+import com.evernote.android.job.v14.PlatformAlarmServiceExact;
 
 import java.util.concurrent.TimeUnit;
 
@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
  *
  * Created by rwondratschek on 01.05.17.
  */
+@SuppressWarnings("WeakerAccess")
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 /*package*/ final class TransientBundleCompat {
 
@@ -59,7 +60,7 @@ import java.util.concurrent.TimeUnit;
     }
 
     public static void persistBundle(@NonNull Context context, @NonNull JobRequest request) {
-        Intent intent = PlatformAlarmService.createIntent(context, request.getJobId(), request.getTransientExtras());
+        Intent intent = PlatformAlarmServiceExact.createIntent(context, request.getJobId(), request.getTransientExtras());
         PendingIntent pendingIntent = PendingIntent.getService(context, request.getJobId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         long when = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1000);
@@ -70,7 +71,7 @@ import java.util.concurrent.TimeUnit;
 
     public static boolean startWithTransientBundle(@NonNull Context context, @NonNull JobRequest request) {
         // transientExtras are not necessary in this case
-        Intent intent = PlatformAlarmService.createIntent(context, request.getJobId(), null);
+        Intent intent = PlatformAlarmServiceExact.createIntent(context, request.getJobId(), null);
         PendingIntent pendingIntent = PendingIntent.getService(context, request.getJobId(), intent, PendingIntent.FLAG_NO_CREATE);
 
         if (pendingIntent == null) {
@@ -93,14 +94,14 @@ import java.util.concurrent.TimeUnit;
     }
 
     public static boolean isScheduled(Context context, int jobId) {
-        Intent intent = PlatformAlarmService.createIntent(context, jobId, null);
+        Intent intent = PlatformAlarmServiceExact.createIntent(context, jobId, null);
         return PendingIntent.getService(context, jobId, intent, PendingIntent.FLAG_NO_CREATE) != null;
     }
 
     public static void cancel(@NonNull Context context, int jobId, @Nullable PendingIntent pendingIntent) {
         try {
             if (pendingIntent == null) {
-                Intent intent = PlatformAlarmService.createIntent(context, jobId, null);
+                Intent intent = PlatformAlarmServiceExact.createIntent(context, jobId, null);
                 pendingIntent = PendingIntent.getService(context, jobId, intent, PendingIntent.FLAG_NO_CREATE);
 
                 if (pendingIntent == null) {

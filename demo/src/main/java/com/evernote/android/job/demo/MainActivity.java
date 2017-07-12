@@ -241,7 +241,8 @@ public class MainActivity extends Activity {
         mLastJobId = new JobRequest.Builder(DemoSyncJob.TAG)
                 .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.EXPONENTIAL)
                 .setExtras(extras)
-                .setExact(20_000L)
+                .setExact(10_000L)
+                .setTransientExtras(new Bundle())
                 .setUpdateCurrent(true)
                 .build()
                 .schedule();
