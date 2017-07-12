@@ -1,5 +1,6 @@
 package com.evernote.android.job;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -239,10 +240,15 @@ public class JobManagerTest extends BaseJobManagerTest {
 
         assertThat(manager().getJobStorage().getMaxJobId()).isEqualTo(1);
 
-        // that does increase the ID, but that doesn't matter anymore what's in the memory after the app terminated
         assertThat(manager().getJobStorage().nextJobId()).isEqualTo(2);
         assertThat(manager().getJobStorage().nextJobId()).isEqualTo(3);
 
+        // Once an ID has been used it's not allowed to use it again, even if the job wasn't saved for some reason
+        assertThat(manager().getJobStorage().getMaxJobId()).isEqualTo(3);
+
+        context().getSharedPreferences(JobStorage.PREF_FILE_NAME, Context.MODE_PRIVATE).edit().clear().apply();
+
+        // if something goes wrong with the pref file, use the highest value from the database
         assertThat(manager().getJobStorage().getMaxJobId()).isEqualTo(1);
     }
 }

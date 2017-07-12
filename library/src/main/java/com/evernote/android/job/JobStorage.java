@@ -58,6 +58,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     private static final CatLog CAT = new JobCat("JobStorage");
 
+    private static final String JOB_ID_COUNTER = "JOB_ID_COUNTER_v2";
     private static final String FAILED_DELETE_IDS = "FAILED_DELETE_IDS";
 
     public static final String PREF_FILE_NAME = "evernote_jobs";
@@ -229,6 +230,8 @@ import java.util.concurrent.atomic.AtomicInteger;
             mJobCounter.set(id);
         }
 
+        mPreferences.edit().putInt(JOB_ID_COUNTER, id).apply();
+
         return id;
     }
 
@@ -314,22 +317,23 @@ import java.util.concurrent.atomic.AtomicInteger;
         SQLiteDatabase database = null;
         Cursor cursor = null;
 
+        int jobId = 0;
+
         try {
             database = getDatabase();
             cursor = database.rawQuery("SELECT MAX(" + COLUMN_ID + ") FROM " + JOB_TABLE_NAME, null);
             if (cursor != null && cursor.moveToFirst()) {
-                return cursor.getInt(0);
-            } else {
-                return 0;
+                jobId = cursor.getInt(0);
             }
         } catch (Exception e) {
             CAT.e(e);
-            return 0;
 
         } finally {
             closeCursor(cursor);
             closeDatabase(database);
         }
+
+        return Math.max(jobId, mPreferences.getInt(JOB_ID_COUNTER, 0));
     }
 
     private void addFailedDeleteId(int id) {
