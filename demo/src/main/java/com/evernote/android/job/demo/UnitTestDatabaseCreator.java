@@ -34,6 +34,10 @@ public final class UnitTestDatabaseCreator {
         createJobs(new DummyJobCreatorV3());
     }
 
+    public void createV6() {
+        createJobs(new DummyJobCreatorV6());
+    }
+
     private void createJobs(DummyJobCreator creator) {
         creator.createOneOff();
         creator.createExact();
@@ -108,7 +112,7 @@ public final class UnitTestDatabaseCreator {
         }
     }
 
-    private static final class DummyJobCreatorV3 extends DummyJobCreatorV1 {
+    private static class DummyJobCreatorV3 extends DummyJobCreatorV1 {
         @Override
         public void createPeriodic() {
             for (int i = 0; i < 10; i++) {
@@ -133,4 +137,54 @@ public final class UnitTestDatabaseCreator {
             }
         }
     }
+
+    private static class DummyJobCreatorV6 extends DummyJobCreatorV3 {
+        @Override
+        public void createOneOff() {
+            for (int i = 0; i < 10; i++) {
+                JobRequest.Builder builder = new JobRequest.Builder("tag")
+                        .setExecutionWindow(300_000, 400_000)
+                        .setBackoffCriteria(5_000L, random() ? JobRequest.BackoffPolicy.EXPONENTIAL : JobRequest.BackoffPolicy.LINEAR)
+                        .setRequiresCharging(random())
+                        .setRequiresDeviceIdle(random())
+                        .setRequiresBatteryNotLow(random())
+                        .setRequiresStorageNotLow(random())
+                        .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
+                        .setRequirementsEnforced(random());
+
+                if (random()) {
+                    PersistableBundleCompat extras = new PersistableBundleCompat();
+                    extras.putString("key", "Hello world");
+                    builder.setExtras(extras);
+                }
+
+                builder.build().schedule();
+            }
+        }
+
+        @Override
+        public void createPeriodic() {
+            for (int i = 0; i < 10; i++) {
+                JobRequest.Builder builder = new JobRequest.Builder("tag")
+                        .setRequiresCharging(random())
+                        .setRequiresDeviceIdle(random())
+                        .setRequiresBatteryNotLow(random())
+                        .setRequiresStorageNotLow(random())
+                        .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
+                        .setRequirementsEnforced(random());
+
+                if (random()) {
+                    PersistableBundleCompat extras = new PersistableBundleCompat();
+                    extras.putString("key", "Hello world");
+                    builder.setExtras(extras);
+                }
+                if (random()) {
+                    builder.setPeriodic(JobRequest.MIN_INTERVAL);
+                } else {
+                    builder.setPeriodic(JobRequest.MIN_INTERVAL, JobRequest.MIN_FLEX);
+                }
+
+                builder.build().schedule();
+            }
+        }    }
 }

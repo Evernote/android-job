@@ -29,8 +29,10 @@ import static com.evernote.android.job.JobStorage.COLUMN_LAST_RUN;
 import static com.evernote.android.job.JobStorage.COLUMN_NETWORK_TYPE;
 import static com.evernote.android.job.JobStorage.COLUMN_NUM_FAILURES;
 import static com.evernote.android.job.JobStorage.COLUMN_REQUIREMENTS_ENFORCED;
+import static com.evernote.android.job.JobStorage.COLUMN_REQUIRES_BATTERY_NOT_LOW;
 import static com.evernote.android.job.JobStorage.COLUMN_REQUIRES_CHARGING;
 import static com.evernote.android.job.JobStorage.COLUMN_REQUIRES_DEVICE_IDLE;
+import static com.evernote.android.job.JobStorage.COLUMN_REQUIRES_STORAGE_NOT_LOW;
 import static com.evernote.android.job.JobStorage.COLUMN_SCHEDULED_AT;
 import static com.evernote.android.job.JobStorage.COLUMN_STARTED;
 import static com.evernote.android.job.JobStorage.COLUMN_START_MS;
@@ -49,7 +51,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
 
     @Test
-    public void testDatabaseUpgrade1to5() {
+    public void testDatabaseUpgrade1to6() {
         Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
@@ -61,7 +63,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
     }
 
     @Test
-    public void testDatabaseUpgrade2to5() {
+    public void testDatabaseUpgrade2to6() {
         Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
@@ -73,7 +75,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
     }
 
     @Test
-    public void testDatabaseUpgrade3to5() {
+    public void testDatabaseUpgrade3to6() {
         Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
@@ -85,7 +87,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
     }
 
     @Test
-    public void testDatabaseUpgrade4to5() {
+    public void testDatabaseUpgrade4to6() {
         Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
@@ -97,7 +99,19 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
     }
 
     @Test
-    public void testDatabaseUpgrade1to2to3to4to5() {
+    public void testDatabaseUpgrade5to6() {
+        Context context = RuntimeEnvironment.application;
+        context.deleteDatabase(DATABASE_NAME);
+
+        JobOpenHelper5 openHelper = new JobOpenHelper5(context);
+        createDatabase(openHelper, false);
+        createJobs(openHelper, true);
+
+        checkJob();
+    }
+
+    @Test
+    public void testDatabaseUpgrade1to2to3to4to5to6() {
         Context context = RuntimeEnvironment.application;
         context.deleteDatabase(DATABASE_NAME);
 
@@ -108,6 +122,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
         createDatabase(new JobOpenHelper2(context), true);
         createDatabase(new JobOpenHelper3(context), true);
         createDatabase(new JobOpenHelper4(context), true);
+        createDatabase(new JobOpenHelper5(context), true);
 
         checkJob();
     }
@@ -241,6 +256,10 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
                         upgradeFrom4To5(db);
                         oldVersion++;
                         break;
+                    case 5:
+                        upgradeFrom5To6(db);
+                        oldVersion++;
+                        break;
                     default:
                         throw new IllegalStateException("not implemented");
                 }
@@ -263,6 +282,10 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
         }
 
         protected void upgradeFrom4To5(SQLiteDatabase db) {
+            // override me
+        }
+
+        protected void upgradeFrom5To6(SQLiteDatabase db) {
             // override me
         }
 
@@ -459,7 +482,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
         }
     }
 
-    private static final class JobOpenHelper5 extends JobOpenHelper4 {
+    private static class JobOpenHelper5 extends JobOpenHelper4 {
 
         JobOpenHelper5(Context context) {
             this(context, 5);
@@ -467,6 +490,14 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
 
         JobOpenHelper5(Context context, int version) {
             super(context, version);
+        }
+
+        @Override
+        protected ContentValues createBaseContentValues(int id) {
+            ContentValues values = super.createBaseContentValues(id);
+            values.remove("isTransient");
+            values.remove("persisted");
+            return values;
         }
 
         @Override
@@ -495,6 +526,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
         }
 
         @SuppressWarnings("deprecation")
+        @Override
         protected void upgradeFrom4To5(SQLiteDatabase db) {
             // remove "persisted" column and rename "isTransient" to "started", add "transient" column for O
             try {
@@ -553,6 +585,50 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
             } finally {
                 db.endTransaction();
             }
+        }
+    }
+
+    private static final class JobOpenHelper6 extends JobOpenHelper5 {
+
+        JobOpenHelper6(Context context) {
+            this(context, 6);
+        }
+
+        JobOpenHelper6(Context context, int version) {
+            super(context, version);
+        }
+
+        @Override
+        public void onCreateInner(SQLiteDatabase db) {
+            db.execSQL("create table " + JOB_TABLE_NAME + " ("
+                    + COLUMN_ID + " integer primary key, "
+                    + COLUMN_TAG + " text not null, "
+                    + COLUMN_START_MS + " integer, "
+                    + COLUMN_END_MS + " integer, "
+                    + COLUMN_BACKOFF_MS + " integer, "
+                    + COLUMN_BACKOFF_POLICY + " text not null, "
+                    + COLUMN_INTERVAL_MS + " integer, "
+                    + COLUMN_REQUIREMENTS_ENFORCED + " integer, "
+                    + COLUMN_REQUIRES_CHARGING + " integer, "
+                    + COLUMN_REQUIRES_DEVICE_IDLE + " integer, "
+                    + COLUMN_EXACT + " integer, "
+                    + COLUMN_NETWORK_TYPE + " text not null, "
+                    + COLUMN_EXTRAS + " text, "
+                    + COLUMN_NUM_FAILURES + " integer, "
+                    + COLUMN_SCHEDULED_AT + " integer, "
+                    + COLUMN_STARTED + " integer, "
+                    + COLUMN_FLEX_MS + " integer, "
+                    + COLUMN_FLEX_SUPPORT + " integer, "
+                    + COLUMN_LAST_RUN + " integer, "
+                    + COLUMN_TRANSIENT + " integer, "
+                    + COLUMN_REQUIRES_BATTERY_NOT_LOW + " integer, "
+                    + COLUMN_REQUIRES_STORAGE_NOT_LOW +" integer);");
+        }
+
+        @Override
+        protected void upgradeFrom5To6(SQLiteDatabase db) {
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_REQUIRES_BATTERY_NOT_LOW + " integer;");
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_REQUIRES_STORAGE_NOT_LOW + " integer;");
         }
     }
 }

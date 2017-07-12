@@ -45,10 +45,10 @@ public class MainActivity extends Activity {
             mLastJobId = savedInstanceState.getInt(LAST_JOB_ID, 0);
         }
 
-        CompoundButton enableGcm = (CompoundButton) findViewById(R.id.enable_gcm);
-        mRequiresCharging = (CompoundButton) findViewById(R.id.check_requires_charging);
-        mRequiresDeviceIdle = (CompoundButton) findViewById(R.id.check_requires_device_idle);
-        mNetworkTypeSpinner = (Spinner) findViewById(R.id.spinner_network_type);
+        CompoundButton enableGcm = findViewById(R.id.enable_gcm);
+        mRequiresCharging = findViewById(R.id.check_requires_charging);
+        mRequiresDeviceIdle = findViewById(R.id.check_requires_device_idle);
+        mNetworkTypeSpinner = findViewById(R.id.spinner_network_type);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getNetworkTypesAsString());
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);

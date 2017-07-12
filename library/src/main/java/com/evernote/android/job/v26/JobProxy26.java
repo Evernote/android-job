@@ -64,6 +64,13 @@ public class JobProxy26 extends JobProxy24 {
     }
 
     @Override
+    protected JobInfo.Builder createBaseBuilder(JobRequest request, boolean allowPersisting) {
+        return super.createBaseBuilder(request, allowPersisting)
+                .setRequiresBatteryNotLow(request.requiresBatteryNotLow())
+                .setRequiresStorageNotLow(request.requiresStorageNotLow());
+    }
+
+    @Override
     protected int convertNetworkType(@NonNull JobRequest.NetworkType networkType) {
         switch (networkType) {
             case METERED:

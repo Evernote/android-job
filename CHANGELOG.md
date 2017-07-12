@@ -8,6 +8,7 @@
 * Remove `startWakefulService` from the `Job` class, `WakefulBroadcastReceiver` is now deprecated with `JobIntentService` as the better option
 * Add feature to make jobs transient and to add a `Bundle`, see `setTransientExtras(bundle)`
 * Add new `METERED` network type
+* Add new requirements battery not low and storage not low
 
 ## 1.1.12
 

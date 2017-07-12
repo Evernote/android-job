@@ -35,7 +35,6 @@ import com.evernote.android.job.Job;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
-import com.evernote.android.job.util.Device;
 import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.Cat;
@@ -69,13 +68,13 @@ public class PlatformJobService extends JobService {
 
         if (request.isTransient()) {
             if (TransientBundleCompat.startWithTransientBundle(this, request)) {
-                if (Device.isAtLeastO()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     // should only happen during testing if an API is disabled
                     Cat.d("PendingIntent for transient bundle is not null although running on O, using compat mode, request %s", request);
                 }
                 return false;
 
-            } else if (!Device.isAtLeastO()) {
+            } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                 CAT.d("PendingIntent for transient job %s expired", request);
                 return false;
             }
@@ -117,7 +116,7 @@ public class PlatformJobService extends JobService {
 
     @TargetApi(Build.VERSION_CODES.O)
     private Bundle getTransientBundle(JobParameters params) {
-        if (Device.isAtLeastO()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             return params.getTransientExtras();
         } else {
             return Bundle.EMPTY;

@@ -51,18 +51,24 @@ public final class Device {
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    public static boolean isCharging(Context context) {
+    public static BatteryStatus getBatteryStatus(Context context) {
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (intent == null) {
             // should not happen
-            return false;
+            return BatteryStatus.DEFAULT;
         }
+
+        int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        float batteryPct = level / (float) scale;
 
         // 0 is on battery
         int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
-        return plugged == BatteryManager.BATTERY_PLUGGED_AC
+        boolean charging = plugged == BatteryManager.BATTERY_PLUGGED_AC
                 || plugged == BatteryManager.BATTERY_PLUGGED_USB
                 || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS);
+
+        return new BatteryStatus(charging, batteryPct);
     }
 
     @SuppressWarnings("deprecation")
@@ -110,15 +116,8 @@ public final class Device {
         }
     }
 
-    /**
-     * This method will be removed once Android O is being released. Don't use it.
-     *
-     * @return Returns if the device is running the Android O preview.
-     */
-    public static boolean isAtLeastO() {
-        // remove the 2nd statement when O is out of preview
-        return Build.VERSION.SDK_INT == Build.VERSION_CODES.O
-                || (Build.VERSION.CODENAME != null && !"REL".equals(Build.VERSION.CODENAME)
-                && ("O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR")));
+    public static boolean isStorageLow() {
+        // figure this out
+        return false;
     }
 }

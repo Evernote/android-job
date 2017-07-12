@@ -47,6 +47,11 @@ public class DatabaseExistingTest extends BaseJobManagerTest {
         testDatabase("evernote_jobs_v5.db");
     }
 
+    @Test
+    public void upgradeFromV6() {
+        testDatabase("evernote_jobs_v6.db");
+    }
+
     private void testDatabase(String name) {
         String filePath = getClass().getResource("/databases/" + name).getPath();
         assertThat(new File(filePath).exists()).isTrue();

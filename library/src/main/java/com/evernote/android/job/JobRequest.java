@@ -226,10 +226,24 @@ public final class JobRequest {
     }
 
     /**
-     * @return If {@code true}, then job should only run if the device is idle.
+     * @return If {@code true}, then the job should only run if the device is idle.
      */
     public boolean requiresDeviceIdle() {
         return mBuilder.mRequiresDeviceIdle;
+    }
+
+    /**
+     * @return If {@code true}, then the job should only run if the battery isn't low.
+     */
+    public boolean requiresBatteryNotLow() {
+        return mBuilder.mRequiresBatteryNotLow;
+    }
+
+    /**
+     * @return If {@code true}, then the job should only run if the battery isn't low.
+     */
+    public boolean requiresStorageNotLow() {
+        return mBuilder.mRequiresStorageNotLow;
     }
 
     /**
@@ -519,6 +533,8 @@ public final class JobRequest {
         private boolean mRequirementsEnforced;
         private boolean mRequiresCharging;
         private boolean mRequiresDeviceIdle;
+        private boolean mRequiresBatteryNotLow;
+        private boolean mRequiresStorageNotLow;
         private boolean mExact;
         private NetworkType mNetworkType;
 
@@ -578,6 +594,8 @@ public final class JobRequest {
             mRequirementsEnforced = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIREMENTS_ENFORCED)) > 0;
             mRequiresCharging = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIRES_CHARGING)) > 0;
             mRequiresDeviceIdle = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIRES_DEVICE_IDLE)) > 0;
+            mRequiresBatteryNotLow = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIRES_BATTERY_NOT_LOW)) > 0;
+            mRequiresStorageNotLow = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_REQUIRES_STORAGE_NOT_LOW)) > 0;
             mExact = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_EXACT)) > 0;
             try {
                 mNetworkType = NetworkType.valueOf(cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_NETWORK_TYPE)));
@@ -611,6 +629,8 @@ public final class JobRequest {
             mRequirementsEnforced = builder.mRequirementsEnforced;
             mRequiresCharging = builder.mRequiresCharging;
             mRequiresDeviceIdle = builder.mRequiresDeviceIdle;
+            mRequiresBatteryNotLow = builder.mRequiresBatteryNotLow;
+            mRequiresStorageNotLow = builder.mRequiresStorageNotLow;
             mExact = builder.mExact;
             mNetworkType = builder.mNetworkType;
 
@@ -638,6 +658,8 @@ public final class JobRequest {
             contentValues.put(JobStorage.COLUMN_REQUIREMENTS_ENFORCED, mRequirementsEnforced);
             contentValues.put(JobStorage.COLUMN_REQUIRES_CHARGING, mRequiresCharging);
             contentValues.put(JobStorage.COLUMN_REQUIRES_DEVICE_IDLE, mRequiresDeviceIdle);
+            contentValues.put(JobStorage.COLUMN_REQUIRES_BATTERY_NOT_LOW, mRequiresBatteryNotLow);
+            contentValues.put(JobStorage.COLUMN_REQUIRES_STORAGE_NOT_LOW, mRequiresStorageNotLow);
             contentValues.put(JobStorage.COLUMN_EXACT, mExact);
             contentValues.put(JobStorage.COLUMN_NETWORK_TYPE, mNetworkType.toString());
 
@@ -800,6 +822,46 @@ public final class JobRequest {
          */
         public Builder setRequiresDeviceIdle(boolean requiresDeviceIdle) {
             mRequiresDeviceIdle = requiresDeviceIdle;
+            return this;
+        }
+
+        /**
+         * Specify that to run this job, the device battery shouldn't be below a curtain threshold.
+         * The default is set to {@code false}.
+         *
+         * <br>
+         * <br>
+         *
+         * Note that if the deadline is met and the requirements aren't enforced, then your job
+         * will run and ignore this requirement.
+         *
+         * @param requiresBatteryNotLow Whether or not the device batter shouldn't be low.
+         * @see #setRequirementsEnforced(boolean)
+         * @see #setExecutionWindow(long, long)
+         */
+        public Builder setRequiresBatteryNotLow(boolean requiresBatteryNotLow) {
+            mRequiresBatteryNotLow = requiresBatteryNotLow;
+            return this;
+        }
+
+        /**
+         * Specify that to run this job, the device storage shouldn't be low.
+         * The default is set to {@code false}. <b>Note: </b>This requirement only has an
+         * affect on Android O, but not lower versions. It's never guaranteed that enough
+         * space is available, when your job runs. This is more like a hint.
+         *
+         * <br>
+         * <br>
+         *
+         * Note that if the deadline is met and the requirements aren't enforced, then your job
+         * will run and ignore this requirement.
+         *
+         * @param requiresStorageNotLow Whether or not the device storage shouldn't be low.
+         * @see #setRequirementsEnforced(boolean)
+         * @see #setExecutionWindow(long, long)
+         */
+        public Builder setRequiresStorageNotLow(boolean requiresStorageNotLow) {
+            mRequiresStorageNotLow = requiresStorageNotLow;
             return this;
         }
 
@@ -988,7 +1050,8 @@ public final class JobRequest {
             if (mExact && mStartMs != mEndMs) {
                 throw new IllegalArgumentException("Can't call setExecutionWindow() for an exact job.");
             }
-            if (mExact && (mRequirementsEnforced || mRequiresDeviceIdle || mRequiresCharging || !DEFAULT_NETWORK_TYPE.equals(mNetworkType))) {
+            if (mExact && (mRequirementsEnforced || mRequiresDeviceIdle || mRequiresCharging || !DEFAULT_NETWORK_TYPE.equals(mNetworkType)
+                    || mRequiresBatteryNotLow || mRequiresStorageNotLow)) {
                 throw new IllegalArgumentException("Can't require any condition for an exact job.");
             }
 

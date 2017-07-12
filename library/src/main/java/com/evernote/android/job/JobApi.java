@@ -36,7 +36,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.gcm.JobProxyGcm;
-import com.evernote.android.job.util.Device;
 import com.evernote.android.job.v14.JobProxy14;
 import com.evernote.android.job.v14.PlatformAlarmReceiver;
 import com.evernote.android.job.v14.PlatformAlarmService;
@@ -110,7 +109,7 @@ public enum JobApi {
     public boolean isSupported(Context context) {
         switch (this) {
             case V_26:
-                return Device.isAtLeastO() && isServiceEnabled(context, PlatformJobService.class);
+                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isServiceEnabled(context, PlatformJobService.class);
             case V_24:
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isServiceEnabledAndHasPermission(context, PlatformJobService.class, JOB_SCHEDULER_PERMISSION);
             case V_21:

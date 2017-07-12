@@ -63,7 +63,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     public static final String PREF_FILE_NAME = "evernote_jobs";
     public static final String DATABASE_NAME = PREF_FILE_NAME + ".db";
-    public static final int DATABASE_VERSION = 5;
+    public static final int DATABASE_VERSION = 6;
 
     public static final String JOB_TABLE_NAME = "jobs";
 
@@ -97,6 +97,8 @@ import java.util.concurrent.atomic.AtomicInteger;
     public static final String COLUMN_FLEX_SUPPORT = "flexSupport";
     public static final String COLUMN_LAST_RUN = "lastRun";
     public static final String COLUMN_TRANSIENT = "transient";
+    public static final String COLUMN_REQUIRES_BATTERY_NOT_LOW = "requiresBatteryNotLow";
+    public static final String COLUMN_REQUIRES_STORAGE_NOT_LOW = "requiresStorageNotLow";
 
     private static final int CACHE_SIZE = 30;
 
@@ -449,6 +451,10 @@ import java.util.concurrent.atomic.AtomicInteger;
                         upgradeFrom4To5(db);
                         oldVersion++;
                         break;
+                    case 5:
+                        upgradeFrom5To6(db);
+                        oldVersion++;
+                        break;
                     default:
                         throw new IllegalStateException("not implemented");
                 }
@@ -476,7 +482,9 @@ import java.util.concurrent.atomic.AtomicInteger;
                     + COLUMN_FLEX_MS + " integer, "
                     + COLUMN_FLEX_SUPPORT + " integer, "
                     + COLUMN_LAST_RUN + " integer, "
-                    + COLUMN_TRANSIENT + " integer);");
+                    + COLUMN_TRANSIENT + " integer, "
+                    + COLUMN_REQUIRES_BATTERY_NOT_LOW + " integer, "
+                    + COLUMN_REQUIRES_STORAGE_NOT_LOW +" integer);");
         }
 
         @SuppressWarnings("deprecation")
@@ -560,6 +568,11 @@ import java.util.concurrent.atomic.AtomicInteger;
             } finally {
                 db.endTransaction();
             }
+        }
+
+        private void upgradeFrom5To6(SQLiteDatabase db) {
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_REQUIRES_BATTERY_NOT_LOW + " integer;");
+            db.execSQL("alter table " + JOB_TABLE_NAME + " add column " + COLUMN_REQUIRES_STORAGE_NOT_LOW + " integer;");
         }
     }
 

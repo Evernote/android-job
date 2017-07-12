@@ -170,7 +170,7 @@ public abstract class Job {
      * Otherwise always returns {@code true}.
      */
     protected boolean isRequirementChargingMet() {
-        return !(getParams().getRequest().requiresCharging() && !Device.isCharging(getContext()));
+        return !(getParams().getRequest().requiresCharging() && !Device.getBatteryStatus(getContext()).isCharging());
     }
 
     /**
@@ -179,6 +179,23 @@ public abstract class Job {
      */
     protected boolean isRequirementDeviceIdleMet() {
         return !(getParams().getRequest().requiresDeviceIdle() && !Device.isIdle(getContext()));
+    }
+
+    /**
+     * @return Whether the battery not low requirement is met. That's true either if it's not a requirement
+     * or if the battery actually isn't low. The battery is low, if less than 15% are left and the device isn't
+     * charging.
+     */
+    protected boolean isRequirementBatteryNotLowMet() {
+        return !(getParams().getRequest().requiresBatteryNotLow() && Device.getBatteryStatus(getContext()).isBatteryLow());
+    }
+
+    /**
+     * @return Whether the storage not low requirement is met. That's true either if it's not a requirement
+     * or if the storage actually isn't low.
+     */
+    protected boolean isRequirementStorageNotLowMet() {
+        return !(getParams().getRequest().requiresStorageNotLow() && Device.isStorageLow());
     }
 
     /**
@@ -459,6 +476,20 @@ public abstract class Job {
          */
         public JobRequest.NetworkType requiredNetworkType() {
             return mRequest.requiredNetworkType();
+        }
+
+        /**
+         * @return If {@code true}, then the job should only run if the battery isn't low.
+         */
+        public boolean requiresBatteryNotLow() {
+            return mRequest.requiresBatteryNotLow();
+        }
+
+        /**
+         * @return If {@code true}, then the job should only run if the battery isn't low.
+         */
+        public boolean requiresStorageNotLow() {
+            return mRequest.requiresStorageNotLow();
         }
 
         /**
