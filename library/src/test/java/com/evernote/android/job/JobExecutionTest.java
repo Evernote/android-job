@@ -2,7 +2,7 @@ package com.evernote.android.job;
 
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
-import com.evernote.android.job.test.TestCat;
+import com.evernote.android.job.test.TestLogger;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -92,7 +92,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
                 .build()
                 .schedule();
 
-        final JobProxy.Common common = new JobProxy.Common(context(), TestCat.INSTANCE, jobId);
+        final JobProxy.Common common = new JobProxy.Common(context(), TestLogger.INSTANCE, jobId);
         final JobRequest request = common.getPendingRequest(true, true);
         assertThat(request).isNotNull();
 
@@ -125,7 +125,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
                 .build()
                 .schedule();
 
-        final JobProxy.Common common = new JobProxy.Common(context(), TestCat.INSTANCE, jobId);
+        final JobProxy.Common common = new JobProxy.Common(context(), TestLogger.INSTANCE, jobId);
         final JobRequest request = common.getPendingRequest(true, true);
         assertThat(request).isNotNull();
 
@@ -158,7 +158,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
                 .build()
                 .schedule();
 
-        final JobProxy.Common common = new JobProxy.Common(context(), TestCat.INSTANCE, jobId);
+        final JobProxy.Common common = new JobProxy.Common(context(), TestLogger.INSTANCE, jobId);
 
         assertThat(common.getPendingRequest(true, false)).isNotNull();
         assertThat(common.getPendingRequest(true, false)).isNotNull();

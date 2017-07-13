@@ -29,6 +29,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.util.JobCat;
+import com.evernote.android.job.util.JobLogger;
 
 import java.util.EnumMap;
 
@@ -147,6 +148,43 @@ public final class JobConfig {
     }
 
     /**
+     * Add a global logger for the job library, which will be notified about each log statement.
+     *
+     * @param logger Your desired logger.
+     * @return {@code true} if the logger was added. Returns {@code false} if the logger was
+     * already added.
+     */
+    public static synchronized boolean addLogger(@NonNull JobLogger logger) {
+        return JobCat.addLogger(logger);
+    }
+
+    /**
+     * Remove a global logger.
+     *
+     * @param logger Your desired logger.
+     * @see #addLogger(JobLogger)
+     */
+    public static synchronized void removeLogger(@NonNull JobLogger logger) {
+        JobCat.removeLogger(logger);
+    }
+
+    /**
+     * Global switch to enable or disable printing log messages to Logcat.
+     *
+     * @param enabled Whether or not to print all log messages. The default value is {@code true}.
+     */
+    public static void setLogcatEnabled(boolean enabled) {
+        JobCat.setLogcatEnabled(enabled);
+    }
+
+    /**
+     * @return Whether logging is enabled for this library. The default value is {@code true}.
+     */
+    public static boolean isLogcatEnabled() {
+        return JobCat.isLogcatEnabled();
+    }
+
+    /**
      * Resets all adjustments in the config.
      */
     public static void reset() {
@@ -155,5 +193,7 @@ public final class JobConfig {
         }
         allowSmallerIntervals = false;
         forceAllowApi14 = false;
+        JobCat.setLogcatEnabled(true);
+        JobCat.clearLogger();
     }
 }

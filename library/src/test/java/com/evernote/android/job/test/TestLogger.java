@@ -3,17 +3,19 @@ package com.evernote.android.job.test;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.evernote.android.job.util.JobLogger;
+
 import net.vrallev.android.cat.instance.CatLazy;
 import net.vrallev.android.cat.print.CatPrinter;
 
 /**
  * @author rwondratschek
  */
-public final class TestCat extends CatLazy implements CatPrinter {
+public final class TestLogger extends CatLazy implements CatPrinter, JobLogger {
 
-    public static final TestCat INSTANCE = new TestCat();
+    public static final TestLogger INSTANCE = new TestLogger();
 
-    private TestCat() {
+    private TestLogger() {
         // no op
     }
 
@@ -24,6 +26,11 @@ public final class TestCat extends CatLazy implements CatPrinter {
 
     @Override
     public void println(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+        log(priority, tag, message, t);
+    }
+
+    @Override
+    public void log(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
         // System.out.println(message);
         // if (t != null) {
         //     t.printStackTrace();

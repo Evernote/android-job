@@ -5,10 +5,8 @@ import android.support.annotation.Nullable;
 
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
-import com.evernote.android.job.util.JobCat;
+import com.evernote.android.job.util.JobLogger;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
-
-import net.vrallev.android.cat.print.CatPrinter;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -242,22 +240,22 @@ public class JobRequestTest extends BaseJobManagerTest {
 
     @Test
     public void testWarningWhenTooFarInTheFuture() {
-        class TestPrinter implements CatPrinter {
+        class TestPrinter implements JobLogger {
             private final List<String> mMessages = new ArrayList<>();
 
             @Override
-            public void println(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+            public void log(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
                 mMessages.add(message);
             }
         }
 
         TestPrinter testPrinter = new TestPrinter();
-        JobCat.addLogPrinter(testPrinter);
+        JobConfig.addLogger(testPrinter);
 
         getBuilder().setExecutionWindow(TimeUnit.DAYS.toMillis(366), TimeUnit.DAYS.toMillis(367)).build();
         getBuilder().setExact(TimeUnit.DAYS.toMillis(366)).build();
 
-        JobCat.removeLogPrinter(testPrinter);
+        JobConfig.removeLogger(testPrinter);
 
         assertThat(testPrinter.mMessages).containsSubsequence(
                 "Warning: job with tag SuccessJob scheduled over a year in the future",

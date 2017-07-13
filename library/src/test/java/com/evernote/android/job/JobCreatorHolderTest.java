@@ -1,8 +1,6 @@
 package com.evernote.android.job;
 
-import com.evernote.android.job.util.JobCat;
-
-import net.vrallev.android.cat.print.CatPrinter;
+import com.evernote.android.job.util.JobLogger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,28 +24,27 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JobCreatorHolderTest {
-    @Mock CatPrinter catPrinter;
+    @Mock JobLogger jobLogger;
     @Mock JobCreator mockJobCreator;
 
     private JobCreatorHolder holder;
 
     @Before
     public void setup() {
-        JobCat.addLogPrinter(catPrinter);
-
+        JobConfig.addLogger(jobLogger);
         holder = new JobCreatorHolder();
     }
 
     @After
     public void tearDown() {
-        JobCat.removeLogPrinter(catPrinter);
+        JobConfig.reset();
     }
 
     @Test
     public void createJobLogsWarningWhenNoCreatorsAreAdded() {
         holder.createJob("DOES_NOT_EXIST");
 
-        verify(catPrinter).println(
+        verify(jobLogger).log(
                 anyInt(),                  // priority
                 eq("JobCreatorHolder"),    // tag
                 eq("no JobCreator added"), // message
@@ -60,7 +57,7 @@ public class JobCreatorHolderTest {
 
         holder.createJob("DOES_NOT_EXIST");
 
-        verifyZeroInteractions(catPrinter);
+        verifyZeroInteractions(jobLogger);
     }
 
     @Test

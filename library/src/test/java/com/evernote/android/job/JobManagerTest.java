@@ -6,9 +6,7 @@ import android.support.annotation.Nullable;
 
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
-import com.evernote.android.job.util.JobCat;
-
-import net.vrallev.android.cat.print.CatPrinter;
+import com.evernote.android.job.util.JobLogger;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -118,11 +116,11 @@ public class JobManagerTest extends BaseJobManagerTest {
         }
 
         // that sucks, but the storage can't be injected to verify it better
-        class TestPrinter implements CatPrinter {
+        class TestPrinter implements JobLogger {
             private final List<String> mMessages = new ArrayList<>();
 
             @Override
-            public void println(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+            public void log(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
                 if (message.endsWith("canceling")) {
                     mMessages.add(message);
                 }
@@ -130,7 +128,7 @@ public class JobManagerTest extends BaseJobManagerTest {
         }
 
         TestPrinter testPrinter = new TestPrinter();
-        JobCat.addLogPrinter(testPrinter);
+        JobConfig.addLogger(testPrinter);
 
         for (int i = 0; i < jobCount; i++) {
             DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
