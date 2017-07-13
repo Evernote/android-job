@@ -29,17 +29,17 @@ public abstract class DailyJob extends Job {
     private static final long DAY = TimeUnit.DAYS.toMillis(1);
 
     /**
-     * Schedule your daily job. You need to pass in the builder. That gives you the option to override
-     * requirements or to pass extras to the job. However, it's not allowed to make the job exact,
-     * periodic or transient. Since rescheduling a daily job isn't useful, enforcing requirements
-     * isn't support either.
+     * Schedules your daily job. A builder is required for this method call. Within the builder, you may specify
+     * additional requirements and/or extras for the job. However, a daily job may not be exact,
+     * periodic or transient. Since the rescheduling of a daily job when requirements aren't met
+     * (e.g. low internet connectivity) isn't useful, the enforcing of such requirements isn't supported either.
      * <br>
      * <br>
-     * Daily jobs should use an unique tag and their classes shouldn't be reused for other jobs.
+     * Daily jobs should use a unique tag and their classes shouldn't be reused for other jobs.
      * <br>
      * <br>
-     * The start and end parameter must be less than one day. It's allowed to have a smaller end value
-     * than start value. That's helpful for allowing the job to run in evening or morning.
+     * The start and end parameter must be less than one day. The end value may be smaller than the start value,
+     * allowing you to run the job in the evening or morning.
      * <br>
      * <br>
      * Sample usage:
@@ -62,7 +62,7 @@ public abstract class DailyJob extends Job {
 
     private static void schedule(@NonNull JobRequest.Builder builder, boolean newJob, long startMs, long endMs) {
         if (startMs >= DAY || endMs >= DAY || startMs < 0 || endMs < 0) {
-            throw new IllegalArgumentException("startMs or endMs should be smaller than one day (in milliseconds)");
+            throw new IllegalArgumentException("startMs or endMs should be less than one day (in milliseconds)");
         }
 
         Calendar calendar = Calendar.getInstance();
@@ -90,10 +90,10 @@ public abstract class DailyJob extends Job {
                 .build();
 
         if (newJob && (request.isExact() || request.isPeriodic() || request.isTransient())) {
-            throw new IllegalArgumentException("Daily jobs are not allowed to be exact, periodic or transient");
+            throw new IllegalArgumentException("Daily jobs cannot be exact, periodic or transient");
         }
         if (newJob && (request.requirementsEnforced())) {
-            throw new IllegalArgumentException("Daily jobs are not allowed to enforce requirements");
+            throw new IllegalArgumentException("Daily jobs cannot enforce requirements");
         }
 
         request.schedule();
@@ -137,8 +137,8 @@ public abstract class DailyJob extends Job {
 
     /**
      * This method is invoked from a background thread. You should run your desired task here.
-     * This method is thread safe. Each time a job starts executing a new instance of your {@link Job}
-     * is instantiated. You can identify your {@link Job} with the passed {@code params}.
+     * This method is thread safe. Each time a job starts, a new instance of your {@link Job}
+     * is instantiated and executed. You can identify your {@link Job} with the passed {@code params}.
      *
      * <br>
      * <br>
@@ -162,11 +162,11 @@ public abstract class DailyJob extends Job {
 
     public enum DailyJobResult {
         /**
-         * Indicates that the job was successful and should run the next day again.
+         * Indicates that the job was successful and should run again the next day.
          */
         SUCCESS,
         /**
-         * Indicates that the job finished and should NOT run again.
+         * Indicates that the job is finished and should NOT run again.
          */
         CANCEL
     }
