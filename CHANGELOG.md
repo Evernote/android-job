@@ -3,6 +3,7 @@
 * Handle NPE inside of `JobScheduler`
 * Handle 'Package manager has died' crash
 * Save the highest job ID in a pref file so that it isn't lost when no job is in the database anymore (makes debugging easier)
+* Fix rare NPE when rescheduling jobs after service has been restarted, see #234
 
 ## 1.1.11 (2017-06-05)
 

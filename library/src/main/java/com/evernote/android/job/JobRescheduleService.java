@@ -101,7 +101,11 @@ public final class JobRescheduleService extends IntentService {
             }
 
             CAT.d("Reschedule %d jobs of %d jobs", rescheduledCount, requests.size());
-            latch.countDown();
+
+            if (latch != null) {
+                // latch can be null, if the service was restarted after a process death
+                latch.countDown();
+            }
 
         } finally {
             WakeLockUtil.completeWakefulIntent(intent);
