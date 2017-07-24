@@ -3,6 +3,7 @@ package com.evernote.android.job.v21;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
@@ -37,6 +38,7 @@ public class TransientBundleCompatTest {
 
     @Test
     public void verifyAlarmIsCanceled() throws Exception {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         JobConfig.forceApi(JobApi.V_21);
 
         int jobId = scheduleJob();
@@ -53,6 +55,7 @@ public class TransientBundleCompatTest {
 
     @Test
     public void verifyAlarmIsCanceledAfterStart() throws Exception {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         JobConfig.forceApi(JobApi.V_21);
 
         int jobId = scheduleJob();
@@ -70,6 +73,7 @@ public class TransientBundleCompatTest {
 
     @Test
     public void verifyAlarmNotCanceledForPeriodicAfterStart() throws Exception {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         JobConfig.forceApi(JobApi.V_21);
 
         Bundle extras = new Bundle();

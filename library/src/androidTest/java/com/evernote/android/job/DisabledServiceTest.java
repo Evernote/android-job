@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * @author rwondratschek
@@ -37,16 +38,22 @@ public class DisabledServiceTest {
     public void prepare() {
         mContext = InstrumentationRegistry.getTargetContext();
         mPackageManager = mContext.getPackageManager();
-        mComponent = new ComponentName(mContext, PlatformJobService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mComponent = new ComponentName(mContext, PlatformJobService.class);
+        }
     }
 
     @After
     public void cleanup() {
-        mPackageManager.setComponentEnabledSetting(mComponent, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mPackageManager.setComponentEnabledSetting(mComponent, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP);
+        }
     }
 
     @Test
     public void verifyJobApiNotSupportedWhenServiceIsDisabled() {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             assertThat(JobApi.V_26.isSupported(mContext)).isTrue();
         }

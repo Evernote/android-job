@@ -104,6 +104,9 @@ public class PlatformTest {
     }
 
     private void testOneOff(JobApi api, long wait, TimeUnit timeUnit) throws Exception {
+        // ignore test if not supported
+        assumeTrue(api.isSupported(InstrumentationRegistry.getTargetContext()));
+
         switch (api) {
             case V_14:
             case V_19:
@@ -120,9 +123,6 @@ public class PlatformTest {
             default:
                 throw new IllegalStateException("not implemented");
         }
-
-        // ignore test if not supported
-        assumeTrue(api.isSupported(InstrumentationRegistry.getTargetContext()));
 
         JobConfig.forceApi(api);
 

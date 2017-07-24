@@ -3,6 +3,7 @@ package com.evernote.android.job;
 import android.content.Context;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
@@ -14,6 +15,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * @author rwondratschek
@@ -36,6 +38,7 @@ public class TransientJobCleanUpTest {
 
     @Test
     public void verifyJobDeletedFromDatabaseSpecific() throws Exception {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         JobConfig.forceApi(JobApi.V_21);
 
         Bundle bundle = new Bundle();
@@ -68,6 +71,7 @@ public class TransientJobCleanUpTest {
 
     @Test
     public void verifyJobDeletedFromDatabaseAll() throws Exception {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         JobConfig.forceApi(JobApi.V_21);
 
         Bundle bundle = new Bundle();

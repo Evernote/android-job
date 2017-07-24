@@ -27,7 +27,9 @@ public class JobManagerRule extends ExternalResource {
 
     @Override
     protected void after() {
-        getJobScheduler().cancelAll();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getJobScheduler().cancelAll();
+        }
 
         mManager.cancelAll();
         mManager.destroy();
