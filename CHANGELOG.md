@@ -4,6 +4,7 @@
 * Handle 'Package manager has died' crash
 * Save the highest job ID in a pref file so that it isn't lost when no job is in the database anymore (makes debugging easier)
 * Fix rare NPE when rescheduling jobs after service has been restarted, see #234
+* Fix rescheduled periodic job although it has been canceled pre Android N, see #241
 
 ## 1.1.11 (2017-06-05)
 

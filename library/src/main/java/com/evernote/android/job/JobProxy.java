@@ -257,7 +257,7 @@ public interface JobProxy {
                 if (!request.isPeriodic()) {
                     mJobManager.getJobStorage().remove(request);
 
-                } else if (request.isFlexSupport()) {
+                } else if (request.isFlexSupport() && (job == null || !job.isDeleted())) {
                     mJobManager.getJobStorage().remove(request); // remove, we store the new job in JobManager.schedule()
                     request.reschedule(false, false);
                 }
