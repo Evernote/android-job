@@ -4,8 +4,8 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0-alpha7'
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.14.0'
+        classpath 'com.android.tools.build:gradle:3.0.0-alpha8'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
     }
 }
 
@@ -28,14 +28,14 @@ ext {
 
     buildToolsVersion = '26.0.0'
 
-    supportLibVersion = '26.0.0-beta2'
+    supportLibVersion = '26.0.0'
     playServicesVersion = '11.0.2'
     catVersion = '1.0.5'
     stethoVersion = '1.5.0'
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
     mockitoVersion = '2.7.22'
-    robolectricVersion = '3.4-rc3'
+    robolectricVersion = '3.4'
 }
 
 task wrapper(type: Wrapper) {

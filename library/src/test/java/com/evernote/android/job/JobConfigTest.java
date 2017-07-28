@@ -56,7 +56,7 @@ public class JobConfigTest extends BaseJobManagerTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.O)
-    @Ignore("Enable with Android O support in Robolectric")
+    @Ignore("Enable with Android O sDupport in Robolectric")
     public void verifyApi26Supported() {
         assertThat(JobApi.getDefault(context())).isEqualTo(JobApi.V_26);
     }

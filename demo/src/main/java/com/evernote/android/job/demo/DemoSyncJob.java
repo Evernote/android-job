@@ -8,8 +8,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v7.app.NotificationCompat;
 
 import com.evernote.android.job.Job;
 
@@ -35,7 +35,7 @@ public class DemoSyncJob extends Job {
             getContext().getSystemService(NotificationManager.class).createNotificationChannel(channel);
         }
 
-        Notification notification = new NotificationCompat.Builder(getContext())
+        Notification notification = new NotificationCompat.Builder(getContext(), TAG)
                 .setContentTitle("ID " + params.getId())
                 .setContentText("Job ran, exact " + params.isExact() + " , periodic " + params.isPeriodic() + ", transient " + params.isTransient())
                 .setAutoCancel(true)
