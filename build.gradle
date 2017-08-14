@@ -4,7 +4,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0-alpha8'
+        classpath 'com.android.tools.build:gradle:3.0.0-beta2'
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
     }
 }
@@ -26,9 +26,9 @@ ext {
     targetSdkVersion = compileSdkVersion
     minSdkVersion = 14
 
-    buildToolsVersion = '26.0.0'
+    buildToolsVersion = '26.0.1'
 
-    supportLibVersion = '26.0.0'
+    supportLibVersion = '26.0.1'
     playServicesVersion = '11.0.2'
     catVersion = '1.0.5'
     stethoVersion = '1.5.0'
@@ -39,6 +39,6 @@ ext {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.1-milestone-1'
+    gradleVersion = '4.1'
     distributionType = 'ALL'
 }
