@@ -739,6 +739,22 @@ public final class JobRequest {
         }
 
         /**
+         * Adds optional extras. This is persisted, so only primitive types are allowed. This method overrides
+         * values with the same keys inside of {@code extras}, which were set before.
+         *
+         * @param extras Bundle containing extras which you can retrieve with {@link Job.Params#getExtras()}.
+         */
+        public Builder addExtras(@NonNull PersistableBundleCompat extras) {
+            if (mExtras == null) {
+                mExtras = extras;
+            } else {
+                mExtras.putAll(extras);
+            }
+            mExtrasXml = null;
+            return this;
+        }
+
+        /**
          * It's possible to set several requirements for a job, however, not all of them need to
          * be considered by the underlying {@link JobApi}. If the requirements are enforced, then
          * the device state is checked before your job runs. If at least one requirement isn't met,

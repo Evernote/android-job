@@ -2,6 +2,7 @@ package com.evernote.android.job;
 
 import android.os.PowerManager.WakeLock;
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
 import com.evernote.android.job.util.JobCat;
@@ -23,8 +24,10 @@ public abstract class DailyJob extends Job {
 
     private static final CatLog CAT = new JobCat("DailyJob");
 
-    private static final String EXTRA_START_MS = "EXTRA_START_MS";
-    private static final String EXTRA_END_MS = "EXTRA_END_MS";
+    @VisibleForTesting
+    /*package*/ static final String EXTRA_START_MS = "EXTRA_START_MS";
+    @VisibleForTesting
+    /*package*/ static final String EXTRA_END_MS = "EXTRA_END_MS";
 
     private static final long DAY = TimeUnit.DAYS.toMillis(1);
 
@@ -55,12 +58,13 @@ public abstract class DailyJob extends Job {
      * @param baseBuilder The builder of your daily job.
      * @param startMs The time of the day when the job is allowed to start in milliseconds.
      * @param endMs The time of the day when the job is not allowed to start later in milliseconds.
+     * @return The unique ID for this job.
      */
-    public static void schedule(@NonNull JobRequest.Builder baseBuilder, long startMs, long endMs) {
-        schedule(baseBuilder, true, startMs, endMs);
+    public static int schedule(@NonNull JobRequest.Builder baseBuilder, long startMs, long endMs) {
+        return schedule(baseBuilder, true, startMs, endMs);
     }
 
-    private static void schedule(@NonNull JobRequest.Builder builder, boolean newJob, long startMs, long endMs) {
+    private static int schedule(@NonNull JobRequest.Builder builder, boolean newJob, long startMs, long endMs) {
         if (startMs >= DAY || endMs >= DAY || startMs < 0 || endMs < 0) {
             throw new IllegalArgumentException("startMs or endMs should be less than one day (in milliseconds)");
         }
@@ -74,7 +78,8 @@ public abstract class DailyJob extends Job {
         long startDelay = TimeUnit.SECONDS.toMillis(60 - second)
                 + TimeUnit.MINUTES.toMillis(60 - minute)
                 + TimeUnit.HOURS.toMillis((24 - hour) % 24)
-                - TimeUnit.HOURS.toMillis(1); // subtract because we're adding minutes and seconds
+                - TimeUnit.HOURS.toMillis(1)  // subtract because we're adding minutes and seconds
+                + TimeUnit.DAYS.toMillis(1); // add one day, otherwise result could be negative, e.g. if startMs is 0 and time is 00:08
 
         startDelay = (startDelay + startMs) % TimeUnit.DAYS.toMillis(1);
 
@@ -83,6 +88,12 @@ public abstract class DailyJob extends Job {
             endMs += TimeUnit.DAYS.toMillis(1);
         }
         long endDelay = startDelay + (endMs - startMs);
+
+        PersistableBundleCompat extras = new PersistableBundleCompat();
+        extras.putLong(EXTRA_START_MS, startMs);
+        extras.putLong(EXTRA_END_MS, endMs);
+
+        builder.addExtras(extras);
 
         JobRequest request = builder
                 .setExecutionWindow(startDelay, endDelay)
@@ -96,7 +107,7 @@ public abstract class DailyJob extends Job {
             throw new IllegalArgumentException("Daily jobs cannot enforce requirements");
         }
 
-        request.schedule();
+        return request.schedule();
     }
 
     @NonNull

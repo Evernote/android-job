@@ -2,6 +2,7 @@ package com.evernote.android.job;
 
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
+import com.evernote.android.job.util.support.PersistableBundleCompat;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -68,5 +69,38 @@ public class DailyJobTest extends BaseJobManagerTest {
 
         DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessJob.class), start, end);
         assertThat(manager().getAllJobRequests()).hasSize(1);
+    }
+
+    @Test
+    public void verifyHasExtras() {
+        long start = 0;
+        long end = 1L;
+
+        int jobId = DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessJob.class), start, end);
+        JobRequest request = manager().getJobRequest(jobId);
+
+        assertThat(request).isNotNull();
+        assertThat(request.getExtras().getLong(DailyJob.EXTRA_START_MS, -1)).isEqualTo(0L);
+        assertThat(request.getExtras().getLong(DailyJob.EXTRA_END_MS, -1)).isEqualTo(1L);
+        assertThat(request.getExtras().size()).isEqualTo(2);
+    }
+
+    @Test
+    public void verifyExtraValuesAreOverwritten() {
+        long start = 0;
+        long end = 1L;
+
+        PersistableBundleCompat extras = new PersistableBundleCompat();
+        extras.putLong("something", 9L); // make sure this value is not overwritten
+        extras.putLong(DailyJob.EXTRA_START_MS, 9L); // make sure they're overwritten
+        extras.putLong(DailyJob.EXTRA_END_MS, 9L);
+
+        int jobId = DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessJob.class).setExtras(extras), start, end);
+        JobRequest request = manager().getJobRequest(jobId);
+
+        assertThat(request).isNotNull();
+        assertThat(request.getExtras().getLong(DailyJob.EXTRA_START_MS, -1)).isEqualTo(0L);
+        assertThat(request.getExtras().getLong(DailyJob.EXTRA_END_MS, -1)).isEqualTo(1L);
+        assertThat(request.getExtras().size()).isEqualTo(3);
     }
 }
