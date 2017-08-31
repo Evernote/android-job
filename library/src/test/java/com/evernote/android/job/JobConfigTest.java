@@ -5,7 +5,6 @@ import android.os.Build;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
 
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -56,7 +55,6 @@ public class JobConfigTest extends BaseJobManagerTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.O)
-    @Ignore("Enable with Android O sDupport in Robolectric")
     public void verifyApi26Supported() {
         assertThat(JobApi.getDefault(context())).isEqualTo(JobApi.V_26);
     }
@@ -81,7 +79,6 @@ public class JobConfigTest extends BaseJobManagerTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.O)
-    @Ignore("Enable with Android O support in Robolectric")
     public void verifyApiDisabled() {
         assertThat(JobApi.getDefault(context())).isEqualTo(JobApi.V_26);
 

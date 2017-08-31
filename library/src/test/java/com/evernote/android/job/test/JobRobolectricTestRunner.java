@@ -16,7 +16,7 @@ public class JobRobolectricTestRunner extends RobolectricTestRunner {
     @Override
     protected Config buildGlobalConfig() {
         return new Config.Builder()
-                .setSdk(25) // TODO: change to 26 when Robolectric supports Android O final
+                .setSdk(26)
                 .build();
     }
 }

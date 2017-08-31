@@ -35,7 +35,7 @@ ext {
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
     mockitoVersion = '2.7.22'
-    robolectricVersion = '3.4'
+    robolectricVersion = '3.4.2'
 }
 
 task wrapper(type: Wrapper) {
