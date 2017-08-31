@@ -58,6 +58,7 @@ public final class JobConfig {
     private static volatile boolean forceAllowApi14 = false;
 
     private static volatile long jobReschedulePause = DEFAULT_JOB_RESCHEDULE_PAUSE;
+    private static volatile boolean skipJobReschedule = false;
 
     static {
         ENABLED_APIS = new EnumMap<>(JobApi.class);
@@ -206,6 +207,14 @@ public final class JobConfig {
         jobReschedulePause = timeUnit.toMillis(pause);
     }
 
+    /*package*/ static boolean isSkipJobReschedule() {
+        return skipJobReschedule;
+    }
+
+    /*package*/ static void setSkipJobReschedule(boolean skipJobReschedule) {
+        JobConfig.skipJobReschedule = skipJobReschedule;
+    }
+
     /**
      * Resets all adjustments in the config.
      */
@@ -215,6 +224,8 @@ public final class JobConfig {
         }
         allowSmallerIntervals = false;
         forceAllowApi14 = false;
+        jobReschedulePause = DEFAULT_JOB_RESCHEDULE_PAUSE;
+        skipJobReschedule = false;
         JobCat.setLogcatEnabled(true);
         JobCat.clearLogger();
     }

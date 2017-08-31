@@ -11,9 +11,9 @@ dependencies {
     api "com.android.support:support-v4:$supportLibVersion"
     implementation "net.vrallev.android:cat:$catVersion"
 
-    androidTestImplementation 'com.android.support.test:runner:0.5'
-    androidTestImplementation 'com.android.support.test:rules:0.5'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
+    androidTestImplementation 'com.android.support.test:runner:1.0.0'
+    androidTestImplementation 'com.android.support.test:rules:1.0.0'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     androidTestImplementation 'com.squareup.assertj:assertj-android:1.1.1'
     androidTestImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
 

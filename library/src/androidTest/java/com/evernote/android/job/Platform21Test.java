@@ -1,9 +1,6 @@
 package com.evernote.android.job;
 
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
 import android.os.Build;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -11,9 +8,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.concurrent.TimeUnit;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -37,7 +33,7 @@ public class Platform21Test {
                     .schedule();
         }
 
-        throw new AssertionError("It shouldn't be possible to create more than 100 distinct jobs with the JobScheduler");
+        fail("It shouldn't be possible to create more than 100 distinct jobs with the JobScheduler");
     }
 
     @Test
@@ -71,7 +67,7 @@ public class Platform21Test {
                         .schedule();
             }
 
-            throw new AssertionError("It shouldn't be possible to create more than 100 distinct jobs with the JobScheduler");
+            fail("It shouldn't be possible to create more than 100 distinct jobs with the JobScheduler");
 
         } catch (Exception ignored) {
         }
@@ -97,24 +93,10 @@ public class Platform21Test {
         assertThat(manager.getAllJobRequests()).hasSize(jobCount + moreJobs);
 
         waitForJobRescheduleService();
-        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).hasSize(jobCount);
+        assertThat(mJobManagerRule.getAllPendingJobsFromScheduler().size()).isGreaterThanOrEqualTo(jobCount);
     }
 
     private void waitForJobRescheduleService() throws InterruptedException {
-        boolean await = JobRescheduleService.latch.await(15, TimeUnit.SECONDS);
-        if (!await) {
-            // must be O
-            assertThat(Build.VERSION.SDK_INT).isGreaterThanOrEqualTo(Build.VERSION_CODES.O);
-
-            JobScheduler jobScheduler = InstrumentationRegistry.getContext().getSystemService(JobScheduler.class);
-            JobInfo pendingJob = jobScheduler.getPendingJob(JobRescheduleService.JOB_ID);
-            if (pendingJob != null) {
-                // job was scheduled, that's what we want to verify, now manually call the reschedule
-                new JobRescheduleService().rescheduleJobs(mJobManagerRule.getManager());
-            } else {
-                // job probably running, give it another try
-                assertThat(JobRescheduleService.latch.await(15, TimeUnit.SECONDS)).isTrue();
-            }
-        }
+        new JobRescheduleService().rescheduleJobs(mJobManagerRule.getManager());
     }
 }

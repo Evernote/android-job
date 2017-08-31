@@ -123,6 +123,10 @@ import java.util.List;
                         CAT.i("GCM service enabled");
                     }
                     break;
+                case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
+                case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
+                    // do nothing
+                    break;
             }
 
         } catch (Throwable t) {

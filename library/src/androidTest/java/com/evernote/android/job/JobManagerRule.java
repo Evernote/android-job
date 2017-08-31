@@ -11,6 +11,7 @@ import org.junit.rules.ExternalResource;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author rwondratschek
@@ -21,6 +22,9 @@ public class JobManagerRule extends ExternalResource {
 
     @Override
     protected void before() throws Throwable {
+        JobConfig.setJobReschedulePause(0, TimeUnit.MILLISECONDS);
+        JobConfig.setSkipJobReschedule(true);
+
         mManager = JobManager.create(InstrumentationRegistry.getTargetContext());
         mManager.cancelAll();
     }
@@ -34,6 +38,7 @@ public class JobManagerRule extends ExternalResource {
         mManager.cancelAll();
         mManager.destroy();
 
+        getJobScheduler().cancelAll();
         JobConfig.reset();
     }
 
