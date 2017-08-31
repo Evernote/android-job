@@ -52,11 +52,11 @@ public final class JobRescheduleService extends JobIntentService {
          * Delay this slightly. This avoids a race condition if the app was launched by the
          * AlarmManager. Then the alarm was already removed, but the JobRequest might still
          * be available in the storage. We still catch this case, because we never execute
-         * a job with the same ID twice. However, the still save resources with the delay.
+         * a job with the same ID twice. Nonetheless, add the delay to save resources.
          */
         try {
             CAT.d("Reschedule service started");
-            SystemClock.sleep(10_000L);
+            SystemClock.sleep(JobConfig.getJobReschedulePause());
 
             JobManager manager;
             try {

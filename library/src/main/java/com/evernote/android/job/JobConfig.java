@@ -32,6 +32,7 @@ import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobLogger;
 
 import java.util.EnumMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A global configuration for the job library.
@@ -48,11 +49,15 @@ public final class JobConfig {
         throw new UnsupportedOperationException();
     }
 
+    private static final long DEFAULT_JOB_RESCHEDULE_PAUSE = 3_000L;
+
     private static final EnumMap<JobApi, Boolean> ENABLED_APIS;
     private static final JobCat CAT = new JobCat("JobConfig");
 
     private static volatile boolean allowSmallerIntervals;
     private static volatile boolean forceAllowApi14 = false;
+
+    private static volatile long jobReschedulePause = DEFAULT_JOB_RESCHEDULE_PAUSE;
 
     static {
         ENABLED_APIS = new EnumMap<>(JobApi.class);
@@ -182,6 +187,23 @@ public final class JobConfig {
      */
     public static boolean isLogcatEnabled() {
         return JobCat.isLogcatEnabled();
+    }
+
+    /**
+     * @return The pause of job reschedule service in milliseconds.
+     */
+    public static long getJobReschedulePause() {
+        return jobReschedulePause;
+    }
+
+    /**
+     * Overrides the default job reschedule pause. The default value is 3 seconds.
+     *
+     * @param pause The new pause.
+     * @param timeUnit The time unit of the pause argument.
+     */
+    public static void setJobReschedulePause(long pause, @NonNull TimeUnit timeUnit) {
+        jobReschedulePause = timeUnit.toMillis(pause);
     }
 
     /**
