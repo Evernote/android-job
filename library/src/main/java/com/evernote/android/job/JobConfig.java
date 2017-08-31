@@ -60,6 +60,8 @@ public final class JobConfig {
     private static volatile long jobReschedulePause = DEFAULT_JOB_RESCHEDULE_PAUSE;
     private static volatile boolean skipJobReschedule = false;
 
+    private static volatile int jobIdOffset = 0;
+
     static {
         ENABLED_APIS = new EnumMap<>(JobApi.class);
         for (JobApi api : JobApi.values()) {
@@ -216,6 +218,27 @@ public final class JobConfig {
     }
 
     /**
+     * @return The offset for the very first job ID. The default value is 0 and very first job ID will be 1.
+     */
+    public static int getJobIdOffset() {
+        return jobIdOffset;
+    }
+
+    /**
+     * Adds an offset to the job IDs. Job IDs are generated and usually start with 1. This offset shifts the
+     * very first job ID.
+     *
+     * @param jobIdOffset The offset for the very first job ID.
+     */
+    public static void setJobIdOffset(int jobIdOffset) {
+        if (jobIdOffset > Integer.MAX_VALUE - 500) {
+            throw new IllegalArgumentException("offset is too close to Integer.MAX_VALUE");
+        }
+
+        JobConfig.jobIdOffset = jobIdOffset;
+    }
+
+    /**
      * Resets all adjustments in the config.
      */
     public static void reset() {
@@ -226,6 +249,7 @@ public final class JobConfig {
         forceAllowApi14 = false;
         jobReschedulePause = DEFAULT_JOB_RESCHEDULE_PAUSE;
         skipJobReschedule = false;
+        jobIdOffset = 0;
         JobCat.setLogcatEnabled(true);
         JobCat.clearLogger();
     }

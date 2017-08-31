@@ -24,6 +24,8 @@ public final class JobManagerRule extends ExternalResource {
     @Override
     protected void before() throws Throwable {
         JobConfig.addLogger(TestLogger.INSTANCE);
+        JobConfig.setSkipJobReschedule(true);
+
         mManager = JobManager.create(mContext);
         mManager.addJobCreator(mJobCreator);
     }

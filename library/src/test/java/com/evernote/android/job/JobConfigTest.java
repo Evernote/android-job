@@ -2,6 +2,7 @@ package com.evernote.android.job;
 
 import android.os.Build;
 
+import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
 
 import org.junit.FixMethodOrder;
@@ -107,5 +108,38 @@ public class JobConfigTest extends BaseJobManagerTest {
         for (JobApi api : JobApi.values()) {
             assertThat(JobConfig.isApiEnabled(api)).isEqualTo(api == forcedApi);
         }
+    }
+
+    @Test
+    public void verifyJobIdOffset() {
+        assertThat(JobConfig.getJobIdOffset()).isEqualTo(0);
+        assertThat(manager().getJobStorage().getMaxJobId()).isEqualTo(0);
+
+        int jobId = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExecutionWindow(200_000L, 400_000L)
+                .build()
+                .schedule();
+
+        assertThat(jobId).isEqualTo(1);
+
+        JobConfig.setJobIdOffset(100);
+        assertThat(JobConfig.getJobIdOffset()).isEqualTo(100);
+
+        jobId = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExecutionWindow(200_000L, 400_000L)
+                .build()
+                .schedule();
+
+        assertThat(jobId).isEqualTo(101);
+
+        JobConfig.setJobIdOffset(0);
+        assertThat(JobConfig.getJobIdOffset()).isEqualTo(0);
+
+        jobId = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExecutionWindow(200_000L, 400_000L)
+                .build()
+                .schedule();
+
+        assertThat(jobId).isEqualTo(102);
     }
 }

@@ -233,6 +233,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
         int id = mJobCounter.incrementAndGet();
 
+        int offset = JobConfig.getJobIdOffset();
+        if (id < offset) {
+            mJobCounter.set(offset);
+            id = mJobCounter.incrementAndGet();
+        }
+
         if (id < 0) {
             /*
              * An overflow occurred. It'll happen rarely, but just in case reset the ID and start from scratch.
@@ -346,7 +352,7 @@ import java.util.concurrent.atomic.AtomicInteger;
             closeDatabase(database);
         }
 
-        return Math.max(jobId, mPreferences.getInt(JOB_ID_COUNTER, 0));
+        return Math.max(JobConfig.getJobIdOffset(), Math.max(jobId, mPreferences.getInt(JOB_ID_COUNTER, 0)));
     }
 
     private void addFailedDeleteId(int id) {
