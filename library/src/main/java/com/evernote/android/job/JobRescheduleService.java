@@ -10,17 +10,22 @@ import android.support.v4.app.JobIntentService;
 import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.instance.CatEmpty;
 
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 /**
+ * This service reschedules your jobs in case this should be necessary. Usually rescheduling is necessary
+ * after a reboot. If you don't want that your jobs are rescheduled, then you should use a transient job
+ * or cancel your job manually.
+ *
  * @author rwondratschek
  */
 public final class JobRescheduleService extends JobIntentService {
 
-    private static final CatLog CAT = new JobCat("JobRescheduleService");
+    private static final CatLog CAT = BuildConfig.DEBUG ? new JobCat("JobRescheduleService") : new CatEmpty();
 
     /*package*/ static final int JOB_ID = 2147480000; // close to Integer.MAX_VALUE to avoid conflict with real jobs
 
@@ -78,6 +83,7 @@ public final class JobRescheduleService extends JobIntentService {
         }
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     /*package*/ int rescheduleJobs(JobManager manager) {
         return rescheduleJobs(manager, manager.getAllJobRequests(null, true, true));
     }
