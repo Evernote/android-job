@@ -5,8 +5,6 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
-    buildTypeMatching 'gcm', 'release', 'debug'
-
     defaultConfig {
         applicationId "com.evernote.android.job.demo"
 
@@ -32,6 +30,7 @@ android {
         gcm.initWith(buildTypes.debug)
         gcm {
             applicationIdSuffix ".gcm"
+            matchingFallbacks = ['debug', 'release']
         }
     }
 
