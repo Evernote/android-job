@@ -249,4 +249,17 @@ public class JobManagerTest extends BaseJobManagerTest {
         // if something goes wrong with the pref file, use the highest value from the database
         assertThat(manager().getJobStorage().getMaxJobId()).isEqualTo(1);
     }
+
+    @SuppressWarnings("ConstantConditions")
+    @Test
+    public void testCancelAndEdit() {
+        int id = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExact(10_000)
+                .build().schedule();
+
+        int newId = manager().getJobRequest(id).cancelAndEdit().build().schedule();
+
+        JobRequest request = manager().getJobRequest(newId);
+        assertThat(request.getEndMs()).isGreaterThan(9_000);
+    }
 }

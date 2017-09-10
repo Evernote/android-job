@@ -418,12 +418,15 @@ public final class JobRequest {
      * @return A builder to modify the parameters.
      */
     public Builder cancelAndEdit() {
+        // create a temporary variable, because .cancel() will reset mScheduledAt
+        long scheduledAt = mScheduledAt;
+
         JobManager.instance().cancel(getJobId());
         Builder builder = new Builder(this.mBuilder);
         mStarted = false;
 
         if (!isPeriodic()) {
-            long offset = System.currentTimeMillis() - mScheduledAt;
+            long offset = System.currentTimeMillis() - scheduledAt;
             long minValue = 1L; // 1ms
             builder.setExecutionWindow(Math.max(minValue, getStartMs() - offset), Math.max(minValue, getEndMs() - offset));
         }
