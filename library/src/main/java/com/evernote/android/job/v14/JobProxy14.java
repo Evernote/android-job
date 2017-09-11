@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobProxy;
@@ -94,7 +95,7 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected void plantOneOffExact(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
-        long triggerAtMillis = Common.getAverageDelayMs(request);
+        long triggerAtMillis = SystemClock.elapsedRealtime() + Common.getAverageDelayMs(request);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
