@@ -142,4 +142,20 @@ public class JobConfigTest extends BaseJobManagerTest {
 
         assertThat(jobId).isEqualTo(102);
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void verifyJobIdOffsetUpperBound() {
+        JobConfig.setJobIdOffset(Integer.MAX_VALUE - 500 + 1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void verifyJobIdOffsetLowerBound() {
+        JobConfig.setJobIdOffset(-1);
+    }
+
+    @Test
+    public void verifyJobIdOffsetBounds() {
+        JobConfig.setJobIdOffset(0);
+        JobConfig.setJobIdOffset(Integer.MAX_VALUE - 500);
+    }
 }
