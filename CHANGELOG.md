@@ -12,6 +12,7 @@
 * Add helper job class `DailyJob` to make it easier to run jobs once a day, see #223
 * Add option in `JobConfig` to add a logger
 * Add option in `JobConfig` for a job ID offset to avoid clashes with other jobs in the `JobScheduler`
+* Switch to elapsed real time with the `AlarmManager` to have a consistent behavior with the `JobScheduler`, see #237
 
 ## 1.1.12
 

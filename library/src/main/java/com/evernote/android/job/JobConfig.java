@@ -62,6 +62,8 @@ public final class JobConfig {
 
     private static volatile int jobIdOffset = 0;
 
+    private static volatile boolean forceRtc = false;
+
     static {
         ENABLED_APIS = new EnumMap<>(JobApi.class);
         for (JobApi api : JobApi.values()) {
@@ -239,6 +241,24 @@ public final class JobConfig {
     }
 
     /**
+     * @return Whether the alarm time should use System.currentTimeMillis() (wall clock time in UTC). The
+     *                 default value is {@code false} and will use the alarm time in SystemClock.elapsedRealtime()
+     *                 (time since boot, including sleep).
+     */
+    public static boolean isForceRtc() {
+        return forceRtc;
+    }
+
+    /**
+     * @param forceRtc Force using the alarm time in System.currentTimeMillis() (wall clock time in UTC). The
+     *                 default value is {@code false} and will use the alarm time in SystemClock.elapsedRealtime()
+     *                 (time since boot, including sleep).
+     */
+    public static void setForceRtc(boolean forceRtc) {
+        JobConfig.forceRtc = forceRtc;
+    }
+
+    /**
      * Resets all adjustments in the config.
      */
     public static void reset() {
@@ -250,6 +270,7 @@ public final class JobConfig {
         jobReschedulePause = DEFAULT_JOB_RESCHEDULE_PAUSE;
         skipJobReschedule = false;
         jobIdOffset = 0;
+        forceRtc = false;
         JobCat.setLogcatEnabled(true);
         JobCat.clearLogger();
     }

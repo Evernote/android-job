@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 
+import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
@@ -90,18 +91,18 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected void plantOneOffInexact(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME, Common.getAverageDelayMs(request), pendingIntent);
+        alarmManager.set(getType(false), getTriggerAtMillis(request), pendingIntent);
         logScheduled(request);
     }
 
     protected void plantOneOffExact(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
-        long triggerAtMillis = SystemClock.elapsedRealtime() + Common.getAverageDelayMs(request);
+        long triggerAtMillis = getTriggerAtMillis(request);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent);
+            alarmManager.setExactAndAllowWhileIdle(getType(true), triggerAtMillis, pendingIntent);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent);
+            alarmManager.setExact(getType(true), triggerAtMillis, pendingIntent);
         } else {
-            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent);
+            alarmManager.set(getType(true), triggerAtMillis, pendingIntent);
         }
         logScheduled(request);
     }
@@ -114,9 +115,21 @@ public class JobProxy14 implements JobProxy {
                 JobUtil.timeToString(request.getIntervalMs()), JobUtil.timeToString(request.getFlexMs()));
     }
 
-//    protected long getTriggerAtMillis(JobRequest request) {
-//        return System.currentTimeMillis() + Common.getAverageDelayMs(request);
-//    }
+    protected long getTriggerAtMillis(JobRequest request) {
+        if (JobConfig.isForceRtc()) {
+            return System.currentTimeMillis() + Common.getAverageDelayMs(request);
+        } else {
+            return SystemClock.elapsedRealtime() + Common.getAverageDelayMs(request);
+        }
+    }
+
+    protected int getType(boolean wakeup) {
+        if (wakeup) {
+            return JobConfig.isForceRtc() ? AlarmManager.RTC_WAKEUP : AlarmManager.ELAPSED_REALTIME_WAKEUP;
+        } else {
+            return JobConfig.isForceRtc() ? AlarmManager.RTC : AlarmManager.ELAPSED_REALTIME;
+        }
+    }
 
     private void logScheduled(JobRequest request) {
         mCat.d("Scheduled alarm, %s, delay %s, exact %b, reschedule count %d", request,
@@ -128,7 +141,7 @@ public class JobProxy14 implements JobProxy {
         PendingIntent pendingIntent = getPendingIntent(request, true);
         AlarmManager alarmManager = getAlarmManager();
         if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
+            alarmManager.setRepeating(getType(true), getTriggerAtMillis(request), request.getIntervalMs(), pendingIntent);
         }
 
         mCat.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));

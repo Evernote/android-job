@@ -76,7 +76,17 @@ public class PlatformTest {
     }
 
     @Test
-    public void testExact() throws Exception {
+    public void testExactRealTime() throws Exception {
+        testJobExact();
+    }
+
+    @Test
+    public void testExactRtc() throws Exception {
+        JobConfig.setForceRtc(true);
+        testJobExact();
+    }
+
+    private void testJobExact() throws Exception {
         mJob = new TestJob(PlatformAlarmServiceExact.class);
 
         new JobRequest.Builder("tag")
