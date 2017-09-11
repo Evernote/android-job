@@ -235,17 +235,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
         int offset = JobConfig.getJobIdOffset();
         if (id < offset) {
-            mJobCounter.set(offset);
-            id = mJobCounter.incrementAndGet();
-        }
-
-        if (id < 0) {
             /*
              * An overflow occurred. It'll happen rarely, but just in case reset the ID and start from scratch.
              * Existing jobs will be treated as orphaned and will be overwritten.
              */
-            id = 1;
-            mJobCounter.set(id);
+            mJobCounter.set(offset);
+            id = mJobCounter.incrementAndGet();
         }
 
         mPreferences.edit().putInt(JOB_ID_COUNTER, id).apply();
