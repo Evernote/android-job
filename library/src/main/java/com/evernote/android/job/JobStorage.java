@@ -234,7 +234,7 @@ import java.util.concurrent.atomic.AtomicInteger;
         int id = mJobCounter.incrementAndGet();
 
         int offset = JobConfig.getJobIdOffset();
-        if (id < offset) {
+        if (id < offset || id >= JobIds.RESERVED_JOB_ID_RANGE_START) {
             /*
              * An overflow occurred. It'll happen rarely, but just in case reset the ID and start from scratch.
              * Existing jobs will be treated as orphaned and will be overwritten.

@@ -27,11 +27,9 @@ public final class JobRescheduleService extends JobIntentService {
 
     private static final CatLog CAT = BuildConfig.DEBUG ? new JobCat("JobRescheduleService") : new CatEmpty();
 
-    /*package*/ static final int JOB_ID = 2147480000; // close to Integer.MAX_VALUE to avoid conflict with real jobs
-
     /*package*/ static void startService(Context context) {
         try {
-            enqueueWork(context, JobRescheduleService.class, JOB_ID, new Intent());
+            enqueueWork(context, JobRescheduleService.class, JobIds.JOB_ID_JOB_RESCHEDULE_SERVICE, new Intent());
             latch = new CountDownLatch(1);
         } catch (Exception e) {
             /*
