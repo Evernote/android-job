@@ -242,8 +242,6 @@ public class MainActivity extends Activity {
                 .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.EXPONENTIAL)
                 .setExtras(extras)
                 .setExact(10_000L)
-                .setTransientExtras(new Bundle())
-                .setUpdateCurrent(true)
                 .build()
                 .schedule();
     }

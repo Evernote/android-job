@@ -89,18 +89,18 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected void plantOneOffInexact(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
-        alarmManager.set(AlarmManager.RTC, getTriggerAtMillis(request), pendingIntent);
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME, Common.getAverageDelayMs(request), pendingIntent);
         logScheduled(request);
     }
 
     protected void plantOneOffExact(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
-        long triggerAtMillis = getTriggerAtMillis(request);
+        long triggerAtMillis = Common.getAverageDelayMs(request);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent);
         } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtMillis, pendingIntent);
         }
         logScheduled(request);
     }
@@ -113,9 +113,9 @@ public class JobProxy14 implements JobProxy {
                 JobUtil.timeToString(request.getIntervalMs()), JobUtil.timeToString(request.getFlexMs()));
     }
 
-    protected long getTriggerAtMillis(JobRequest request) {
-        return System.currentTimeMillis() + Common.getAverageDelayMs(request);
-    }
+//    protected long getTriggerAtMillis(JobRequest request) {
+//        return System.currentTimeMillis() + Common.getAverageDelayMs(request);
+//    }
 
     private void logScheduled(JobRequest request) {
         mCat.d("Scheduled alarm, %s, delay %s, exact %b, reschedule count %d", request,
@@ -127,7 +127,7 @@ public class JobProxy14 implements JobProxy {
         PendingIntent pendingIntent = getPendingIntent(request, true);
         AlarmManager alarmManager = getAlarmManager();
         if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
+            alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
         }
 
         mCat.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
