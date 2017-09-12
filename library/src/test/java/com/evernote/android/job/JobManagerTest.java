@@ -250,6 +250,19 @@ public class JobManagerTest extends BaseJobManagerTest {
         assertThat(manager().getJobStorage().getMaxJobId()).isEqualTo(1);
     }
 
+    @Test
+    public void testJobIdRollover() throws Exception {
+        JobConfig.setJobIdOffset(10);
+
+        context().getSharedPreferences(JobStorage.PREF_FILE_NAME, Context.MODE_PRIVATE).edit()
+                .putInt(JobStorage.JOB_ID_COUNTER, JobIdsInternal.RESERVED_JOB_ID_RANGE_START - 2)
+                .apply();
+
+        assertThat(manager().getJobStorage().nextJobId()).isEqualTo(JobIdsInternal.RESERVED_JOB_ID_RANGE_START - 1);
+        assertThat(manager().getJobStorage().nextJobId()).isEqualTo(11);
+        assertThat(manager().getJobStorage().nextJobId()).isEqualTo(12);
+    }
+
     @SuppressWarnings("ConstantConditions")
     @Test
     public void testCancelAndEdit() {

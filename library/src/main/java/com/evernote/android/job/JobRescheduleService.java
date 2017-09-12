@@ -29,7 +29,7 @@ public final class JobRescheduleService extends JobIntentService {
 
     /*package*/ static void startService(Context context) {
         try {
-            enqueueWork(context, JobRescheduleService.class, JobIds.JOB_ID_JOB_RESCHEDULE_SERVICE, new Intent());
+            enqueueWork(context, JobRescheduleService.class, JobIdsInternal.JOB_ID_JOB_RESCHEDULE_SERVICE, new Intent());
             latch = new CountDownLatch(1);
         } catch (Exception e) {
             /*

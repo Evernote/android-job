@@ -33,7 +33,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.JobIntentService;
 
-import com.evernote.android.job.JobIds;
+import com.evernote.android.job.JobIdsInternal;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
@@ -54,7 +54,7 @@ public final class PlatformAlarmService extends JobIntentService {
             intent.putExtra(PlatformAlarmReceiver.EXTRA_TRANSIENT_EXTRAS, transientExtras);
         }
 
-        enqueueWork(context, PlatformAlarmService.class, JobIds.JOB_ID_PLATFORM_ALARM_SERVICE, intent);
+        enqueueWork(context, PlatformAlarmService.class, JobIdsInternal.JOB_ID_PLATFORM_ALARM_SERVICE, intent);
     }
 
     @Override
