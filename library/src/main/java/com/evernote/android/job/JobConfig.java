@@ -30,6 +30,7 @@ import android.support.annotation.NonNull;
 
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobLogger;
+import com.evernote.android.job.util.JobPreconditions;
 
 import java.util.EnumMap;
 import java.util.concurrent.TimeUnit;
@@ -233,6 +234,7 @@ public final class JobConfig {
      * @param jobIdOffset The offset for the very first job ID.
      */
     public static void setJobIdOffset(int jobIdOffset) {
+        JobPreconditions.checkArgumentNonnegative(jobIdOffset, "offset can't be negative");
         if (jobIdOffset > Integer.MAX_VALUE - 500) {
             throw new IllegalArgumentException("offset is too close to Integer.MAX_VALUE");
         }
