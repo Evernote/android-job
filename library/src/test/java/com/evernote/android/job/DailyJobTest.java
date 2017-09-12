@@ -2,6 +2,8 @@ package com.evernote.android.job;
 
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
+import com.evernote.android.job.test.TestClock;
+import com.evernote.android.job.util.Clock;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
 import org.junit.FixMethodOrder;
@@ -22,10 +24,29 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 public class DailyJobTest extends BaseJobManagerTest {
 
     @Test
-    public void verifyScheduleInNextHour() {
-        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-        long start = TimeUnit.HOURS.toMillis(hour + 1);
-        long end = start + TimeUnit.MINUTES.toMillis(30);
+    public void verifyScheduleInNextHourMinute0() {
+        TestClock clock = new TestClock();
+        clock.setTime(20, 0);
+        verifyScheduleInNextHour(clock);
+    }
+
+    @Test
+    public void verifyScheduleInNextHourMinute57() {
+        TestClock clock = new TestClock();
+        clock.setTime(20, 57);
+        verifyScheduleInNextHour(clock);
+    }
+
+    private void verifyScheduleInNextHour(Clock clock) {
+        JobConfig.setClock(clock);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(clock.currentTimeMillis());
+
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+        long start = TimeUnit.HOURS.toMillis(hour + 1) + TimeUnit.MINUTES.toMillis(minute);
+        long end = start + TimeUnit.HOURS.toMillis(1);
 
         DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessJob.class), start, end);
 
@@ -33,12 +54,29 @@ public class DailyJobTest extends BaseJobManagerTest {
 
         JobRequest request = manager().getAllJobRequests().iterator().next();
 
-        assertThat(request.getStartMs()).isLessThan(TimeUnit.HOURS.toMillis(1));
-        assertThat(request.getEndMs()).isLessThan(TimeUnit.HOURS.toMillis(2));
+        assertThat(request.getStartMs()).isEqualTo(TimeUnit.HOURS.toMillis(1));
+        assertThat(request.getEndMs()).isEqualTo(TimeUnit.HOURS.toMillis(2));
     }
 
     @Test
-    public void verifyScheduleOverMidnight() {
+    public void verifyScheduleOverMidnight8pm() {
+        TestClock clock = new TestClock();
+        clock.setTime(20, 0);
+
+        verifyScheduleOverMidnight(clock);
+    }
+
+    @Test
+    public void verifyScheduleOverMidnightAtMidnight() {
+        TestClock clock = new TestClock();
+        clock.setTime(0, 0);
+
+        verifyScheduleOverMidnight(clock);
+    }
+
+    private void verifyScheduleOverMidnight(Clock clock) {
+        JobConfig.setClock(clock);
+
         long start = TimeUnit.HOURS.toMillis(24) - 1L;
         long end = 1L;
 
@@ -47,7 +85,9 @@ public class DailyJobTest extends BaseJobManagerTest {
         assertThat(manager().getAllJobRequests()).hasSize(1);
         JobRequest request = manager().getAllJobRequests().iterator().next();
 
-        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(clock.currentTimeMillis());
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
 
         long maxStart = TimeUnit.HOURS.toMillis(24 - hour);
         assertThat(request.getStartMs()).isLessThan(maxStart);

@@ -70,6 +70,8 @@ public abstract class DailyJob extends Job {
         }
 
         Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(JobConfig.getClock().currentTimeMillis());
+
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
         int second = calendar.get(Calendar.SECOND);
@@ -78,7 +80,8 @@ public abstract class DailyJob extends Job {
         long startDelay = TimeUnit.SECONDS.toMillis(60 - second)
                 + TimeUnit.MINUTES.toMillis(60 - minute)
                 + TimeUnit.HOURS.toMillis((24 - hour) % 24)
-                - TimeUnit.HOURS.toMillis(1)  // subtract because we're adding minutes and seconds
+                - TimeUnit.HOURS.toMillis(1)  // subtract because we're adding minutes
+                - TimeUnit.MINUTES.toMillis(1)  // subtract because we're adding seconds
                 + TimeUnit.DAYS.toMillis(1); // add one day, otherwise result could be negative, e.g. if startMs is 0 and time is 00:08
 
         startDelay = (startDelay + startMs) % TimeUnit.DAYS.toMillis(1);

@@ -426,7 +426,7 @@ public final class JobRequest {
         mStarted = false;
 
         if (!isPeriodic()) {
-            long offset = System.currentTimeMillis() - scheduledAt;
+            long offset = JobConfig.getClock().currentTimeMillis() - scheduledAt;
             long minValue = 1L; // 1ms
             builder.setExecutionWindow(Math.max(minValue, getStartMs() - offset), Math.max(minValue, getEndMs() - offset));
         }
@@ -459,7 +459,7 @@ public final class JobRequest {
             contentValues.put(JobStorage.COLUMN_NUM_FAILURES, mFailureCount);
         }
         if (updateLastRun) {
-            mLastRun = System.currentTimeMillis();
+            mLastRun = JobConfig.getClock().currentTimeMillis();
             contentValues.put(JobStorage.COLUMN_LAST_RUN, mLastRun);
         }
         JobManager.instance().getJobStorage().update(this, contentValues);

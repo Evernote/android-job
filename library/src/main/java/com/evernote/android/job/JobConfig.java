@@ -27,7 +27,9 @@ package com.evernote.android.job;
 
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
+import com.evernote.android.job.util.Clock;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobLogger;
 import com.evernote.android.job.util.JobPreconditions;
@@ -43,7 +45,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author rwondratschek
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"WeakerAccess", "unused", "SameParameterValue"})
 public final class JobConfig {
 
     private JobConfig() {
@@ -64,6 +66,8 @@ public final class JobConfig {
     private static volatile int jobIdOffset = 0;
 
     private static volatile boolean forceRtc = false;
+
+    private static volatile Clock clock = Clock.DEFAULT;
 
     static {
         ENABLED_APIS = new EnumMap<>(JobApi.class);
@@ -261,6 +265,18 @@ public final class JobConfig {
     }
 
     /**
+     * @return A helper providing the system time
+     */
+    public static Clock getClock() {
+        return clock;
+    }
+
+    @VisibleForTesting
+    /*package*/ static void setClock(Clock clock) {
+        JobConfig.clock = clock;
+    }
+
+    /**
      * Resets all adjustments in the config.
      */
     public static void reset() {
@@ -273,6 +289,7 @@ public final class JobConfig {
         skipJobReschedule = false;
         jobIdOffset = 0;
         forceRtc = false;
+        clock = Clock.DEFAULT;
         JobCat.setLogcatEnabled(true);
         JobCat.clearLogger();
     }

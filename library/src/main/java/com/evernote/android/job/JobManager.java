@@ -187,7 +187,7 @@ public final class JobManager {
         boolean periodic = request.isPeriodic();
         boolean flexSupport = periodic && jobApi.isFlexSupport() && request.getFlexMs() < request.getIntervalMs();
 
-        request.setScheduledAt(System.currentTimeMillis());
+        request.setScheduledAt(JobConfig.getClock().currentTimeMillis());
         request.setFlexSupport(flexSupport);
         mJobStorage.put(request);
 

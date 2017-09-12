@@ -31,7 +31,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobConfig;
@@ -108,7 +107,7 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected void plantOneOffFlexSupport(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
-        long triggerAtMs = System.currentTimeMillis() + Common.getAverageDelayMsSupportFlex(request);
+        long triggerAtMs = JobConfig.getClock().currentTimeMillis() + Common.getAverageDelayMsSupportFlex(request);
         alarmManager.set(AlarmManager.RTC, triggerAtMs, pendingIntent);
 
         mCat.d("Scheduled repeating alarm (flex support), %s, interval %s, flex %s", request,
@@ -117,9 +116,9 @@ public class JobProxy14 implements JobProxy {
 
     protected long getTriggerAtMillis(JobRequest request) {
         if (JobConfig.isForceRtc()) {
-            return System.currentTimeMillis() + Common.getAverageDelayMs(request);
+            return JobConfig.getClock().currentTimeMillis() + Common.getAverageDelayMs(request);
         } else {
-            return SystemClock.elapsedRealtime() + Common.getAverageDelayMs(request);
+            return JobConfig.getClock().elapsedRealtime() + Common.getAverageDelayMs(request);
         }
     }
 
