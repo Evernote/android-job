@@ -58,7 +58,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
     private static final CatLog CAT = new JobCat("JobStorage");
 
-    private static final String JOB_ID_COUNTER = "JOB_ID_COUNTER_v2";
+    public static final String JOB_ID_COUNTER = "JOB_ID_COUNTER_v2";
     private static final String FAILED_DELETE_IDS = "FAILED_DELETE_IDS";
 
     public static final String PREF_FILE_NAME = "evernote_jobs";
@@ -234,7 +234,7 @@ import java.util.concurrent.atomic.AtomicInteger;
         int id = mJobCounter.incrementAndGet();
 
         int offset = JobConfig.getJobIdOffset();
-        if (id < offset) {
+        if (id < offset || id >= JobIdsInternal.RESERVED_JOB_ID_RANGE_START) {
             /*
              * An overflow occurred. It'll happen rarely, but just in case reset the ID and start from scratch.
              * Existing jobs will be treated as orphaned and will be overwritten.

@@ -145,7 +145,7 @@ public class JobConfigTest extends BaseJobManagerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void verifyJobIdOffsetUpperBound() {
-        JobConfig.setJobIdOffset(Integer.MAX_VALUE - 500 + 1);
+        JobConfig.setJobIdOffset(2147480000 - 500 + 1);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -156,6 +156,6 @@ public class JobConfigTest extends BaseJobManagerTest {
     @Test
     public void verifyJobIdOffsetBounds() {
         JobConfig.setJobIdOffset(0);
-        JobConfig.setJobIdOffset(Integer.MAX_VALUE - 500);
+        JobConfig.setJobIdOffset(2147480000 - 500);
     }
 }

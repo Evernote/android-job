@@ -33,6 +33,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.JobIntentService;
 
+import com.evernote.android.job.JobIdsInternal;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
@@ -45,7 +46,6 @@ import net.vrallev.android.cat.CatLog;
 public final class PlatformAlarmService extends JobIntentService {
 
     private static final CatLog CAT = new JobCat("PlatformAlarmService");
-    private static final int JOB_ID = 2147480001; // close to Integer.MAX_VALUE to avoid conflict with real jobs
 
     public static void start(Context context, int jobId, @Nullable Bundle transientExtras) {
         Intent intent = new Intent();
@@ -54,7 +54,7 @@ public final class PlatformAlarmService extends JobIntentService {
             intent.putExtra(PlatformAlarmReceiver.EXTRA_TRANSIENT_EXTRAS, transientExtras);
         }
 
-        enqueueWork(context, PlatformAlarmService.class, JOB_ID, intent);
+        enqueueWork(context, PlatformAlarmService.class, JobIdsInternal.JOB_ID_PLATFORM_ALARM_SERVICE, intent);
     }
 
     @Override
