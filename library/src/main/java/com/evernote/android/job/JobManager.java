@@ -34,6 +34,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -233,7 +234,7 @@ public final class JobManager {
             CAT.w("GCM API disabled, but used nonetheless");
         }
 
-        request.setScheduledAt(System.currentTimeMillis());
+        request.setScheduledAt(SystemClock.elapsedRealtime());
         request.setFlexSupport(flexSupport);
         mJobStorage.put(request);
 
