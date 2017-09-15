@@ -30,6 +30,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.util.JobApi;
@@ -205,7 +206,7 @@ public interface JobProxy {
 
         @NonNull
         public Job.Result executeJobRequest(@NonNull JobRequest request) {
-            long waited = System.currentTimeMillis() - request.getScheduledAt();
+            long waited = SystemClock.elapsedRealtime() - request.getScheduledAt();
             String timeWindow;
             if (request.isPeriodic()) {
                 timeWindow = String.format(Locale.US, "interval %s, flex %s", JobUtil.timeToString(request.getIntervalMs()),
