@@ -55,7 +55,9 @@ import java.util.List;
         } catch (Throwable t) {
             // seeing sometimes a DeadObjectException, return false, we can't do anything in this case
             // still sometimes seeing a NoClassDefFoundError here
-            CAT.w(t.getMessage());
+            if (BuildConfig.DEBUG) {
+                CAT.w(t.getMessage());
+            }
             return false;
         }
     }
@@ -131,7 +133,9 @@ import java.util.List;
 
         } catch (Throwable t) {
             // just in case, don't let the app crash with each restart
-            CAT.e(t.getMessage());
+            if (BuildConfig.DEBUG) {
+                CAT.e(t.getMessage());
+            }
         }
     }
 
