@@ -32,7 +32,7 @@ public class TransientBundleRescheduleTest {
     private int mCount;
 
     @Rule
-    public JobManagerRule mJobManagerRule = new JobManagerRule();
+    public PlatformJobManagerRule mJobManagerRule = new PlatformJobManagerRule();
 
     @Before
     public void prepare() {

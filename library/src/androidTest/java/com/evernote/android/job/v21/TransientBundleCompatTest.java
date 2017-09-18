@@ -10,8 +10,8 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.evernote.android.job.JobApi;
 import com.evernote.android.job.JobConfig;
-import com.evernote.android.job.JobManagerRule;
 import com.evernote.android.job.JobRequest;
+import com.evernote.android.job.PlatformJobManagerRule;
 import com.evernote.android.job.v14.PlatformAlarmServiceExact;
 
 import org.junit.FixMethodOrder;
@@ -34,7 +34,7 @@ import static org.junit.Assume.assumeTrue;
 public class TransientBundleCompatTest {
 
     @Rule
-    public JobManagerRule mJobManagerRule = new JobManagerRule();
+    public PlatformJobManagerRule mJobManagerRule = new PlatformJobManagerRule();
 
     @Test
     public void verifyAlarmIsCanceled() throws Exception {

@@ -36,7 +36,7 @@ public class PlatformTest {
     private TestJob mJob;
 
     @Rule
-    public JobManagerRule mJobManagerRule = new JobManagerRule();
+    public PlatformJobManagerRule mJobManagerRule = new PlatformJobManagerRule();
 
     @Before
     public void prepare() {

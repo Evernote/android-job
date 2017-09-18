@@ -32,7 +32,7 @@ public class DisabledServiceTest {
     private ComponentName mComponent;
 
     @Rule
-    public JobManagerRule mJobManagerRule = new JobManagerRule();
+    public PlatformJobManagerRule mJobManagerRule = new PlatformJobManagerRule();
 
     @Before
     public void prepare() {

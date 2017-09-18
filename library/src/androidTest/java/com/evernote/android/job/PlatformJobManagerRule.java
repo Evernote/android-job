@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author rwondratschek
  */
-public class JobManagerRule extends ExternalResource {
+public class PlatformJobManagerRule extends ExternalResource {
 
     private JobManager mManager;
 
@@ -57,7 +57,7 @@ public class JobManagerRule extends ExternalResource {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Iterator<JobInfo> iterator = jobs.iterator();
             while (iterator.hasNext()) {
-                if (iterator.next().getId() == JobRescheduleService.JOB_ID) {
+                if (iterator.next().getId() == JobIdsInternal.JOB_ID_JOB_RESCHEDULE_SERVICE) {
                     iterator.remove();
                 }
             }

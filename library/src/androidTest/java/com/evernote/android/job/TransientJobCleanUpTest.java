@@ -1,11 +1,9 @@
 package com.evernote.android.job;
 
-import android.content.Context;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -25,15 +23,13 @@ import static org.junit.Assume.assumeTrue;
 public class TransientJobCleanUpTest {
 
     private JobManager mManager;
-    private Context mContext;
 
     @Rule
-    public JobManagerRule mJobManagerRule = new JobManagerRule();
+    public PlatformJobManagerRule mJobManagerRule = new PlatformJobManagerRule();
 
     @Before
     public void prepare() {
         mManager = mJobManagerRule.getManager();
-        mContext = InstrumentationRegistry.getContext();
     }
 
     @Test

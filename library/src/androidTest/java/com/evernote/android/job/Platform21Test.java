@@ -20,7 +20,7 @@ import static org.junit.Assume.assumeTrue;
 public class Platform21Test {
 
     @Rule
-    public JobManagerRule mJobManagerRule = new JobManagerRule();
+    public PlatformJobManagerRule mJobManagerRule = new PlatformJobManagerRule();
 
     @Test(expected = IllegalStateException.class)
     public void test100DistinctJobsLimit() {
