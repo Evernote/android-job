@@ -143,4 +143,15 @@ public class DailyJobTest extends BaseJobManagerTest {
         assertThat(request.getExtras().getLong(DailyJob.EXTRA_END_MS, -1)).isEqualTo(1L);
         assertThat(request.getExtras().size()).isEqualTo(3);
     }
+
+    @Test
+    public void verifyDailyJobIsNotExact() {
+        long time = 1L;
+
+        int jobId = DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessJob.class), time, time);
+        JobRequest request = manager().getJobRequest(jobId);
+
+        assertThat(request).isNotNull();
+        assertThat(request.isExact()).isFalse();
+    }
 }
