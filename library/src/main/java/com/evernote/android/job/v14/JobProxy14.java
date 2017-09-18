@@ -74,7 +74,7 @@ public class JobProxy14 implements JobProxy {
 
         try {
             if (request.isExact()) {
-                if (request.getStartMs() == 1) {
+                if (request.getStartMs() == 1 && request.getFailureCount() <= 0) {
                     // this job should start immediately
                     PlatformAlarmService.start(mContext, request.getJobId(), request.getTransientExtras());
                 } else {

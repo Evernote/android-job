@@ -131,6 +131,7 @@ public abstract class BaseJobManagerTest {
 
         Context context = spy(RuntimeEnvironment.application);
         when(context.getPackageManager()).thenReturn(packageManager);
+        when(context.getApplicationContext()).thenReturn(context);
 
         Context mockContext = mock(MockContext.class);
         when(mockContext.getApplicationContext()).thenReturn(context);

@@ -1,5 +1,6 @@
 package com.evernote.android.job;
 
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.test.DummyJobs;
@@ -213,5 +214,30 @@ public class JobExecutionTest extends BaseJobManagerTest {
         assertThat(manager().getJobRequest(jobId, true)).isNull();
 
         assertThat(onRescheduleCalled.get()).isFalse();
+    }
+
+    @Test
+    public void verifyReschedulingTransientJobsWorks() throws Throwable {
+        Bundle extras = new Bundle();
+        extras.putString("key", "hello");
+
+        int previousJobId = DummyJobs.createBuilder(DummyJobs.RescheduleJob.class)
+                .setExecutionWindow(200_000L, 400_000L)
+                .setTransientExtras(extras)
+                .build()
+                .schedule();
+
+        for (int i = 0; i < 5; i++) {
+            executeJob(previousJobId, Job.Result.RESCHEDULE);
+
+            assertThat(manager().getAllJobRequestsForTag(DummyJobs.RescheduleJob.TAG)).hasSize(1);
+
+            JobRequest request = manager().getAllJobRequestsForTag(DummyJobs.RescheduleJob.TAG).iterator().next();
+            assertThat(request.getJobId()).isNotEqualTo(previousJobId);
+
+            assertThat(request.getTransientExtras().getString("key", null)).isEqualTo("hello");
+
+            previousJobId = request.getJobId();
+        }
     }
 }
