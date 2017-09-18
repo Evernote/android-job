@@ -180,7 +180,7 @@ import java.util.concurrent.TimeUnit;
             boolean incFailureCount = false;
             boolean updateLastRun = false;
 
-            if (!request.isPeriodic() && Job.Result.RESCHEDULE.equals(result)) {
+            if (!request.isPeriodic() && Job.Result.RESCHEDULE.equals(result) && !job.isDeleted()) {
                 request = request.reschedule(true, true);
                 mJob.onReschedule(request.getJobId());
                 updateLastRun = true;

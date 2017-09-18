@@ -1,5 +1,7 @@
 package com.evernote.android.job;
 
+import android.support.annotation.NonNull;
+
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
 import com.evernote.android.job.test.TestLogger;
@@ -11,6 +13,7 @@ import org.junit.runners.MethodSorters;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -168,5 +171,47 @@ public class JobExecutionTest extends BaseJobManagerTest {
 
         common.markStarting(request);
         assertThat(common.getPendingRequest(true, false)).isNull();
+    }
+
+    @Test
+    public void verifyCanceledJobNotRescheduled() {
+        final AtomicBoolean onRescheduleCalled = new AtomicBoolean(false);
+        final Job job = new Job() {
+            @NonNull
+            @Override
+            protected Result onRunJob(Params params) {
+                manager().cancelAll();
+                return Result.RESCHEDULE;
+            }
+
+            @Override
+            protected void onReschedule(int newJobId) {
+                onRescheduleCalled.set(true);
+            }
+        };
+
+        JobCreator jobCreator = new JobCreator() {
+            @Override
+            public Job create(String tag) {
+                return job;
+            }
+        };
+
+        manager().addJobCreator(jobCreator);
+
+        final String tag = "something";
+        final int jobId = new JobRequest.Builder(tag)
+                .setExecutionWindow(200_000L, 400_000L)
+                .build()
+                .schedule();
+
+        executeJob(jobId, Job.Result.RESCHEDULE);
+
+        assertThat(manager().getAllJobRequestsForTag(tag)).isEmpty();
+
+        assertThat(manager().getJobRequest(jobId)).isNull();
+        assertThat(manager().getJobRequest(jobId, true)).isNull();
+
+        assertThat(onRescheduleCalled.get()).isFalse();
     }
 }
