@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 /**
  * A {@code JobCreator} maps a tag to a specific {@link Job} class. You need to pass the tag in the
@@ -31,7 +32,8 @@ public interface JobCreator {
      * and isn't rescheduled.
      * @see JobRequest.Builder#Builder(String)
      */
-    Job create(String tag);
+    @Nullable
+    Job create(@NonNull String tag);
 
     /**
      * Action to notify receives that the application was instantiated and {@link JobCreator}s should be added.
