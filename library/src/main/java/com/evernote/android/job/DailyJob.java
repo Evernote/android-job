@@ -139,7 +139,7 @@ public abstract class DailyJob extends Job {
 
                 // don't update current, it would cancel this currently running job
                 schedule(request.createBuilder(), false,
-                        extras.getLong(EXTRA_START_MS, 0), extras.getLong(EXTRA_END_MS, 0L));
+                        extras.getLong(EXTRA_START_MS, 0) % DAY, extras.getLong(EXTRA_END_MS, 0L) % DAY);
 
             } else {
                 CAT.i("Cancel daily job %s", request);

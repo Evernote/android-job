@@ -2,6 +2,7 @@ package com.evernote.android.job.test;
 
 import android.support.annotation.NonNull;
 
+import com.evernote.android.job.DailyJob;
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobCreator;
 import com.evernote.android.job.JobRequest;
@@ -75,6 +76,16 @@ public final class DummyJobs {
         }
     }
 
+    public static final class SuccessDailyJob extends DailyJob {
+        public static final String TAG = "SuccessDailyJob";
+
+        @NonNull
+        @Override
+        protected DailyJobResult onRunDailyJob(Params params) {
+            return DailyJobResult.SUCCESS;
+        }
+    }
+
     public static final JobCreator TEST_JOB_CREATOR = new JobCreator() {
         @Override
         public Job create(String tag) {
@@ -87,6 +98,8 @@ public final class DummyJobs {
                     return new FailureJob();
                 case TwoSecondPauseJob.TAG:
                     return new TwoSecondPauseJob();
+                case SuccessDailyJob.TAG:
+                    return new SuccessDailyJob();
                 default:
                     return null;
             }

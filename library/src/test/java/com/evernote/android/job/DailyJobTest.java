@@ -94,6 +94,50 @@ public class DailyJobTest extends BaseJobManagerTest {
         assertThat(request.getEndMs()).isLessThan(maxStart + 3);
     }
 
+    @Test
+    public void verifyScheduleAndExecutionInFuture() {
+        TestClock clock = new TestClock();
+        clock.setTime(0, 0);
+
+        verifyExecutionAndSuccessfulReschedule(clock, TimeUnit.HOURS.toMillis(2),  TimeUnit.HOURS.toMillis(6));
+    }
+
+    @Test
+    public void verifyScheduleAndExecutionInPast() {
+        TestClock clock = new TestClock();
+        clock.setTime(12, 0);
+
+        verifyExecutionAndSuccessfulReschedule(clock, TimeUnit.HOURS.toMillis(2),  TimeUnit.HOURS.toMillis(6));
+    }
+
+    @Test
+    public void verifyScheduleAndExecutionStartInPast() {
+        TestClock clock = new TestClock();
+        clock.setTime(4, 0);
+
+        verifyExecutionAndSuccessfulReschedule(clock, TimeUnit.HOURS.toMillis(2),  TimeUnit.HOURS.toMillis(6));
+    }
+
+    @Test
+    public void verifyScheduleAndExecutionOverMidnight() {
+        TestClock clock = new TestClock();
+        clock.setTime(0, 0);
+
+        verifyExecutionAndSuccessfulReschedule(clock, TimeUnit.HOURS.toMillis(23),  TimeUnit.HOURS.toMillis(6));
+    }
+
+    private void verifyExecutionAndSuccessfulReschedule(Clock clock, long start, long end) {
+        JobConfig.setClock(clock);
+
+        int jobId = DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessDailyJob.class), start, end);
+        assertThat(jobId).isEqualTo(1);
+
+        executeJob(jobId, Job.Result.SUCCESS);
+
+        assertThat(manager().getAllJobRequests()).hasSize(1);
+        assertThat(manager().getJobRequest(jobId + 1)).isNotNull();
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void verifyTooLargeValue() {
         long start = TimeUnit.HOURS.toMillis(24);
