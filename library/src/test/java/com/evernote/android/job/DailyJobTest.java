@@ -119,6 +119,22 @@ public class DailyJobTest extends BaseJobManagerTest {
     }
 
     @Test
+    public void verifyScheduleAndExecutionExactStart() {
+        TestClock clock = new TestClock();
+        clock.setTime(13, 0);
+
+        verifyExecutionAndSuccessfulReschedule(clock, TimeUnit.HOURS.toMillis(13),  TimeUnit.HOURS.toMillis(14));
+    }
+
+    @Test
+    public void verifyScheduleAndExecutionExactEnd() {
+        TestClock clock = new TestClock();
+        clock.setTime(14, 0);
+
+        verifyExecutionAndSuccessfulReschedule(clock, TimeUnit.HOURS.toMillis(13),  TimeUnit.HOURS.toMillis(14));
+    }
+
+    @Test
     public void verifyScheduleAndExecutionOverMidnight() {
         TestClock clock = new TestClock();
         clock.setTime(0, 0);

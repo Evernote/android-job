@@ -99,7 +99,7 @@ public abstract class DailyJob extends Job {
         builder.addExtras(extras);
 
         JobRequest request = builder
-                .setExecutionWindow(startDelay, endDelay)
+                .setExecutionWindow(Math.max(1L, startDelay), Math.max(1L, endDelay))
                 .setUpdateCurrent(newJob)
                 .build();
 
