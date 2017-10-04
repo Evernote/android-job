@@ -80,7 +80,7 @@ public class JobProxy21 implements JobProxy {
             scheduleResult = schedule(jobInfo);
         }
 
-        mCat.d("Schedule one-off jobInfo %s, %s, start %s, end %s, reschedule count %d", scheduleResultToString(scheduleResult),
+        mCat.d("Schedule one-off jobInfo %s, %s, start %s, end %s (from now), reschedule count %d", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs), Common.getRescheduleCount(request));
     }
 
