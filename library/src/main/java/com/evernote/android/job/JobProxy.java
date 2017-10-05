@@ -29,10 +29,11 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
@@ -60,6 +61,7 @@ public interface JobProxy {
 
     boolean isPlatformJobScheduled(JobRequest request);
 
+    @SuppressWarnings("UnusedReturnValue")
     /*package*/ final class Common {
 
         private static final Object COMMON_MONITOR = new Object();
@@ -69,7 +71,7 @@ public interface JobProxy {
             private final AtomicInteger mThreadNumber = new AtomicInteger();
 
             @Override
-            public Thread newThread(Runnable r) {
+            public Thread newThread(@NonNull Runnable r) {
                 Thread thread = new Thread(r, "AndroidJob-" + mThreadNumber.incrementAndGet());
                 if (thread.isDaemon()) {
                     thread.setDaemon(false);
@@ -152,7 +154,7 @@ public interface JobProxy {
             mJobManager = manager;
         }
 
-        public JobRequest getPendingRequest(boolean cleanUpOrphanedJob, boolean markStarting) {
+        public JobRequest getPendingRequest(@SuppressWarnings("SameParameterValue") boolean cleanUpOrphanedJob, boolean markStarting) {
             synchronized (COMMON_MONITOR) {
                 if (mJobManager == null) {
                     return null;
@@ -180,9 +182,9 @@ public interface JobProxy {
                     // don't clean up, periodic job
                     return null;
 
-                } else if (request != null && request.isTransient()) {
-                    mCat.d("Request %d is transient, %s", mJobId, request);
-                    // not necessary to clean up, the JobManager will do this for transient jobs
+                } else if (request != null && request.isStarted()) {
+                    mCat.d("Request %d already started, %s", mJobId, request);
+                    // not necessary to clean up, the JobManager will do this for started jobs
                     return null;
 
                 } else if (request != null && mJobManager.getJobExecutor().isRequestStarting(request)) {
@@ -196,15 +198,19 @@ public interface JobProxy {
                 }
 
                 if (markStarting) {
-                    mJobManager.getJobExecutor().markJobRequestStarting(request);
+                    markStarting(request);
                 }
 
                 return request;
             }
         }
 
+        public void markStarting(@NonNull JobRequest request) {
+            mJobManager.getJobExecutor().markJobRequestStarting(request);
+        }
+
         @NonNull
-        public Job.Result executeJobRequest(@NonNull JobRequest request) {
+        public Job.Result executeJobRequest(@NonNull JobRequest request, @Nullable Bundle transientExtras) {
             long waited = System.currentTimeMillis() - request.getScheduledAt();
             String timeWindow;
             if (request.isPeriodic()) {
@@ -226,14 +232,18 @@ public interface JobProxy {
             Job job = null;
 
             try {
-                // create job first before setting it transient, avoids a race condition while rescheduling jobs
+                // create job first before setting it started, avoids a race condition while rescheduling jobs
                 job = mJobManager.getJobCreatorHolder().createJob(request.getTag());
 
                 if (!request.isPeriodic()) {
-                    request.setTransient(true);
+                    request.setStarted(true);
                 }
 
-                Future<Job.Result> future = jobExecutor.execute(mContext, request, job);
+                if (transientExtras == null) {
+                    transientExtras = Bundle.EMPTY;
+                }
+
+                Future<Job.Result> future = jobExecutor.execute(mContext, request, job, transientExtras);
                 if (future == null) {
                     return Job.Result.FAILURE;
                 }
@@ -270,7 +280,7 @@ public interface JobProxy {
             }
         }
 
-        public static void cleanUpOrphanedJob(Context context, int jobId) {
+        /*package*/ static void cleanUpOrphanedJob(Context context, int jobId) {
             /*
              * That's necessary if the database was deleted and jobs (especially the JobScheduler) are still around.
              * Then if a new job is being scheduled, it's possible that the new job has the ID of the old one. Here
@@ -279,7 +289,7 @@ public interface JobProxy {
             for (JobApi jobApi : JobApi.values()) {
                 if (jobApi.isSupported(context)) {
                     try {
-                        jobApi.getCachedProxy(context).cancel(jobId);
+                        jobApi.getProxy(context).cancel(jobId);
                     } catch (Exception ignored) {
                         // GCM API could crash if it's disabled, ignore crashes at this point and continue
                     }

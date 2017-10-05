@@ -5,25 +5,24 @@ apply from: '../build-config/gradle-quality.gradle'
 archivesBaseName = 'android-job'
 
 dependencies {
-    provided "com.google.android.gms:play-services-gcm:$playServicesVersion"
+    compileOnly "com.google.android.gms:play-services-gcm:$playServicesVersion"
 
     //noinspection GradleDependency
-    compile "com.android.support:support-annotations:$supportLibVersion"
-    compile "com.android.support:support-v4:$supportLibVersion"
-    compile 'net.vrallev.android:cat:1.0.5'
+    api "com.android.support:support-v4:$supportLibVersion"
+    implementation "net.vrallev.android:cat:$catVersion"
 
-    androidTestCompile 'com.android.support.test:runner:0.5'
-    androidTestCompile 'com.android.support.test:rules:0.5'
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
-    androidTestCompile 'com.squareup.assertj:assertj-android:1.1.1'
-    androidTestCompile "com.google.android.gms:play-services-gcm:$playServicesVersion"
+    androidTestImplementation 'com.android.support.test:runner:1.0.0'
+    androidTestImplementation 'com.android.support.test:rules:1.0.0'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'com.squareup.assertj:assertj-android:1.1.1'
+    androidTestImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
 
-    androidTestCompile "com.facebook.stetho:stetho:$stethoVersion"
+    androidTestImplementation "com.facebook.stetho:stetho:$stethoVersion"
 
-    testCompile "junit:junit:$junitVersion"
-    testCompile "org.mockito:mockito-core:$mockitoVersion"
-    testCompile "org.assertj:assertj-core:$assertjVersion"
-    testCompile "org.robolectric:robolectric:$robolectricVersion"
+    testImplementation "junit:junit:$junitVersion"
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
+    testImplementation "org.assertj:assertj-core:$assertjVersion"
+    testImplementation "org.robolectric:robolectric:$robolectricVersion"
 }
 
 android {
@@ -39,7 +38,7 @@ android {
         versionName project.VERSION_NAME
         versionCode Integer.parseInt(project.VERSION_CODE)
 
-        consumerProguardFiles 'proguard.txt'
+        consumerProguardFiles 'proguard.cfg'
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -55,6 +54,7 @@ android {
 
     testOptions {
         unitTests.returnDefaultValues = true
+        unitTests.includeAndroidResources = true
         unitTests.all {
             testLogging {
                 events 'passed', 'skipped', 'failed', 'standardOut', 'standardError'

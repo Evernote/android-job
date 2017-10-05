@@ -3,8 +3,7 @@ package com.evernote.android.job;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.evernote.android.job.test.TestCat;
-import com.evernote.android.job.util.JobCat;
+import com.evernote.android.job.test.TestLogger;
 
 import org.junit.rules.ExternalResource;
 
@@ -24,7 +23,9 @@ public final class JobManagerRule extends ExternalResource {
 
     @Override
     protected void before() throws Throwable {
-        JobCat.addLogPrinter(TestCat.INSTANCE);
+        JobConfig.addLogger(TestLogger.INSTANCE);
+        JobConfig.setSkipJobReschedule(true);
+
         mManager = JobManager.create(mContext);
         mManager.addJobCreator(mJobCreator);
     }
@@ -33,7 +34,7 @@ public final class JobManagerRule extends ExternalResource {
     protected void after() {
         mManager.cancelAll();
         mManager.destroy();
-        JobCat.removeLogPrinter(TestCat.INSTANCE);
+        JobConfig.reset();
     }
 
     public JobManager getJobManager() {

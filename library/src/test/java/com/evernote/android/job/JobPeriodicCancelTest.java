@@ -4,7 +4,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.test.JobRobolectricTestRunner;
-import com.evernote.android.job.test.TestCat;
+import com.evernote.android.job.test.TestLogger;
 
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -33,7 +33,7 @@ public class JobPeriodicCancelTest extends BaseJobManagerTest {
         mJob = new PeriodicJob();
         manager().addJobCreator(new JobCreator() {
             @Override
-            public Job create(String tag) {
+            public Job create(@NonNull String tag) {
                 return mJob;
             }
         });
@@ -88,7 +88,7 @@ public class JobPeriodicCancelTest extends BaseJobManagerTest {
                 .build()
                 .schedule();
 
-            final JobProxy.Common common = new JobProxy.Common(context(), TestCat.INSTANCE, jobId);
+            final JobProxy.Common common = new JobProxy.Common(context(), TestLogger.INSTANCE, jobId);
             final JobRequest request = common.getPendingRequest(true, true);
             assertThat(request).isNotNull();
 
@@ -96,7 +96,7 @@ public class JobPeriodicCancelTest extends BaseJobManagerTest {
             new Thread() {
                 @Override
                 public void run() {
-                    common.executeJobRequest(request);
+                    common.executeJobRequest(request, null);
                     waitFinishExecution.countDown();
                 }
             }.start();

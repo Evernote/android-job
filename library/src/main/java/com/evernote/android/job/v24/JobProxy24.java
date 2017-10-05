@@ -44,7 +44,11 @@ public class JobProxy24 extends JobProxy21 {
     private static final String TAG = "JobProxy24";
 
     public JobProxy24(Context context) {
-        super(context, TAG);
+        this(context, TAG);
+    }
+
+    public JobProxy24(Context context, String tag) {
+        super(context, tag);
     }
 
     @Override
@@ -56,7 +60,7 @@ public class JobProxy24 extends JobProxy21 {
     @Override
     public boolean isPlatformJobScheduled(JobRequest request) {
         try {
-            return getJobScheduler().getPendingJob(request.getJobId()) != null;
+            return isJobInfoScheduled(getJobScheduler().getPendingJob(request.getJobId()), request);
         } catch (Exception e) {
             mCat.e(e);
             return false;

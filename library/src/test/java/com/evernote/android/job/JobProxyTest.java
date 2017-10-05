@@ -163,7 +163,6 @@ public class JobProxyTest {
 
         new JobRequest.Builder("tag")
                 .setExecutionWindow(200_000, 300_000)
-                .setPersisted(true)
                 .build()
                 .schedule();
 
@@ -190,7 +189,6 @@ public class JobProxyTest {
 
         new JobRequest.Builder("tag")
                 .setExecutionWindow(200_000, 300_000)
-                .setPersisted(true)
                 .build()
                 .schedule();
 
@@ -217,7 +215,6 @@ public class JobProxyTest {
 
         new JobRequest.Builder("tag")
                 .setExecutionWindow(200_000, 300_000)
-                .setPersisted(true)
                 .build()
                 .schedule();
 

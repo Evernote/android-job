@@ -1,4 +1,4 @@
-package com.evernote.android.job.util;
+package com.evernote.android.job;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -8,6 +8,7 @@ import android.content.pm.ResolveInfo;
 
 import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.gcm.PlatformGcmService;
+import com.evernote.android.job.util.JobCat;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
@@ -54,7 +55,9 @@ import java.util.List;
         } catch (Throwable t) {
             // seeing sometimes a DeadObjectException, return false, we can't do anything in this case
             // still sometimes seeing a NoClassDefFoundError here
-            CAT.w(t.getMessage());
+            if (BuildConfig.DEBUG) {
+                CAT.w(t.getMessage());
+            }
             return false;
         }
     }
@@ -122,11 +125,17 @@ import java.util.List;
                         CAT.i("GCM service enabled");
                     }
                     break;
+                case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
+                case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
+                    // do nothing
+                    break;
             }
 
         } catch (Throwable t) {
             // just in case, don't let the app crash with each restart
-            CAT.e(t.getMessage());
+            if (BuildConfig.DEBUG) {
+                CAT.e(t.getMessage());
+            }
         }
     }
 

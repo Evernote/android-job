@@ -16,6 +16,11 @@
 
         <service
             android:name="com.evernote.android.job.v14.PlatformAlarmService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+        <service
+            android:name="com.evernote.android.job.v14.PlatformAlarmServiceExact"
             android:exported="false"/>
 
         <receiver
@@ -51,7 +56,8 @@
 
         <service
             android:name="com.evernote.android.job.JobRescheduleService"
-            android:exported="false"/>
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
 
 </manifest>

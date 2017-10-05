@@ -138,7 +138,6 @@ public class DatabaseFailureTest extends BaseJobManagerTest {
         }.start();
         latch.await(3, TimeUnit.SECONDS);
 
-        assertThat(manager().getJobStorage().getFailedDeleteIds()).isEmpty();
-
+        assertThat(manager.getJobStorage().getFailedDeleteIds()).isEmpty();
     }
 }

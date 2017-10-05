@@ -33,12 +33,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import com.evernote.android.job.util.JobApi;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.JobUtil;
@@ -47,6 +45,7 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 import net.vrallev.android.cat.CatLog;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -105,6 +104,11 @@ public final class JobManager {
                         context = context.getApplicationContext();
                     }
 
+                    JobApi api = JobApi.getDefault(context);
+                    if (api == JobApi.V_14 && !api.isSupported(context)) {
+                        throw new JobManagerCreateException("All APIs are disabled, cannot schedule any job");
+                    }
+
                     instance = new JobManager(context);
 
                     if (!JobUtil.hasWakeLockPermission(context)) {
@@ -117,31 +121,6 @@ public final class JobManager {
                     sendAddJobCreatorIntent(context);
                 }
             }
-        }
-
-        return instance;
-    }
-
-    /**
-     * Initializes the singleton. It's necessary to call this function before using the {@code JobManager}.
-     * Calling it multiple times has not effect.
-     *
-     * @param context    Any {@link Context} to instantiate the singleton object.
-     * @param jobCreator The mapping between a specific job tag and the job class.
-     * @return The new or existing singleton object.
-     * @deprecated Use {@link #create(Context)} instead and call {@link #addJobCreator(JobCreator)} after that.
-     */
-    @Deprecated
-    public static JobManager create(Context context, JobCreator jobCreator) {
-        boolean addJobCreator;
-        synchronized (JobManager.class) {
-            addJobCreator = instance == null;
-        }
-
-        create(context);
-
-        if (addJobCreator) {
-            instance.addJobCreator(jobCreator);
         }
 
         return instance;
@@ -169,36 +148,16 @@ public final class JobManager {
     private final JobCreatorHolder mJobCreatorHolder;
     private final JobStorage mJobStorage;
     private final JobExecutor mJobExecutor;
-    private final Config mConfig;
-
-    private JobApi mApi;
 
     private JobManager(Context context) {
         mContext = context;
         mJobCreatorHolder = new JobCreatorHolder();
         mJobStorage = new JobStorage(context);
         mJobExecutor = new JobExecutor();
-        mConfig = new Config();
 
-        JobApi api = JobApi.getDefault(mContext, mConfig.isGcmApiEnabled());
-        if (api == JobApi.V_14 && !api.isSupported(mContext)) {
-            throw new JobManagerCreateException("All APIs are disabled, cannot schedule any job");
+        if (!JobConfig.isSkipJobReschedule()) {
+            JobRescheduleService.startService(mContext);
         }
-
-        setJobProxy(api);
-
-        JobRescheduleService.startService(mContext);
-    }
-
-    /**
-     * @return The current configuration for the job manager.
-     */
-    public Config getConfig() {
-        return mConfig;
-    }
-
-    private void setJobProxy(JobApi api) {
-        mApi = api;
     }
 
     /**
@@ -228,12 +187,7 @@ public final class JobManager {
         boolean periodic = request.isPeriodic();
         boolean flexSupport = periodic && jobApi.isFlexSupport() && request.getFlexMs() < request.getIntervalMs();
 
-        if (jobApi == JobApi.GCM && !mConfig.isGcmApiEnabled()) {
-            // shouldn't happen
-            CAT.w("GCM API disabled, but used nonetheless");
-        }
-
-        request.setScheduledAt(System.currentTimeMillis());
+        request.setScheduledAt(JobConfig.getClock().currentTimeMillis());
         request.setFlexSupport(flexSupport);
         mJobStorage.put(request);
 
@@ -292,12 +246,18 @@ public final class JobManager {
      * @return The {@link JobRequest} if it's pending or {@code null} otherwise.
      */
     public JobRequest getJobRequest(int jobId) {
-        return getJobRequest(jobId, false);
+        JobRequest request = getJobRequest(jobId, false);
+        if (request != null && request.isTransient() && !request.getJobApi().getProxy(mContext).isPlatformJobScheduled(request)) {
+            getJobStorage().remove(request);
+            return null;
+        } else {
+            return request;
+        }
     }
 
-    /*package*/ JobRequest getJobRequest(int jobId, boolean includeTransient) {
+    /*package*/ JobRequest getJobRequest(int jobId, boolean includeStarted) {
         JobRequest jobRequest = mJobStorage.get(jobId);
-        if (!includeTransient && jobRequest != null && jobRequest.isTransient()) {
+        if (!includeStarted && jobRequest != null && jobRequest.isStarted()) {
             return null;
         } else {
             return jobRequest;
@@ -312,7 +272,7 @@ public final class JobManager {
      */
     @NonNull
     public Set<JobRequest> getAllJobRequests() {
-        return mJobStorage.getAllJobRequests(null, false);
+        return getAllJobRequests(null, false, true);
     }
 
     /**
@@ -322,7 +282,24 @@ public final class JobManager {
      * direct effects to the actual backing store.
      */
     public Set<JobRequest> getAllJobRequestsForTag(@NonNull String tag) {
-        return mJobStorage.getAllJobRequests(tag, false);
+        return getAllJobRequests(tag, false, true);
+    }
+
+    /*package*/ Set<JobRequest> getAllJobRequests(@Nullable String tag, boolean includeStarted, boolean cleanUpTransient) {
+        Set<JobRequest> requests = mJobStorage.getAllJobRequests(tag, includeStarted);
+
+        if (cleanUpTransient) {
+            Iterator<JobRequest> iterator = requests.iterator();
+            while (iterator.hasNext()) {
+                JobRequest request = iterator.next();
+                if (request.isTransient() && !request.getJobApi().getProxy(mContext).isPlatformJobScheduled(request)) {
+                    mJobStorage.remove(request);
+                    iterator.remove();
+                }
+            }
+        }
+
+        return requests;
     }
 
     /**
@@ -362,27 +339,6 @@ public final class JobManager {
     @NonNull
     public Set<Job> getAllJobsForTag(@NonNull String tag) {
         return mJobExecutor.getAllJobsForTag(tag);
-    }
-
-    /**
-     * <b>WARNING:</b> You shouldn't call this method. It only exists for testing and debugging
-     * purposes. The {@link JobManager} automatically decides which API suits best for a {@link Job}.
-     *
-     * @param api The {@link JobApi} which will be used for future scheduled JobRequests.
-     */
-    public void forceApi(@NonNull JobApi api) {
-        setJobProxy(JobPreconditions.checkNotNull(api));
-        CAT.w("Changed API to %s", api);
-    }
-
-    /**
-     * <b>WARNING:</b> Don't rely your logic on a specific {@link JobApi}. You shouldn't be worrying
-     * about it.
-     *
-     * @return The current {@link JobApi} which will be used for future schedules JobRequests.
-     */
-    public JobApi getApi() {
-        return mApi;
     }
 
     /**
@@ -442,7 +398,7 @@ public final class JobManager {
     private synchronized int cancelAllInner(@Nullable String tag) {
         int canceled = 0;
 
-        Set<JobRequest> requests = mJobStorage.getAllJobRequests(tag, true);
+        Set<JobRequest> requests = getAllJobRequests(tag, true, false);
         for (JobRequest request : requests) {
             if (cancelInner(request)) {
                 canceled++;
@@ -457,17 +413,6 @@ public final class JobManager {
             }
         }
         return canceled;
-    }
-
-    /**
-     * Global switch to enable or disable logging.
-     *
-     * @param verbose Whether or not to print log messages.
-     * @deprecated Use {@link Config#setVerbose(boolean)} instead.
-     */
-    @Deprecated
-    public void setVerbose(boolean verbose) {
-        mConfig.setVerbose(verbose);
     }
 
     /**
@@ -515,98 +460,7 @@ public final class JobManager {
     }
 
     /*package*/ JobProxy getJobProxy(JobApi api) {
-        return api.getCachedProxy(mContext);
-    }
-
-    // TODO: extract this class so that settings can be changed before the JobManager has been created
-    public final class Config {
-
-        private boolean mGcmEnabled;
-        private boolean mAllowSmallerIntervals;
-
-        private Config() {
-            mGcmEnabled = true;
-            mAllowSmallerIntervals = false;
-        }
-
-        /**
-         * @return Whether logging is enabled for this library. The default value is {@code true}.
-         */
-        public boolean isVerbose() {
-            return JobCat.isLogcatEnabled();
-        }
-
-        /**
-         * Global switch to enable or disable logging.
-         *
-         * @param verbose Whether or not to print all log messages. The default value is {@code true}.
-         */
-        public void setVerbose(boolean verbose) {
-            JobCat.setLogcatEnabled(verbose);
-        }
-
-        /**
-         * @return Whether the GCM API is enabled. The API is only used if the required class dependency
-         * is found, the Google Play Services are available and this setting is {@code true}. The default
-         * value is {@code true}.
-         */
-        public boolean isGcmApiEnabled() {
-            return mGcmEnabled;
-        }
-
-        /**
-         * Programmatic switch to disable the GCM API. If {@code false}, then the {@link AlarmManager} will
-         * be used for Android 4 devices in all cases.
-         *
-         * @param enabled Whether the GCM API should be enabled or disabled. Note that the API is only used,
-         *                if the required class dependency is found, the Google Play Services are available
-         *                and this setting is {@code true}. The default value is {@code true}.
-         */
-        public void setGcmApiEnabled(boolean enabled) {
-            if (enabled == mGcmEnabled) {
-                return;
-            }
-
-            mGcmEnabled = enabled;
-            if (enabled) {
-                JobApi defaultApi = JobApi.getDefault(mContext, true);
-                if (!defaultApi.equals(getApi())) {
-                    setJobProxy(defaultApi);
-                    CAT.i("Changed default proxy to %s after enabled the GCM API", defaultApi);
-                }
-            } else {
-                JobApi defaultApi = JobApi.getDefault(mContext, false);
-                if (JobApi.GCM == getApi()) {
-                    setJobProxy(defaultApi);
-                    CAT.i("Changed default proxy to %s after disabling the GCM API", defaultApi);
-                }
-            }
-        }
-
-        /**
-         * Checks whether a smaller interval and flex are allowed for periodic jobs. That's helpful
-         * for testing purposes.
-         *
-         * @return Whether a smaller interval and flex than the minimum values are allowed for periodic jobs
-         * are allowed. The default value is {@code false}.
-         */
-        public boolean isAllowSmallerIntervalsForMarshmallow() {
-            return mAllowSmallerIntervals && Build.VERSION.SDK_INT < Build.VERSION_CODES.N;
-        }
-
-        /**
-         * Option to override the minimum period and minimum flex for periodic jobs. This is useful for testing
-         * purposes. This method only works for Android M and earlier. Later versions throw an exception.
-         *
-         * @param allowSmallerIntervals Whether a smaller interval and flex than the minimum values are allowed
-         *                              for periodic jobs are allowed. The default value is {@code false}.
-         */
-        public void setAllowSmallerIntervalsForMarshmallow(boolean allowSmallerIntervals) {
-            if (allowSmallerIntervals && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                throw new IllegalStateException("This method is only allowed to call on Android M or earlier");
-            }
-            mAllowSmallerIntervals = allowSmallerIntervals;
-        }
+        return api.getProxy(mContext);
     }
 
     private static void sendAddJobCreatorIntent(@NonNull Context context) {

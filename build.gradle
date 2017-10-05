@@ -1,36 +1,44 @@
 buildscript {
     repositories {
         jcenter()
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.1'
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.14.0'
+        classpath 'com.android.tools.build:gradle:3.0.0-beta7'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
     }
 }
 
 allprojects {
     repositories {
         jcenter()
+        google()
+    }
+
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked"
+        options.compilerArgs << "-Xlint:deprecation"
     }
 }
 
 ext {
-    compileSdkVersion = 25
+    compileSdkVersion = 26
     targetSdkVersion = compileSdkVersion
     minSdkVersion = 14
 
-    buildToolsVersion = '25.0.2'
+    buildToolsVersion = '26.0.2'
 
-    supportLibVersion = '25.2.0'
-    playServicesVersion = '10.2.6'
-    stethoVersion = '1.4.2'
+    supportLibVersion = '26.0.1'
+    playServicesVersion = '11.0.2'
+    catVersion = '1.0.5'
+    stethoVersion = '1.5.0'
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
     mockitoVersion = '2.7.22'
-    robolectricVersion = '3.3.2'
+    robolectricVersion = '3.4.2'
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '3.5'
+    gradleVersion = '4.1'
     distributionType = 'ALL'
 }

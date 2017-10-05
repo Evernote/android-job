@@ -6,9 +6,7 @@ import android.support.annotation.Nullable;
 
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
-import com.evernote.android.job.util.JobCat;
-
-import net.vrallev.android.cat.print.CatPrinter;
+import com.evernote.android.job.util.JobLogger;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -118,11 +116,11 @@ public class JobManagerTest extends BaseJobManagerTest {
         }
 
         // that sucks, but the storage can't be injected to verify it better
-        class TestPrinter implements CatPrinter {
+        class TestPrinter implements JobLogger {
             private final List<String> mMessages = new ArrayList<>();
 
             @Override
-            public void println(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+            public void log(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
                 if (message.endsWith("canceling")) {
                     mMessages.add(message);
                 }
@@ -130,7 +128,7 @@ public class JobManagerTest extends BaseJobManagerTest {
         }
 
         TestPrinter testPrinter = new TestPrinter();
-        JobCat.addLogPrinter(testPrinter);
+        JobConfig.addLogger(testPrinter);
 
         for (int i = 0; i < jobCount; i++) {
             DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
@@ -250,5 +248,31 @@ public class JobManagerTest extends BaseJobManagerTest {
 
         // if something goes wrong with the pref file, use the highest value from the database
         assertThat(manager().getJobStorage().getMaxJobId()).isEqualTo(1);
+    }
+
+    @Test
+    public void testJobIdRollover() throws Exception {
+        JobConfig.setJobIdOffset(10);
+
+        context().getSharedPreferences(JobStorage.PREF_FILE_NAME, Context.MODE_PRIVATE).edit()
+                .putInt(JobStorage.JOB_ID_COUNTER, JobIdsInternal.RESERVED_JOB_ID_RANGE_START - 2)
+                .apply();
+
+        assertThat(manager().getJobStorage().nextJobId()).isEqualTo(JobIdsInternal.RESERVED_JOB_ID_RANGE_START - 1);
+        assertThat(manager().getJobStorage().nextJobId()).isEqualTo(11);
+        assertThat(manager().getJobStorage().nextJobId()).isEqualTo(12);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Test
+    public void testCancelAndEdit() {
+        int id = DummyJobs.createBuilder(DummyJobs.SuccessJob.class)
+                .setExact(10_000)
+                .build().schedule();
+
+        int newId = manager().getJobRequest(id).cancelAndEdit().build().schedule();
+
+        JobRequest request = manager().getJobRequest(newId);
+        assertThat(request.getEndMs()).isGreaterThan(9_000);
     }
 }

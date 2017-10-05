@@ -42,7 +42,7 @@ import net.vrallev.android.cat.CatLog;
  */
 public class PlatformGcmService extends GcmTaskService {
 
-    private static final CatLog CAT = new JobCat("JobRequest");
+    private static final CatLog CAT = new JobCat("PlatformGcmService");
 
     @Override
     public int onRunTask(TaskParams taskParams) {
@@ -54,7 +54,7 @@ public class PlatformGcmService extends GcmTaskService {
             return GcmNetworkManager.RESULT_FAILURE;
         }
 
-        Job.Result result = common.executeJobRequest(request);
+        Job.Result result = common.executeJobRequest(request, taskParams.getExtras());
         if (Job.Result.SUCCESS.equals(result)) {
             return GcmNetworkManager.RESULT_SUCCESS;
         } else {

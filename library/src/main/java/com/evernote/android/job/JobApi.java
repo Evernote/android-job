@@ -23,7 +23,7 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evernote.android.job.util;
+package com.evernote.android.job;
 
 import android.app.AlarmManager;
 import android.app.Service;
@@ -35,17 +35,16 @@ import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
-import com.evernote.android.job.JobManager;
-import com.evernote.android.job.JobManagerCreateException;
-import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.v14.JobProxy14;
 import com.evernote.android.job.v14.PlatformAlarmReceiver;
 import com.evernote.android.job.v14.PlatformAlarmService;
+import com.evernote.android.job.v14.PlatformAlarmServiceExact;
 import com.evernote.android.job.v19.JobProxy19;
 import com.evernote.android.job.v21.JobProxy21;
 import com.evernote.android.job.v21.PlatformJobService;
 import com.evernote.android.job.v24.JobProxy24;
+import com.evernote.android.job.v26.JobProxy26;
 import com.google.android.gms.gcm.GcmNetworkManager;
 
 import java.util.List;
@@ -59,79 +58,58 @@ public enum JobApi {
     /**
      * Uses the {@link JobScheduler} for scheduling jobs.
      */
-    V_24(true, false),
+    V_26(true, false, true),
     /**
      * Uses the {@link JobScheduler} for scheduling jobs.
      */
-    V_21(true, true),
+    V_24(true, false, false),
+    /**
+     * Uses the {@link JobScheduler} for scheduling jobs.
+     */
+    V_21(true, true, false),
     /**
      * Uses the {@link AlarmManager} for scheduling jobs.
      */
-    V_19(true, true),
+    V_19(true, true, true),
     /**
      * Uses the {@link AlarmManager} for scheduling jobs.
      */
-    V_14(false, true),
+    V_14(false, true, true),
     /**
      * Uses the {@link GcmNetworkManager} for scheduling jobs.
      */
-    GCM(true, false);
+    GCM(true, false, true);
 
     private static final String JOB_SCHEDULER_PERMISSION = "android.permission.BIND_JOB_SERVICE";
-
-    private static volatile boolean forceAllowApi14 = false;
-
-    /**
-     * On some devices for some reason all broadcast receiver and services are disabled. This library
-     * cannot work properly in this case. This switch allows to use the AlarmManager as fallback even
-     * in such a weird state.
-     *
-     * <br>
-     * <br>
-     *
-     * If the value is {@code true}, then this suppresses the {@link JobManagerCreateException} during
-     * the creation of the job manager.
-     *
-     * @param forceAllowApi14 Whether API 14 should be used as fallback in all scenarios. The default value
-     *                   is {@code false}.
-     * @deprecated In version 1.2.0 this method will be moved to the Config class.
-     */
-    @SuppressWarnings("DeprecatedIsStillUsed")
-    @Deprecated
-    public static void setForceAllowApi14(boolean forceAllowApi14) {
-        JobApi.forceAllowApi14 = forceAllowApi14;
-    }
-
-    /**
-     * @return Whether API 14 should be used as fallback in all scenarios. The default value is {@code false}.
-     *
-     * @deprecated In version 1.2.0 this method will be moved to the Config class.
-     */
-    @Deprecated
-    public static boolean isForceAllowApi14() {
-        return forceAllowApi14;
-    }
 
     private volatile JobProxy mCachedProxy;
 
     private final boolean mSupportsExecutionWindow;
     private final boolean mFlexSupport;
+    private final boolean mSupportsTransientJobs;
 
-    JobApi(boolean supportsExecutionWindow, boolean flexSupport) {
+    JobApi(boolean supportsExecutionWindow, boolean flexSupport, boolean supportsTransientJobs) {
         mSupportsExecutionWindow = supportsExecutionWindow;
         mFlexSupport = flexSupport;
+        mSupportsTransientJobs = supportsTransientJobs;
     }
 
-    public boolean supportsExecutionWindow() {
+    /*package*/ boolean supportsExecutionWindow() {
         return mSupportsExecutionWindow;
     }
 
-    public boolean isFlexSupport() {
+    /*package*/ boolean isFlexSupport() {
         return mFlexSupport;
+    }
+
+    /*package*/ boolean supportsTransientJobs() {
+        return mSupportsTransientJobs;
     }
 
     public boolean isSupported(Context context) {
         switch (this) {
+            case V_26:
+                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isServiceEnabled(context, PlatformJobService.class);
             case V_24:
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isServiceEnabledAndHasPermission(context, PlatformJobService.class, JOB_SCHEDULER_PERMISSION);
             case V_21:
@@ -140,8 +118,9 @@ public enum JobApi {
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && isServiceEnabled(context, PlatformAlarmService.class)
                         && isBroadcastEnabled(context, PlatformAlarmReceiver.class);
             case V_14:
-                return forceAllowApi14
-                        || (isServiceEnabled(context, PlatformAlarmService.class) && isBroadcastEnabled(context, PlatformAlarmReceiver.class));
+                return JobConfig.isForceAllowApi14()
+                        || (isServiceEnabled(context, PlatformAlarmService.class) && isServiceEnabled(context, PlatformAlarmServiceExact.class)
+                        && isBroadcastEnabled(context, PlatformAlarmReceiver.class));
             case GCM:
                 return GcmAvailableHelper.isGcmApiSupported(context);
             default:
@@ -150,8 +129,10 @@ public enum JobApi {
     }
 
     @NonNull
-    public JobProxy createProxy(Context context) {
+    private JobProxy createProxy(Context context) {
         switch (this) {
+            case V_26:
+                return new JobProxy26(context);
             case V_24:
                 return new JobProxy24(context);
             case V_21:
@@ -168,7 +149,7 @@ public enum JobApi {
     }
 
     @NonNull
-    public synchronized JobProxy getCachedProxy(Context context) {
+    /*package*/ synchronized JobProxy getProxy(Context context) {
         if (mCachedProxy == null) {
             mCachedProxy = createProxy(context);
         }
@@ -221,28 +202,22 @@ public enum JobApi {
         }
     }
 
-    /**
-     * @deprecated Use {@link #getDefault(Context, boolean)} instead.
-     */
-    @SuppressWarnings("unused")
     @NonNull
-    @Deprecated
     public static JobApi getDefault(Context context) {
-        return getDefault(context, JobManager.instance().getConfig().isGcmApiEnabled());
-    }
-
-    @NonNull
-    public static JobApi getDefault(Context context, boolean gcmEnabled) {
-        if (V_24.isSupported(context)) {
+        if (V_26.isSupported(context) && JobConfig.isApiEnabled(V_26)) {
+            return V_26;
+        } else if (V_24.isSupported(context) && JobConfig.isApiEnabled(V_24)) {
             return V_24;
-        } else if (V_21.isSupported(context)) {
+        } else if (V_21.isSupported(context) && JobConfig.isApiEnabled(V_21)) {
             return V_21;
-        } else if (gcmEnabled && GCM.isSupported(context)) {
+        } else if (GCM.isSupported(context) && JobConfig.isApiEnabled(GCM)) {
             return GCM;
-        } else if (V_19.isSupported(context)) {
+        } else if (V_19.isSupported(context) && JobConfig.isApiEnabled(V_19)) {
             return V_19;
-        } else {
+        } else if (JobConfig.isApiEnabled(V_14)) {
             return V_14;
+        } else {
+            throw new IllegalStateException("All supported APIs are disabled");
         }
     }
 }

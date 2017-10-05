@@ -1,6 +1,6 @@
 # Android-Job
 
-A utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post](https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/) or in [these slides](https://speakerdeck.com/vrallev/scheduling-background-job-on-android-at-the-right-time-1) why you should prefer this library than each separate API. All features from Android Nougat are backward compatible.
+A utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post](https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/) or in [these slides](https://speakerdeck.com/vrallev/doo-z-z-z-z-z-e?slide=50) why you should prefer this library than each separate API. All features from Android Oreo are backward compatible back to Ice Cream Sandwich.
 
 ## Download
 
@@ -8,7 +8,7 @@ Download [the latest version](http://search.maven.org/#search|gav|1|g:"com.evern
 
 ```groovy
 dependencies {
-    compile 'com.evernote:android-job:1.1.12'
+    compile 'com.evernote:android-job:1.2.0'
 }
 ```
 
@@ -16,13 +16,11 @@ If you didn't turn off the manifest merger from the Gradle build tools, then no 
 
 You can read the [JavaDoc here](https://evernote.github.io/android-job/javadoc/).
 
-Testing Android O? You can give version `1.2.0` a try. You find the instruction in the [wiki](https://github.com/evernote/android-job/wiki/Version-1.2.0-and-Android-O).
-
 ## Usage
 
 The class `JobManager` serves as entry point. Your jobs need to extend the class `Job`. Create a `JobRequest` with the corresponding builder class and schedule this request with the `JobManager`.
 
-Before you can use the `JobManager` you must initialize the singleton. You need to provide a `Context` and add a `JobCreator` implementation after that. The `JobCreator` maps a job tag to a specific job class. It's recommended to initialize the `JobManager` in the `onCreate()` method of your `Application` object, but there is [an alternative](FAQ.md#i-cannot-override-the-application-class-how-can-i-add-my-jobcreator), if you don't have access to the `Application` class.
+Before you can use the `JobManager` you must initialize the singleton. You need to provide a `Context` and add a `JobCreator` implementation after that. The `JobCreator` maps a job tag to a specific job class. It's recommended to initialize the `JobManager` in the `onCreate()` method of your `Application` object, but there is [an alternative](https://github.com/evernote/android-job/wiki/FAQ#i-cannot-override-the-application-class-how-can-i-add-my-jobcreator), if you don't have access to the `Application` class.
 
 ```java
 public class App extends Application {
@@ -38,8 +36,8 @@ public class App extends Application {
 ```java
 public class DemoJobCreator implements JobCreator {
 
-    @Override
-    public Job create(String tag) {
+    @Override @Nullable
+    public Job create(@NonNull String tag) {
         switch (tag) {
             case DemoSyncJob.TAG:
                 return new DemoSyncJob();
@@ -92,7 +90,6 @@ private void scheduleAdvancedJob() {
             .setRequiredNetworkType(JobRequest.NetworkType.CONNECTED)
             .setExtras(extras)
             .setRequirementsEnforced(true)
-            .setPersisted(true)
             .setUpdateCurrent(true)
             .build()
             .schedule();
@@ -101,7 +98,6 @@ private void scheduleAdvancedJob() {
 private void schedulePeriodicJob() {
     int jobId = new JobRequest.Builder(DemoSyncJob.TAG)
             .setPeriodic(TimeUnit.MINUTES.toMillis(15), TimeUnit.MINUTES.toMillis(5))
-            .setPersisted(true)
             .build()
             .schedule();
 }
@@ -109,7 +105,13 @@ private void schedulePeriodicJob() {
 private void scheduleExactJob() {
     int jobId = new JobRequest.Builder(DemoSyncJob.TAG)
             .setExact(20_000L)
-            .setPersisted(true)
+            .build()
+            .schedule();
+}
+
+private void runJobImmediately() {
+    int jobId = new JobRequest.Builder(DemoSyncJob.TAG)
+            .startNow()
             .build()
             .schedule();
 }
@@ -138,31 +140,13 @@ public class RescheduleDemoJob extends Job {
 }
 ```
 
-**Warning:** With Android Marshmallow Google introduced the auto backup feature. All job information are stored in a shared preference file called `evernote_jobs.xml` and in a database called `evernote_jobs.db`. You should exclude these files so that they aren't backed up.
-
-You can do this by defining a resource XML file (i.e., `res/xml/backup_config.xml`) with content:
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<full-backup-content>
-    <exclude domain="sharedpref" path="evernote_jobs.xml" />
-    <exclude domain="database" path="evernote_jobs.db" />
-</full-backup-content>
-``` 
-
-And then referring to it in your application tag in `AndroidManifest.xml`:
-
-```xml
-<application ...  android:fullBackupContent="@xml/backup_config">
-```
-
 #### Proguard
 
 The library doesn't use reflection, but it relies on three `Service`s and two `BroadcastReceiver`s. In order to avoid any issues, you shouldn't obfuscate those four classes. The library bundles its own Proguard config and you don't need to do anything, but just in case you can add [these rules](library/proguard.txt) in your configuration.
 
-## FAQ
+## More questions?
 
-See [here](FAQ.md).
+See the [FAQ](https://github.com/evernote/android-job/wiki/FAQ) in the [Wiki](https://github.com/evernote/android-job/wiki).
 
 ## Google Play Services
 
@@ -172,7 +156,7 @@ dependencies {
     compile "com.google.android.gms:play-services-gcm:latest_version"
 }
 ```
-Crashes after removing the GCM dependency is a known limitation of the Google Play Services. Please take a look at [this workaround](FAQ.md#how-can-i-remove-the-gcm-dependency-from-my-app) to avoid those crashes.
+Crashes after removing the GCM dependency is a known limitation of the Google Play Services. Please take a look at [this workaround](https://github.com/evernote/android-job/wiki/FAQ#how-can-i-remove-the-gcm-dependency-from-my-app) to avoid those crashes.
 
 ## License
 ```

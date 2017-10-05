@@ -9,7 +9,7 @@ import android.support.annotation.NonNull;
 import android.test.mock.MockContext;
 
 import com.evernote.android.job.test.DummyJobs;
-import com.evernote.android.job.test.TestCat;
+import com.evernote.android.job.test.TestLogger;
 
 import org.junit.Rule;
 import org.robolectric.RuntimeEnvironment;
@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author rwondratschek
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class BaseJobManagerTest {
 
     @Rule
@@ -68,7 +69,6 @@ public abstract class BaseJobManagerTest {
         return JobManager.create(mockContext);
     }
 
-    @NonNull
     protected void executeJob(int jobId, @NonNull Job.Result expected) {
         try {
             executeJobAsync(jobId, expected).get(3, TimeUnit.SECONDS);
@@ -78,7 +78,7 @@ public abstract class BaseJobManagerTest {
     }
 
     protected Future<Job.Result> executeJobAsync(int jobId, @NonNull final Job.Result expected) throws InterruptedException {
-        final JobProxy.Common common = new JobProxy.Common(context(), TestCat.INSTANCE, jobId);
+        final JobProxy.Common common = new JobProxy.Common(context(), TestLogger.INSTANCE, jobId);
 
         final JobRequest pendingRequest = common.getPendingRequest(true, true);
         assertThat(pendingRequest).isNotNull();
@@ -91,7 +91,7 @@ public abstract class BaseJobManagerTest {
             public Job.Result call() throws Exception {
                 latch.countDown();
 
-                Job.Result result = common.executeJobRequest(pendingRequest);
+                Job.Result result = common.executeJobRequest(pendingRequest, null);
                 assertThat(result).isEqualTo(expected);
                 assertThat(common.getPendingRequest(true, false)).isNull();
 
@@ -131,6 +131,7 @@ public abstract class BaseJobManagerTest {
 
         Context context = spy(RuntimeEnvironment.application);
         when(context.getPackageManager()).thenReturn(packageManager);
+        when(context.getApplicationContext()).thenReturn(context);
 
         Context mockContext = mock(MockContext.class);
         when(mockContext.getApplicationContext()).thenReturn(context);

@@ -28,110 +28,54 @@ package com.evernote.android.job.v14;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.os.IBinder;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.JobIntentService;
 
+import com.evernote.android.job.JobIdsInternal;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.CatLog;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 /**
  * @author rwondratschek
  */
-public final class PlatformAlarmService extends Service {
+public final class PlatformAlarmService extends JobIntentService {
 
     private static final CatLog CAT = new JobCat("PlatformAlarmService");
 
-    /*package*/ static Intent createIntent(Context context, int jobId) {
-        Intent intent = new Intent(context, PlatformAlarmService.class);
+    public static void start(Context context, int jobId, @Nullable Bundle transientExtras) {
+        Intent intent = new Intent();
         intent.putExtra(PlatformAlarmReceiver.EXTRA_JOB_ID, jobId);
-        return intent;
-    }
-
-    private final Object mMonitor = new Object();
-
-    private volatile ExecutorService mExecutorService;
-    private volatile Set<Integer> mStartIds;
-    private volatile int mLastStartId;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        mExecutorService = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
-        mStartIds = new HashSet<>();
-    }
-
-    @Override
-    public int onStartCommand(@Nullable final Intent intent, int flags, final int startId) {
-        synchronized (mMonitor) {
-            mStartIds.add(startId);
-            mLastStartId = startId;
+        if (transientExtras != null) {
+            intent.putExtra(PlatformAlarmReceiver.EXTRA_TRANSIENT_EXTRAS, transientExtras);
         }
 
-        mExecutorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    runJob(intent);
-                } finally {
-                    // call here, our own wake lock could be acquired too late
-                    JobProxy.Common.completeWakefulIntent(intent);
-                    stopSelfIfNecessary(startId);
-                }
-            }
-        });
-        return START_NOT_STICKY;
+        enqueueWork(context, PlatformAlarmService.class, JobIdsInternal.JOB_ID_PLATFORM_ALARM_SERVICE, intent);
     }
 
     @Override
-    public void onDestroy() {
-        mExecutorService.shutdown();
-        mExecutorService = null;
-
-        synchronized (mMonitor) {
-            mStartIds = null;
-            mLastStartId = 0;
-        }
+    protected void onHandleWork(@NonNull Intent intent) {
+        runJob(intent, this, CAT);
     }
 
-    @Override
-    public final IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    private void runJob(Intent intent) {
+    /*package*/ static void runJob(@Nullable Intent intent, @NonNull Service service, @NonNull CatLog cat) {
         if (intent == null) {
-            CAT.i("Delivered intent is null");
+            cat.i("Delivered intent is null");
             return;
         }
 
         int jobId = intent.getIntExtra(PlatformAlarmReceiver.EXTRA_JOB_ID, -1);
-        final JobProxy.Common common = new JobProxy.Common(this, CAT, jobId);
+        Bundle transientExtras = intent.getBundleExtra(PlatformAlarmReceiver.EXTRA_TRANSIENT_EXTRAS);
+        final JobProxy.Common common = new JobProxy.Common(service, cat, jobId);
 
         // create the JobManager. Seeing sometimes exceptions, that it wasn't created, yet.
         final JobRequest request = common.getPendingRequest(true, true);
         if (request != null) {
-            common.executeJobRequest(request);
-        }
-    }
-
-    private void stopSelfIfNecessary(int startId) {
-        synchronized (mMonitor) {
-            Set<Integer> startIds = mStartIds;
-            if (startIds != null) {
-                // service not destroyed
-                startIds.remove(startId);
-                if (startIds.isEmpty()) {
-                    stopSelfResult(mLastStartId);
-                }
-            }
+            common.executeJobRequest(request, transientExtras);
         }
     }
 }

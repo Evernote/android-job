@@ -29,7 +29,6 @@ import android.support.annotation.NonNull;
 
 import net.vrallev.android.cat.CatLog;
 import net.vrallev.android.cat.instance.CatLazy;
-import net.vrallev.android.cat.print.CatPrinter;
 
 import java.util.Arrays;
 
@@ -40,49 +39,53 @@ import java.util.Arrays;
  */
 public class JobCat extends CatLazy {
 
-    private static volatile CatPrinter[] printers = new CatPrinter[0]; // use array to avoid synchronization while printing log statements
+    private static volatile JobLogger[] loggers = new JobLogger[0]; // use array to avoid synchronization while printing log statements
     private static volatile boolean logcatEnabled = true;
 
     /**
      * Add a global logger for the job library, which will be notified about each log statement.
      *
-     * @param printer Your desired logger.
-     * @return {@code true} if the printer was added. Returns {@code false} if the printer was
+     * @param logger Your desired logger.
+     * @return {@code true} if the logger was added. Returns {@code false} if the logger was
      * already added.
      */
-    public static synchronized boolean addLogPrinter(@NonNull CatPrinter printer) {
-        for (CatPrinter printer1 : printers) {
-            if (printer.equals(printer1)) {
+    public static synchronized boolean addLogger(@NonNull JobLogger logger) {
+        for (JobLogger printer1 : loggers) {
+            if (logger.equals(printer1)) {
                 return false;
             }
         }
 
-        for (int i = 0; i < printers.length; i++) {
-            if (printers[i] == null) {
-                printers[i] = printer;
+        for (int i = 0; i < loggers.length; i++) {
+            if (loggers[i] == null) {
+                loggers[i] = logger;
                 return true;
             }
         }
 
-        int index = printers.length;
-        printers = Arrays.copyOf(printers, printers.length + 2);
-        printers[index] = printer;
+        int index = loggers.length;
+        loggers = Arrays.copyOf(loggers, loggers.length + 2);
+        loggers[index] = logger;
         return true;
     }
 
     /**
      * Remove a global logger.
      *
-     * @param printer Your desired logger.
-     * @see #addLogPrinter(CatPrinter)
+     * @param logger Your desired logger.
+     * @see #addLogger(JobLogger)
      */
-    public static synchronized void removeLogPrinter(@NonNull CatPrinter printer) {
-        for (int i = 0; i < printers.length; i++) {
-            if (printer.equals(printers[i])) {
-                printers[i] = null;
-                // continue, maybe for some reason the printer is twice in the array
+    public static synchronized void removeLogger(@NonNull JobLogger logger) {
+        for (int i = 0; i < loggers.length; i++) {
+            if (logger.equals(loggers[i])) {
+                loggers[i] = null;
+                // continue, maybe for some reason the logger is twice in the array
             }
         }
+    }
+
+    public static synchronized void clearLogger() {
+        Arrays.fill(loggers, null);
     }
 
     /**
@@ -126,13 +129,13 @@ public class JobCat extends CatLazy {
             super.println(priority, message, t);
         }
 
-        CatPrinter[] printers = JobCat.printers;
+        JobLogger[] printers = JobCat.loggers;
         if (printers.length > 0) {
             String tag = getTag();
 
-            for (CatPrinter printer : printers) {
-                if (printer != null) {
-                    printer.println(priority, tag, message, t);
+            for (JobLogger logger : printers) {
+                if (logger != null) {
+                    logger.log(priority, tag, message, t);
                 }
             }
         }

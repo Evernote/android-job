@@ -1,3 +1,19 @@
+## 1.2.0
+
+* Extract `JobManager.Config` class into `JobConfig` class to make it possible to change settings before the `JobManager` is created
+* Add an option to disable any specific API and not just the GCM API (only useful for testing purposes)
+* Remove deprecated methods
+* Add the `startNow()` method to run a job immediately respecting all constraints in Android O
+* Remove the persisted parameter, which didn't work reliable, all jobs are persisted anyway
+* Remove `startWakefulService` from the `Job` class, `WakefulBroadcastReceiver` is now deprecated with `JobIntentService` as the better option
+* Add feature to make jobs transient and to add a `Bundle`, see `setTransientExtras(bundle)`
+* Add new `METERED` network type
+* Add new requirements battery not low and storage not low
+* Add helper job class `DailyJob` to make it easier to run jobs once a day, see #223
+* Add option in `JobConfig` to add a logger
+* Add option in `JobConfig` for a job ID offset to avoid clashes with other jobs in the `JobScheduler`
+* Switch to elapsed real time with the `AlarmManager` to have a consistent behavior with the `JobScheduler`, see #237
+
 ## 1.1.12 (2017-10-05)
 
 * Handle NPE inside of `JobScheduler`

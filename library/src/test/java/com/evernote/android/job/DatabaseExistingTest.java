@@ -37,6 +37,21 @@ public class DatabaseExistingTest extends BaseJobManagerTest {
         testDatabase("evernote_jobs_v3.db");
     }
 
+    @Test
+    public void upgradeFromV4() {
+        testDatabase("evernote_jobs_v4.db");
+    }
+
+    @Test
+    public void upgradeFromV5() {
+        testDatabase("evernote_jobs_v5.db");
+    }
+
+    @Test
+    public void upgradeFromV6() {
+        testDatabase("evernote_jobs_v6.db");
+    }
+
     private void testDatabase(String name) {
         String filePath = getClass().getResource("/databases/" + name).getPath();
         assertThat(new File(filePath).exists()).isTrue();
@@ -64,9 +79,9 @@ public class DatabaseExistingTest extends BaseJobManagerTest {
         assertThat(oneOff).isEqualTo(10);
         assertThat(periodic).isEqualTo(10);
 
-        // none of them should be transient
+        // none of them should be started
         for (JobRequest request : requests) {
-            assertThat(request.isTransient()).isFalse();
+            assertThat(request.isStarted()).isFalse();
         }
 
         for (JobRequest request : requests) {

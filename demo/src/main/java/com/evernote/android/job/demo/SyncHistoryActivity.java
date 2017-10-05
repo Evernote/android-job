@@ -1,5 +1,6 @@
 package com.evernote.android.job.demo;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -42,6 +43,7 @@ public class SyncHistoryActivity extends Activity {
         }
     }
 
+    @SuppressLint("StaticFieldLeak")
     private void syncAsynchronously() {
         new AsyncTask<Void, Void, Boolean>() {
             @Override

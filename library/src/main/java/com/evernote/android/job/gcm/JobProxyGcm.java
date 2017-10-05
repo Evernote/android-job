@@ -28,14 +28,14 @@ package com.evernote.android.job.gcm;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.evernote.android.job.JobProxy;
+import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
+import com.evernote.android.job.util.JobUtil;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.OneoffTask;
 import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
-import com.evernote.android.job.JobProxy;
-import com.evernote.android.job.JobRequest;
-import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
 
@@ -52,9 +52,11 @@ public class JobProxyGcm implements JobProxy {
      * already plugged in again.
      */
 
+    private final Context mContext;
     private final GcmNetworkManager mGcmNetworkManager;
 
     public JobProxyGcm(Context context) {
+        mContext = context;
         mGcmNetworkManager = GcmNetworkManager.getInstance(context);
     }
 
@@ -72,7 +74,7 @@ public class JobProxyGcm implements JobProxy {
 
         mGcmNetworkManager.schedule(task);
 
-        CAT.d("Scheduled OneoffTask, %s, start %s, end %s, reschedule count %d", request, JobUtil.timeToString(startMs),
+        CAT.d("Scheduled OneoffTask, %s, start %s, end %s (from now), reschedule count %d", request, JobUtil.timeToString(startMs),
                 JobUtil.timeToString(endMs), Common.getRescheduleCount(request));
     }
 
@@ -122,8 +124,9 @@ public class JobProxyGcm implements JobProxy {
                 .setService(PlatformGcmService.class)
                 .setUpdateCurrent(true)
                 .setRequiredNetwork(convertNetworkType(request.requiredNetworkType()))
-                .setPersisted(request.isPersisted())
-                .setRequiresCharging(request.requiresCharging());
+                .setPersisted(JobUtil.hasBootPermission(mContext))
+                .setRequiresCharging(request.requiresCharging())
+                .setExtras(request.getTransientExtras());
         return builder;
     }
 

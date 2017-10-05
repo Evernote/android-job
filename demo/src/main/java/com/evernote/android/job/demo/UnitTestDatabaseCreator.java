@@ -19,7 +19,7 @@ public final class UnitTestDatabaseCreator {
     }
 
     public void createV2() {
-        createJobs(new DummyJobCreatorV1()); // same as v1, only transient column is new
+        createJobs(new DummyJobCreatorV1()); // same as v1, only isTransient column is new
     }
 
     public void createV3() {
@@ -28,6 +28,14 @@ public final class UnitTestDatabaseCreator {
 
     public void createV4() {
         createJobs(new DummyJobCreatorV3()); // same as v3, only last run column is new
+    }
+
+    public void createV5() {
+        createJobs(new DummyJobCreatorV3());
+    }
+
+    public void createV6() {
+        createJobs(new DummyJobCreatorV6());
     }
 
     private void createJobs(DummyJobCreator creator) {
@@ -54,8 +62,7 @@ public final class UnitTestDatabaseCreator {
                         .setRequiresCharging(random())
                         .setRequiresDeviceIdle(random())
                         .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
-                        .setRequirementsEnforced(random())
-                        .setPersisted(random());
+                        .setRequirementsEnforced(random());
 
                 if (random()) {
                     PersistableBundleCompat extras = new PersistableBundleCompat();
@@ -65,7 +72,6 @@ public final class UnitTestDatabaseCreator {
 
                 builder.build().schedule();
             }
-
         }
 
         @Override
@@ -73,8 +79,7 @@ public final class UnitTestDatabaseCreator {
             for (int i = 0; i < 10; i++) {
                 JobRequest.Builder builder = new JobRequest.Builder("tag")
                         .setExact(400_000)
-                        .setBackoffCriteria(5_000L, random() ? JobRequest.BackoffPolicy.EXPONENTIAL : JobRequest.BackoffPolicy.LINEAR)
-                        .setPersisted(random());
+                        .setBackoffCriteria(5_000L, random() ? JobRequest.BackoffPolicy.EXPONENTIAL : JobRequest.BackoffPolicy.LINEAR);
 
                 if (random()) {
                     PersistableBundleCompat extras = new PersistableBundleCompat();
@@ -84,7 +89,6 @@ public final class UnitTestDatabaseCreator {
 
                 builder.build().schedule();
             }
-
         }
 
         @Override
@@ -95,8 +99,7 @@ public final class UnitTestDatabaseCreator {
                         .setRequiresCharging(random())
                         .setRequiresDeviceIdle(random())
                         .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
-                        .setRequirementsEnforced(random())
-                        .setPersisted(random());
+                        .setRequirementsEnforced(random());
 
                 if (random()) {
                     PersistableBundleCompat extras = new PersistableBundleCompat();
@@ -109,7 +112,7 @@ public final class UnitTestDatabaseCreator {
         }
     }
 
-    private static final class DummyJobCreatorV3 extends DummyJobCreatorV1 {
+    private static class DummyJobCreatorV3 extends DummyJobCreatorV1 {
         @Override
         public void createPeriodic() {
             for (int i = 0; i < 10; i++) {
@@ -117,8 +120,7 @@ public final class UnitTestDatabaseCreator {
                         .setRequiresCharging(random())
                         .setRequiresDeviceIdle(random())
                         .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
-                        .setRequirementsEnforced(random())
-                        .setPersisted(random());
+                        .setRequirementsEnforced(random());
 
                 if (random()) {
                     PersistableBundleCompat extras = new PersistableBundleCompat();
@@ -133,7 +135,56 @@ public final class UnitTestDatabaseCreator {
 
                 builder.build().schedule();
             }
-
         }
     }
+
+    private static class DummyJobCreatorV6 extends DummyJobCreatorV3 {
+        @Override
+        public void createOneOff() {
+            for (int i = 0; i < 10; i++) {
+                JobRequest.Builder builder = new JobRequest.Builder("tag")
+                        .setExecutionWindow(300_000, 400_000)
+                        .setBackoffCriteria(5_000L, random() ? JobRequest.BackoffPolicy.EXPONENTIAL : JobRequest.BackoffPolicy.LINEAR)
+                        .setRequiresCharging(random())
+                        .setRequiresDeviceIdle(random())
+                        .setRequiresBatteryNotLow(random())
+                        .setRequiresStorageNotLow(random())
+                        .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
+                        .setRequirementsEnforced(random());
+
+                if (random()) {
+                    PersistableBundleCompat extras = new PersistableBundleCompat();
+                    extras.putString("key", "Hello world");
+                    builder.setExtras(extras);
+                }
+
+                builder.build().schedule();
+            }
+        }
+
+        @Override
+        public void createPeriodic() {
+            for (int i = 0; i < 10; i++) {
+                JobRequest.Builder builder = new JobRequest.Builder("tag")
+                        .setRequiresCharging(random())
+                        .setRequiresDeviceIdle(random())
+                        .setRequiresBatteryNotLow(random())
+                        .setRequiresStorageNotLow(random())
+                        .setRequiredNetworkType(random() ? JobRequest.NetworkType.ANY : JobRequest.NetworkType.CONNECTED)
+                        .setRequirementsEnforced(random());
+
+                if (random()) {
+                    PersistableBundleCompat extras = new PersistableBundleCompat();
+                    extras.putString("key", "Hello world");
+                    builder.setExtras(extras);
+                }
+                if (random()) {
+                    builder.setPeriodic(JobRequest.MIN_INTERVAL);
+                } else {
+                    builder.setPeriodic(JobRequest.MIN_INTERVAL, JobRequest.MIN_FLEX);
+                }
+
+                builder.build().schedule();
+            }
+        }    }
 }

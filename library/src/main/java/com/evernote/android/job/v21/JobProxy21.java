@@ -32,6 +32,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobProxyIllegalStateException;
@@ -79,7 +80,7 @@ public class JobProxy21 implements JobProxy {
             scheduleResult = schedule(jobInfo);
         }
 
-        mCat.d("Schedule one-off jobInfo %s, %s, start %s, end %s, reschedule count %d", scheduleResultToString(scheduleResult),
+        mCat.d("Schedule one-off jobInfo %s, %s, start %s, end %s (from now), reschedule count %d", scheduleResultToString(scheduleResult),
                 request, JobUtil.timeToString(startMs), JobUtil.timeToString(endMs), Common.getRescheduleCount(request));
     }
 
@@ -125,6 +126,8 @@ public class JobProxy21 implements JobProxy {
             // https://gist.github.com/vRallev/5d48a4a8e8d05067834e
             mCat.e(e);
         }
+
+        TransientBundleCompat.cancel(mContext, jobId, null);
     }
 
     @Override
@@ -143,9 +146,8 @@ public class JobProxy21 implements JobProxy {
             return false;
         }
 
-        int requestId = request.getJobId();
         for (JobInfo info : pendingJobs) {
-            if (info.getId() == requestId) {
+            if (isJobInfoScheduled(info, request)) {
                 return true;
             }
         }
@@ -153,12 +155,23 @@ public class JobProxy21 implements JobProxy {
         return false;
     }
 
+    @SuppressWarnings("SimplifiableIfStatement")
+    protected boolean isJobInfoScheduled(@Nullable JobInfo info, @NonNull JobRequest request) {
+        boolean correctInfo = info != null && info.getId() == request.getJobId();
+        if (!correctInfo) {
+            return false;
+        }
+        return !request.isTransient() || TransientBundleCompat.isScheduled(mContext, request.getJobId());
+    }
+
     protected JobInfo.Builder createBaseBuilder(JobRequest request, boolean allowPersisting) {
-        return new JobInfo.Builder(request.getJobId(), new ComponentName(mContext, PlatformJobService.class))
+        JobInfo.Builder builder = new JobInfo.Builder(request.getJobId(), new ComponentName(mContext, PlatformJobService.class))
                 .setRequiresCharging(request.requiresCharging())
                 .setRequiresDeviceIdle(request.requiresDeviceIdle())
                 .setRequiredNetworkType(convertNetworkType(request.requiredNetworkType()))
-                .setPersisted(allowPersisting && request.isPersisted());
+                .setPersisted(allowPersisting && !request.isTransient() && JobUtil.hasBootPermission(mContext));
+
+        return setTransientBundle(request, builder);
     }
 
     protected JobInfo.Builder createBuilderOneOff(JobInfo.Builder builder, long startMs, long endMs) {
@@ -167,6 +180,14 @@ public class JobProxy21 implements JobProxy {
 
     protected JobInfo.Builder createBuilderPeriodic(JobInfo.Builder builder, long intervalMs, long flexMs) {
         return builder.setPeriodic(intervalMs);
+    }
+
+    protected JobInfo.Builder setTransientBundle(JobRequest request, JobInfo.Builder builder) {
+        if (request.isTransient()) {
+            TransientBundleCompat.persistBundle(mContext, request);
+        }
+
+        return builder;
     }
 
     protected int convertNetworkType(@NonNull JobRequest.NetworkType networkType) {
@@ -179,6 +200,8 @@ public class JobProxy21 implements JobProxy {
                 return JobInfo.NETWORK_TYPE_UNMETERED;
             case NOT_ROAMING:
                 return JobInfo.NETWORK_TYPE_UNMETERED; // use unmetered here, is overwritten in v24
+            case METERED:
+                return JobInfo.NETWORK_TYPE_ANY; // use any here as fallback
             default:
                 throw new IllegalStateException("not implemented");
         }

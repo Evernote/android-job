@@ -30,8 +30,10 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 
+import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
@@ -42,6 +44,7 @@ import net.vrallev.android.cat.CatLog;
 /**
  * @author rwondratschek
  */
+@SuppressWarnings("WeakerAccess")
 public class JobProxy14 implements JobProxy {
 
     private static final String TAG = "JobProxy14";
@@ -71,7 +74,12 @@ public class JobProxy14 implements JobProxy {
 
         try {
             if (request.isExact()) {
-                plantOneOffExact(request, alarmManager, pendingIntent);
+                if (request.getStartMs() == 1 && request.getFailureCount() <= 0) {
+                    // this job should start immediately
+                    PlatformAlarmService.start(mContext, request.getJobId(), request.getTransientExtras());
+                } else {
+                    plantOneOffExact(request, alarmManager, pendingIntent);
+                }
             } else {
                 plantOneOffInexact(request, alarmManager, pendingIntent);
             }
@@ -82,24 +90,24 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected void plantOneOffInexact(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
-        alarmManager.set(AlarmManager.RTC, getTriggerAtMillis(request), pendingIntent);
+        alarmManager.set(getType(false), getTriggerAtMillis(request), pendingIntent);
         logScheduled(request);
     }
 
     protected void plantOneOffExact(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
         long triggerAtMillis = getTriggerAtMillis(request);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            alarmManager.setExactAndAllowWhileIdle(getType(true), triggerAtMillis, pendingIntent);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            alarmManager.setExact(getType(true), triggerAtMillis, pendingIntent);
         } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            alarmManager.set(getType(true), triggerAtMillis, pendingIntent);
         }
         logScheduled(request);
     }
 
     protected void plantOneOffFlexSupport(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
-        long triggerAtMs = System.currentTimeMillis() + Common.getAverageDelayMsSupportFlex(request);
+        long triggerAtMs = JobConfig.getClock().currentTimeMillis() + Common.getAverageDelayMsSupportFlex(request);
         alarmManager.set(AlarmManager.RTC, triggerAtMs, pendingIntent);
 
         mCat.d("Scheduled repeating alarm (flex support), %s, interval %s, flex %s", request,
@@ -107,11 +115,23 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected long getTriggerAtMillis(JobRequest request) {
-        return System.currentTimeMillis() + Common.getAverageDelayMs(request);
+        if (JobConfig.isForceRtc()) {
+            return JobConfig.getClock().currentTimeMillis() + Common.getAverageDelayMs(request);
+        } else {
+            return JobConfig.getClock().elapsedRealtime() + Common.getAverageDelayMs(request);
+        }
+    }
+
+    protected int getType(boolean wakeup) {
+        if (wakeup) {
+            return JobConfig.isForceRtc() ? AlarmManager.RTC_WAKEUP : AlarmManager.ELAPSED_REALTIME_WAKEUP;
+        } else {
+            return JobConfig.isForceRtc() ? AlarmManager.RTC : AlarmManager.ELAPSED_REALTIME;
+        }
     }
 
     private void logScheduled(JobRequest request) {
-        mCat.d("Scheduled alarm, %s, delay %s, exact %b, reschedule count %d", request,
+        mCat.d("Scheduled alarm, %s, delay %s (from now), exact %b, reschedule count %d", request,
                 JobUtil.timeToString(Common.getAverageDelayMs(request)), request.isExact(), Common.getRescheduleCount(request));
     }
 
@@ -120,7 +140,7 @@ public class JobProxy14 implements JobProxy {
         PendingIntent pendingIntent = getPendingIntent(request, true);
         AlarmManager alarmManager = getAlarmManager();
         if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
+            alarmManager.setRepeating(getType(true), getTriggerAtMillis(request), request.getIntervalMs(), pendingIntent);
         }
 
         mCat.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
@@ -148,8 +168,9 @@ public class JobProxy14 implements JobProxy {
         AlarmManager alarmManager = getAlarmManager();
         if (alarmManager != null) {
             try {
-                alarmManager.cancel(getPendingIntent(jobId, createPendingIntentFlags(true)));
-                alarmManager.cancel(getPendingIntent(jobId, createPendingIntentFlags(false)));
+                // exact parameter doesn't matter
+                alarmManager.cancel(getPendingIntent(jobId, false, null, createPendingIntentFlags(true)));
+                alarmManager.cancel(getPendingIntent(jobId, false, null, createPendingIntentFlags(false)));
             } catch (Exception e) {
                 // java.lang.SecurityException: get application info: Neither user 1010133 nor
                 // current process has android.permission.INTERACT_ACROSS_USERS.
@@ -177,11 +198,11 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected PendingIntent getPendingIntent(JobRequest request, int flags) {
-        return getPendingIntent(request.getJobId(), flags);
+        return getPendingIntent(request.getJobId(), request.isExact(), request.getTransientExtras(), flags);
     }
 
-    protected PendingIntent getPendingIntent(int jobId, int flags) {
-        Intent intent = PlatformAlarmReceiver.createIntent(mContext, jobId);
+    protected PendingIntent getPendingIntent(int jobId, boolean exact, @Nullable Bundle transientExtras, int flags) {
+        Intent intent = PlatformAlarmReceiver.createIntent(mContext, jobId, exact, transientExtras);
 
         // repeating PendingIntent with service seams to have problems
         try {

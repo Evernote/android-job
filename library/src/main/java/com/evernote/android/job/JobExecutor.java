@@ -26,6 +26,7 @@
 package com.evernote.android.job;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -69,9 +70,8 @@ import java.util.concurrent.TimeUnit;
         mStartingRequests = new HashSet<>();
     }
 
-    public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @Nullable Job job) {
+    public synchronized Future<Job.Result> execute(@NonNull Context context, @NonNull JobRequest request, @Nullable Job job, @NonNull Bundle transientExtras) {
         mStartingRequests.remove(request);
-
         if (job == null) {
             CAT.w("JobCreator returned null for tag %s", request.getTag());
             return null;
@@ -80,7 +80,7 @@ import java.util.concurrent.TimeUnit;
             throw new IllegalStateException(String.format(Locale.ENGLISH, "Job for tag %s was already run, a creator should always create a new Job instance", request.getTag()));
         }
 
-        job.setContext(context).setRequest(request);
+        job.setContext(context).setRequest(request, transientExtras);
 
         CAT.i("Executing %s, context %s", request, context.getClass().getSimpleName());
 
@@ -180,7 +180,7 @@ import java.util.concurrent.TimeUnit;
             boolean incFailureCount = false;
             boolean updateLastRun = false;
 
-            if (!request.isPeriodic() && Job.Result.RESCHEDULE.equals(result)) {
+            if (!request.isPeriodic() && Job.Result.RESCHEDULE.equals(result) && !job.isDeleted()) {
                 request = request.reschedule(true, true);
                 mJob.onReschedule(request.getJobId());
                 updateLastRun = true;

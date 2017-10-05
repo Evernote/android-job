@@ -29,6 +29,7 @@ import android.annotation.TargetApi;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.Build;
+import android.os.Bundle;
 
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobManager;
@@ -36,7 +37,7 @@ import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
+import net.vrallev.android.cat.Cat;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,7 +52,7 @@ public class PlatformJobService extends JobService {
      * JobScheduler can have issues: http://stackoverflow.com/questions/32079407/android-jobscheduler-onstartjob-called-multiple-times
      */
 
-    private static final CatLog CAT = new JobCat("PlatformJobService");
+    private static final JobCat CAT = new JobCat("PlatformJobService");
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
 
     @Override
@@ -59,16 +60,33 @@ public class PlatformJobService extends JobService {
         final int jobId = params.getJobId();
         final JobProxy.Common common = new JobProxy.Common(this, CAT, jobId);
 
-        final JobRequest request = common.getPendingRequest(true, true);
+        // don't mark starting!
+        final JobRequest request = common.getPendingRequest(true, false);
         if (request == null) {
             return false;
         }
+
+        if (request.isTransient()) {
+            if (TransientBundleCompat.startWithTransientBundle(this, request)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    // should only happen during testing if an API is disabled
+                    Cat.d("PendingIntent for transient bundle is not null although running on O, using compat mode, request %s", request);
+                }
+                return false;
+
+            } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                CAT.d("PendingIntent for transient job %s expired", request);
+                return false;
+            }
+        }
+
+        common.markStarting(request);
 
         EXECUTOR_SERVICE.execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    common.executeJobRequest(request);
+                    common.executeJobRequest(request, getTransientBundle(params));
 
                 } finally {
                     // do not reschedule
@@ -94,5 +112,14 @@ public class PlatformJobService extends JobService {
 
         // do not reschedule
         return false;
+    }
+
+    @TargetApi(Build.VERSION_CODES.O)
+    private Bundle getTransientBundle(JobParameters params) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return params.getTransientExtras();
+        } else {
+            return Bundle.EMPTY;
+        }
     }
 }
