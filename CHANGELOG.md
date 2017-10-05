@@ -1,4 +1,4 @@
-## 1.2.0
+## 1.2.0 (2017-10-05)
 
 * Extract `JobManager.Config` class into `JobConfig` class to make it possible to change settings before the `JobManager` is created
 * Add an option to disable any specific API and not just the GCM API (only useful for testing purposes)
