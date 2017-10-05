@@ -79,7 +79,7 @@ public final class JobRequest {
      * <br>
      *
      * This limit comes from the {@code JobScheduler} starting with Android Nougat. You can read
-     * <a href="https://github.com/evernote/android-job/blob/master/FAQ.md">here</a> more about
+     * <a href="https://github.com/evernote/android-job/wiki/FAQ">here</a> more about
      * the limit.
      *
      * @see Builder#setPeriodic(long)
@@ -94,7 +94,7 @@ public final class JobRequest {
      * <br>
      *
      * This limit comes from the {@code JobScheduler} starting with Android Nougat. You can read
-     * <a href="https://github.com/evernote/android-job/blob/master/FAQ.md">here</a> more about
+     * <a href="https://github.com/evernote/android-job/wiki/FAQ">here</a> more about
      * the limit.
      *
      * @see Builder#setPeriodic(long, long)
@@ -1090,7 +1090,7 @@ public final class JobRequest {
             }
 
             if (mIntervalMs <= 0 && (mStartMs > WINDOW_THRESHOLD_WARNING || mEndMs > WINDOW_THRESHOLD_WARNING)) {
-                CAT.w("Attention: your execution window is too large. This could result in undesired behavior, see https://github.com/evernote/android-job/blob/master/FAQ.md");
+                CAT.w("Attention: your execution window is too large. This could result in undesired behavior, see https://github.com/evernote/android-job/wiki/FAQ");
             }
 
             if (mIntervalMs <= 0 && (mStartMs > TimeUnit.DAYS.toMillis(365))) {

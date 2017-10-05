@@ -33,7 +33,7 @@ public class JobPeriodicCancelTest extends BaseJobManagerTest {
         mJob = new PeriodicJob();
         manager().addJobCreator(new JobCreator() {
             @Override
-            public Job create(String tag) {
+            public Job create(@NonNull String tag) {
                 return mJob;
             }
         });

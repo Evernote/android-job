@@ -193,7 +193,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
 
         JobCreator jobCreator = new JobCreator() {
             @Override
-            public Job create(String tag) {
+            public Job create(@NonNull String tag) {
                 return job;
             }
         };

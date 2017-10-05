@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.NonNull;
 
 import com.evernote.android.job.test.JobRobolectricTestRunner;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
@@ -169,7 +170,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
     private void checkJob() {
         createManager().addJobCreator(new JobCreator() {
             @Override
-            public Job create(String tag) {
+            public Job create(@NonNull String tag) {
                 return null;
             }
         });

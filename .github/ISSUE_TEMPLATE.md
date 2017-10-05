@@ -2,7 +2,7 @@ Before posting an issue, please check the following:
 
 * Do you have a question? Please take a look at the samples and read the FAQ first.
 ** https://github.com/evernote/android-job#usage
-** https://github.com/evernote/android-job/blob/master/FAQ.md
+** https://github.com/evernote/android-job/wiki/FAQ
 
 * Does the library crash for you? Please provide the version of the library, a log, stacktrace and even better a sample.
 

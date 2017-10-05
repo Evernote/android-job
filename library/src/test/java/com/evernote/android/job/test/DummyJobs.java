@@ -88,7 +88,7 @@ public final class DummyJobs {
 
     public static final JobCreator TEST_JOB_CREATOR = new JobCreator() {
         @Override
-        public Job create(String tag) {
+        public Job create(@NonNull String tag) {
             switch (tag) {
                 case SuccessJob.TAG:
                     return new SuccessJob();
@@ -115,7 +115,7 @@ public final class DummyJobs {
         }
 
         @Override
-        public Job create(String tag) {
+        public Job create(@NonNull String tag) {
             Job job = mJobCreator.create(tag);
             return job == null ? null : spy(job);
         }

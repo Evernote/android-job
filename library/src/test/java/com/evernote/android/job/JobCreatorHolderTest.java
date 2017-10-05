@@ -1,5 +1,7 @@
 package com.evernote.android.job;
 
+import android.support.annotation.NonNull;
+
 import com.evernote.android.job.util.JobLogger;
 
 import org.junit.After;
@@ -88,7 +90,7 @@ public class JobCreatorHolderTest {
 
         class BlockingJobCreator implements JobCreator {
             @Override
-            public Job create(String tag) {
+            public Job create(@NonNull String tag) {
                 lock.lock();
                 try {
                     isIteratorActive.set(true);
