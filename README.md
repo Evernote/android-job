@@ -36,7 +36,8 @@ public class App extends Application {
 ```java
 public class DemoJobCreator implements JobCreator {
 
-    @Override @Nullable
+    @Override
+    @Nullable
     public Job create(@NonNull String tag) {
         switch (tag) {
             case DemoSyncJob.TAG:
