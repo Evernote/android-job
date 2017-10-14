@@ -35,7 +35,11 @@ import com.evernote.android.job.util.JobLogger;
 import com.evernote.android.job.util.JobPreconditions;
 
 import java.util.EnumMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A global configuration for the job library.
@@ -57,6 +61,23 @@ public final class JobConfig {
     private static final EnumMap<JobApi, Boolean> ENABLED_APIS;
     private static final JobCat CAT = new JobCat("JobConfig");
 
+    private static final ExecutorService DEFAULT_EXECUTOR_SERVICE = Executors.newCachedThreadPool(new ThreadFactory() {
+
+        private final AtomicInteger mThreadNumber = new AtomicInteger();
+
+        @Override
+        public Thread newThread(@NonNull Runnable r) {
+            Thread thread = new Thread(r, "AndroidJob-" + mThreadNumber.incrementAndGet());
+            if (thread.isDaemon()) {
+                thread.setDaemon(false);
+            }
+            if (thread.getPriority() != Thread.NORM_PRIORITY) {
+                thread.setPriority(Thread.NORM_PRIORITY);
+            }
+            return thread;
+        }
+    });
+
     private static volatile boolean allowSmallerIntervals;
     private static volatile boolean forceAllowApi14 = false;
 
@@ -68,6 +89,7 @@ public final class JobConfig {
     private static volatile boolean forceRtc = false;
 
     private static volatile Clock clock = Clock.DEFAULT;
+    private static volatile ExecutorService executorService = DEFAULT_EXECUTOR_SERVICE;
 
     static {
         ENABLED_APIS = new EnumMap<>(JobApi.class);
@@ -277,6 +299,23 @@ public final class JobConfig {
     }
 
     /**
+     * @return The executor service for all parallel execution.
+     */
+    public static ExecutorService getExecutorService() {
+        return executorService;
+    }
+
+    /**
+     * Overrides the executor service for all parallel execution. This could be helpful for Espresso
+     * tests.
+     *
+     * @param executorService The new executor service.
+     */
+    public static void setExecutorService(@NonNull ExecutorService executorService) {
+        JobConfig.executorService = JobPreconditions.checkNotNull(executorService);
+    }
+
+    /**
      * Resets all adjustments in the config.
      */
     public static void reset() {
@@ -290,6 +329,7 @@ public final class JobConfig {
         jobIdOffset = 0;
         forceRtc = false;
         clock = Clock.DEFAULT;
+        executorService = DEFAULT_EXECUTOR_SERVICE;
         JobCat.setLogcatEnabled(true);
         JobCat.clearLogger();
     }

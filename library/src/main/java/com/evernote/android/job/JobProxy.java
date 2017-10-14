@@ -41,8 +41,6 @@ import net.vrallev.android.cat.CatLog;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A proxy for each {@link JobApi}.
@@ -65,23 +63,6 @@ public interface JobProxy {
     /*package*/ final class Common {
 
         private static final Object COMMON_MONITOR = new Object();
-
-        public static final ThreadFactory COMMON_THREAD_FACTORY = new ThreadFactory() {
-
-            private final AtomicInteger mThreadNumber = new AtomicInteger();
-
-            @Override
-            public Thread newThread(@NonNull Runnable r) {
-                Thread thread = new Thread(r, "AndroidJob-" + mThreadNumber.incrementAndGet());
-                if (thread.isDaemon()) {
-                    thread.setDaemon(false);
-                }
-                if (thread.getPriority() != Thread.NORM_PRIORITY) {
-                    thread.setPriority(Thread.NORM_PRIORITY);
-                }
-                return thread;
-            }
-        };
 
         // see Google Guava: https://github.com/google/guava/blob/master/guava/src/com/google/common/math/LongMath.java
         private static long checkedAdd(long a, long b) {

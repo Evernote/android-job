@@ -1,3 +1,6 @@
+## 1.2.1
+* Add option to override the default background executor, see #292
+
 ## 1.2.0 (2017-10-05)
 
 * Extract `JobManager.Config` class into `JobConfig` class to make it possible to change settings before the `JobManager` is created

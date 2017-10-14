@@ -42,8 +42,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -56,15 +54,12 @@ import java.util.concurrent.TimeUnit;
     private static final CatLog CAT = new JobCat("JobExecutor");
     private static final long WAKE_LOCK_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
 
-    private final ExecutorService mExecutorService;
-
     private final SparseArray<Job> mJobs; // only cached in memory, that's fine
     private final LruCache<Integer, Job> mFinishedJobsCache;
 
     private final Set<JobRequest> mStartingRequests;
 
     public JobExecutor() {
-        mExecutorService = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
         mJobs = new SparseArray<>();
         mFinishedJobsCache = new LruCache<>(20);
         mStartingRequests = new HashSet<>();
@@ -85,7 +80,7 @@ import java.util.concurrent.TimeUnit;
         CAT.i("Executing %s, context %s", request, context.getClass().getSimpleName());
 
         mJobs.put(request.getJobId(), job);
-        return mExecutorService.submit(new JobCallable(job));
+        return JobConfig.getExecutorService().submit(new JobCallable(job));
     }
 
     public synchronized Job getJob(int jobId) {

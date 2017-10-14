@@ -32,6 +32,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
+import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.util.JobCat;
 
@@ -39,8 +40,6 @@ import net.vrallev.android.cat.CatLog;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * @author rwondratschek
@@ -60,14 +59,12 @@ public final class PlatformAlarmServiceExact extends Service {
 
     private final Object mMonitor = new Object();
 
-    private volatile ExecutorService mExecutorService;
     private volatile Set<Integer> mStartIds;
     private volatile int mLastStartId;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mExecutorService = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
         mStartIds = new HashSet<>();
     }
 
@@ -78,7 +75,7 @@ public final class PlatformAlarmServiceExact extends Service {
             mLastStartId = startId;
         }
 
-        mExecutorService.execute(new Runnable() {
+        JobConfig.getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -95,9 +92,6 @@ public final class PlatformAlarmServiceExact extends Service {
 
     @Override
     public void onDestroy() {
-        mExecutorService.shutdown();
-        mExecutorService = null;
-
         synchronized (mMonitor) {
             mStartIds = null;
             mLastStartId = 0;

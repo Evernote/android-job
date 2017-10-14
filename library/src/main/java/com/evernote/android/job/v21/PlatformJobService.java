@@ -32,15 +32,13 @@ import android.os.Build;
 import android.os.Bundle;
 
 import com.evernote.android.job.Job;
+import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.Cat;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * @author rwondratschek
@@ -53,7 +51,6 @@ public class PlatformJobService extends JobService {
      */
 
     private static final JobCat CAT = new JobCat("PlatformJobService");
-    private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool(JobProxy.Common.COMMON_THREAD_FACTORY);
 
     @Override
     public boolean onStartJob(final JobParameters params) {
@@ -82,7 +79,7 @@ public class PlatformJobService extends JobService {
 
         common.markStarting(request);
 
-        EXECUTOR_SERVICE.execute(new Runnable() {
+        JobConfig.getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {
