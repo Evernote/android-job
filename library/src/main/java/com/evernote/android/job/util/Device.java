@@ -34,6 +34,7 @@ import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.PowerManager;
+import android.support.annotation.NonNull;
 import android.support.v4.net.ConnectivityManagerCompat;
 
 import com.evernote.android.job.JobRequest;
@@ -50,18 +51,24 @@ public final class Device {
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    public static boolean isCharging(Context context) {
+    public static BatteryStatus getBatteryStatus(Context context) {
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (intent == null) {
             // should not happen
-            return false;
+            return BatteryStatus.DEFAULT;
         }
+
+        int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        float batteryPct = level / (float) scale;
 
         // 0 is on battery
         int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
-        return plugged == BatteryManager.BATTERY_PLUGGED_AC
+        boolean charging = plugged == BatteryManager.BATTERY_PLUGGED_AC
                 || plugged == BatteryManager.BATTERY_PLUGGED_USB
                 || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS);
+
+        return new BatteryStatus(charging, batteryPct);
     }
 
     @SuppressWarnings("deprecation")
@@ -81,7 +88,16 @@ public final class Device {
         }
     }
 
-    public static JobRequest.NetworkType getNetworkType(Context context) {
+    /**
+     * Checks the network condition of the device and returns the best type. If the device
+     * is connected to a WiFi and mobile network at the same time, then it would assume
+     * that the connection is unmetered because of the WiFi connection.
+     *
+     * @param context Any context, e.g. the application context.
+     * @return The current network type of the device.
+     */
+    @NonNull
+    public static JobRequest.NetworkType getNetworkType(@NonNull Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         if (networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
@@ -89,6 +105,19 @@ public final class Device {
         }
 
         boolean metered = ConnectivityManagerCompat.isActiveNetworkMetered(connectivityManager);
-        return metered ? JobRequest.NetworkType.CONNECTED : JobRequest.NetworkType.UNMETERED;
+        if (!metered) {
+            return JobRequest.NetworkType.UNMETERED;
+        }
+
+        if (networkInfo.isRoaming()) {
+            return JobRequest.NetworkType.CONNECTED;
+        } else {
+            return JobRequest.NetworkType.NOT_ROAMING;
+        }
+    }
+
+    public static boolean isStorageLow() {
+        // figure this out
+        return false;
     }
 }

@@ -66,6 +66,14 @@
             android:text="Cancel all"/>
 
         <Switch
+            android:id="@+id/enable_gcm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:text="Enable GCM API"/>
+
+        <Switch
             android:id="@+id/check_requires_charging"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -89,12 +97,12 @@
             android:layout_height="wrap_content" />
 
         <Button
-            android:id="@+id/button_file_activity"
+            android:id="@+id/button_sync_history"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="12dp"
             android:onClick="onClick"
-            android:text="Open file activity"/>
+            android:text="Open sync history"/>
     </LinearLayout>
 </ScrollView>

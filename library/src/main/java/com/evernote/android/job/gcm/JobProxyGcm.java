@@ -28,14 +28,14 @@ package com.evernote.android.job.gcm;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.evernote.android.job.JobProxy;
+import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
+import com.evernote.android.job.util.JobUtil;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.OneoffTask;
 import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
-import com.evernote.android.job.JobProxy;
-import com.evernote.android.job.JobRequest;
-import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
 
@@ -52,48 +52,60 @@ public class JobProxyGcm implements JobProxy {
      * already plugged in again.
      */
 
+    private final Context mContext;
     private final GcmNetworkManager mGcmNetworkManager;
 
     public JobProxyGcm(Context context) {
+        mContext = context;
         mGcmNetworkManager = GcmNetworkManager.getInstance(context);
     }
 
     @Override
     public void plantOneOff(JobRequest request) {
-        long startSeconds = Common.getStartMs(request) / 1_000;
-        long endSeconds = Math.max(Common.getEndMs(request) / 1_000, startSeconds + 1);
+        long startMs = Common.getStartMs(request);
+        long startSeconds = startMs / 1_000;
 
-        OneoffTask task = new OneoffTask.Builder()
-                .setTag(createTag(request))
-                .setService(PlatformGcmService.class)
-                .setUpdateCurrent(true)
+        long endMs = Common.getEndMs(request);
+        long endSeconds = Math.max(endMs / 1_000, startSeconds + 1); // endSeconds must be greater than startSeconds
+
+        OneoffTask task = prepareBuilder(new OneoffTask.Builder(), request)
                 .setExecutionWindow(startSeconds, endSeconds)
-                .setRequiredNetwork(convertNetworkType(request.requiredNetworkType()))
-                .setPersisted(request.isPersisted())
-                .setRequiresCharging(request.requiresCharging())
                 .build();
 
         mGcmNetworkManager.schedule(task);
 
-        CAT.d("Scheduled OneoffTask, %s, start %s, end %s", request,
-                JobUtil.timeToString(Common.getStartMs(request)), JobUtil.timeToString(Common.getEndMs(request)));
+        CAT.d("Scheduled OneoffTask, %s, start %s, end %s (from now), reschedule count %d", request, JobUtil.timeToString(startMs),
+                JobUtil.timeToString(endMs), Common.getRescheduleCount(request));
     }
 
     @Override
     public void plantPeriodic(JobRequest request) {
-        PeriodicTask task = new PeriodicTask.Builder()
-                .setTag(createTag(request))
-                .setService(PlatformGcmService.class)
-                .setUpdateCurrent(true)
+        PeriodicTask task = prepareBuilder(new PeriodicTask.Builder(), request)
                 .setPeriod(request.getIntervalMs() / 1_000)
-                .setRequiredNetwork(convertNetworkType(request.requiredNetworkType()))
-                .setPersisted(request.isPersisted())
-                .setRequiresCharging(request.requiresCharging())
+                .setFlex(request.getFlexMs() / 1_000)
                 .build();
 
         mGcmNetworkManager.schedule(task);
 
-        CAT.d("Scheduled PeriodicTask, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
+        CAT.d("Scheduled PeriodicTask, %s, interval %s, flex %s", request, JobUtil.timeToString(request.getIntervalMs()),
+                JobUtil.timeToString(request.getFlexMs()));
+    }
+
+    @Override
+    public void plantPeriodicFlexSupport(JobRequest request) {
+        CAT.w("plantPeriodicFlexSupport called although flex is supported");
+
+        long startMs = Common.getStartMsSupportFlex(request);
+        long endMs = Common.getEndMsSupportFlex(request);
+
+        OneoffTask task = prepareBuilder(new OneoffTask.Builder(), request)
+                .setExecutionWindow(startMs / 1_000, endMs / 1_000)
+                .build();
+
+        mGcmNetworkManager.schedule(task);
+
+        CAT.d("Scheduled periodic (flex support), %s, start %s, end %s, flex %s", request, JobUtil.timeToString(startMs),
+                JobUtil.timeToString(endMs), JobUtil.timeToString(request.getFlexMs()));
     }
 
     @Override
@@ -105,6 +117,17 @@ public class JobProxyGcm implements JobProxy {
     public boolean isPlatformJobScheduled(JobRequest request) {
         // there is no option to check whether a task is scheduled, assume it is
         return true;
+    }
+
+    protected <T extends Task.Builder> T prepareBuilder(T builder, JobRequest request) {
+        builder.setTag(createTag(request))
+                .setService(PlatformGcmService.class)
+                .setUpdateCurrent(true)
+                .setRequiredNetwork(convertNetworkType(request.requiredNetworkType()))
+                .setPersisted(JobUtil.hasBootPermission(mContext))
+                .setRequiresCharging(request.requiresCharging())
+                .setExtras(request.getTransientExtras());
+        return builder;
     }
 
     protected String createTag(JobRequest request) {
@@ -123,6 +146,8 @@ public class JobProxyGcm implements JobProxy {
                 return Task.NETWORK_STATE_CONNECTED;
             case UNMETERED:
                 return Task.NETWORK_STATE_UNMETERED;
+            case NOT_ROAMING:
+                return Task.NETWORK_STATE_UNMETERED; // use as fallback, NOT_ROAMING not supported
             default:
                 throw new IllegalStateException("not implemented");
         }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:ignore="HardcodedText">
+
+    <item
+        android:id="@+id/action_sync_now"
+        android:showAsAction="always"
+        android:title="Sync now"
+        app:showAsAction="always"
+        tools:ignore="AlwaysShowAction,AppCompatResource"/>
+</menu>

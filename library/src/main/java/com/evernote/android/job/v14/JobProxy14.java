@@ -30,8 +30,10 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 
+import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
@@ -42,24 +44,95 @@ import net.vrallev.android.cat.CatLog;
 /**
  * @author rwondratschek
  */
+@SuppressWarnings("WeakerAccess")
 public class JobProxy14 implements JobProxy {
 
-    private static final CatLog CAT = new JobCat("JobProxy14");
+    private static final String TAG = "JobProxy14";
 
-    private final Context mContext;
+    protected final Context mContext;
+    protected final CatLog mCat;
+
     private AlarmManager mAlarmManager;
 
     public JobProxy14(Context context) {
+        this(context, TAG);
+    }
+
+    protected JobProxy14(Context context, String logTag) {
         mContext = context;
+        mCat = new JobCat(logTag);
     }
 
     @Override
     public void plantOneOff(JobRequest request) {
         PendingIntent pendingIntent = getPendingIntent(request, false);
-        setAlarm(request, System.currentTimeMillis() + Common.getAverageDelayMs(request), pendingIntent);
 
-        CAT.d("Scheduled alarm, %s, delay %s, exact %b", request,
-                JobUtil.timeToString(Common.getAverageDelayMs(request)), request.isExact());
+        AlarmManager alarmManager = getAlarmManager();
+        if (alarmManager == null) {
+            return;
+        }
+
+        try {
+            if (request.isExact()) {
+                if (request.getStartMs() == 1 && request.getFailureCount() <= 0) {
+                    // this job should start immediately
+                    PlatformAlarmService.start(mContext, request.getJobId(), request.getTransientExtras());
+                } else {
+                    plantOneOffExact(request, alarmManager, pendingIntent);
+                }
+            } else {
+                plantOneOffInexact(request, alarmManager, pendingIntent);
+            }
+        } catch (Exception e) {
+            // https://gist.github.com/vRallev/621b0b76a14ddde8691c
+            mCat.e(e);
+        }
+    }
+
+    protected void plantOneOffInexact(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
+        alarmManager.set(getType(false), getTriggerAtMillis(request), pendingIntent);
+        logScheduled(request);
+    }
+
+    protected void plantOneOffExact(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
+        long triggerAtMillis = getTriggerAtMillis(request);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(getType(true), triggerAtMillis, pendingIntent);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            alarmManager.setExact(getType(true), triggerAtMillis, pendingIntent);
+        } else {
+            alarmManager.set(getType(true), triggerAtMillis, pendingIntent);
+        }
+        logScheduled(request);
+    }
+
+    protected void plantOneOffFlexSupport(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
+        long triggerAtMs = JobConfig.getClock().currentTimeMillis() + Common.getAverageDelayMsSupportFlex(request);
+        alarmManager.set(AlarmManager.RTC, triggerAtMs, pendingIntent);
+
+        mCat.d("Scheduled repeating alarm (flex support), %s, interval %s, flex %s", request,
+                JobUtil.timeToString(request.getIntervalMs()), JobUtil.timeToString(request.getFlexMs()));
+    }
+
+    protected long getTriggerAtMillis(JobRequest request) {
+        if (JobConfig.isForceRtc()) {
+            return JobConfig.getClock().currentTimeMillis() + Common.getAverageDelayMs(request);
+        } else {
+            return JobConfig.getClock().elapsedRealtime() + Common.getAverageDelayMs(request);
+        }
+    }
+
+    protected int getType(boolean wakeup) {
+        if (wakeup) {
+            return JobConfig.isForceRtc() ? AlarmManager.RTC_WAKEUP : AlarmManager.ELAPSED_REALTIME_WAKEUP;
+        } else {
+            return JobConfig.isForceRtc() ? AlarmManager.RTC : AlarmManager.ELAPSED_REALTIME;
+        }
+    }
+
+    private void logScheduled(JobRequest request) {
+        mCat.d("Scheduled alarm, %s, delay %s (from now), exact %b, reschedule count %d", request,
+                JobUtil.timeToString(Common.getAverageDelayMs(request)), request.isExact(), Common.getRescheduleCount(request));
     }
 
     @Override
@@ -67,10 +140,27 @@ public class JobProxy14 implements JobProxy {
         PendingIntent pendingIntent = getPendingIntent(request, true);
         AlarmManager alarmManager = getAlarmManager();
         if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + request.getIntervalMs(), request.getIntervalMs(), pendingIntent);
+            alarmManager.setRepeating(getType(true), getTriggerAtMillis(request), request.getIntervalMs(), pendingIntent);
         }
 
-        CAT.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
+        mCat.d("Scheduled repeating alarm, %s, interval %s", request, JobUtil.timeToString(request.getIntervalMs()));
+    }
+
+    @Override
+    public void plantPeriodicFlexSupport(JobRequest request) {
+        PendingIntent pendingIntent = getPendingIntent(request, false);
+
+        AlarmManager alarmManager = getAlarmManager();
+        if (alarmManager == null) {
+            return;
+        }
+
+        try {
+            plantOneOffFlexSupport(request, alarmManager, pendingIntent);
+        } catch (Exception e) {
+            // https://gist.github.com/vRallev/621b0b76a14ddde8691c
+            mCat.e(e);
+        }
     }
 
     @Override
@@ -78,12 +168,13 @@ public class JobProxy14 implements JobProxy {
         AlarmManager alarmManager = getAlarmManager();
         if (alarmManager != null) {
             try {
-                alarmManager.cancel(getPendingIntent(jobId, createPendingIntentFlags(true)));
-                alarmManager.cancel(getPendingIntent(jobId, createPendingIntentFlags(false)));
+                // exact parameter doesn't matter
+                alarmManager.cancel(getPendingIntent(jobId, false, null, createPendingIntentFlags(true)));
+                alarmManager.cancel(getPendingIntent(jobId, false, null, createPendingIntentFlags(false)));
             } catch (Exception e) {
                 // java.lang.SecurityException: get application info: Neither user 1010133 nor
                 // current process has android.permission.INTERACT_ACROSS_USERS.
-                CAT.e(e);
+                mCat.e(e);
             }
         }
     }
@@ -107,11 +198,11 @@ public class JobProxy14 implements JobProxy {
     }
 
     protected PendingIntent getPendingIntent(JobRequest request, int flags) {
-        return getPendingIntent(request.getJobId(), flags);
+        return getPendingIntent(request.getJobId(), request.isExact(), request.getTransientExtras(), flags);
     }
 
-    protected PendingIntent getPendingIntent(int jobId, int flags) {
-        Intent intent = PlatformAlarmReceiver.createIntent(mContext, jobId);
+    protected PendingIntent getPendingIntent(int jobId, boolean exact, @Nullable Bundle transientExtras, int flags) {
+        Intent intent = PlatformAlarmReceiver.createIntent(mContext, jobId, exact, transientExtras);
 
         // repeating PendingIntent with service seams to have problems
         try {
@@ -119,33 +210,8 @@ public class JobProxy14 implements JobProxy {
         } catch (Exception e) {
             // java.lang.SecurityException: Permission Denial: getIntentSender() from pid=31482, uid=10057,
             // (need uid=-1) is not allowed to send as package com.evernote
-            CAT.e(e);
+            mCat.e(e);
             return null;
-        }
-    }
-
-    protected void setAlarm(JobRequest request, long triggerAtMillis, PendingIntent pendingIntent) {
-        AlarmManager alarmManager = getAlarmManager();
-        if (alarmManager == null) {
-            return;
-        }
-
-        try {
-            if (request.isExact()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-                } else {
-                    alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-                }
-
-            } else {
-                alarmManager.set(AlarmManager.RTC, triggerAtMillis, pendingIntent);
-            }
-        } catch (Exception e) {
-            // https://gist.github.com/vRallev/621b0b76a14ddde8691c
-            CAT.e(e);
         }
     }
 
@@ -156,7 +222,7 @@ public class JobProxy14 implements JobProxy {
         }
         if (mAlarmManager == null) {
             // https://gist.github.com/vRallev/5daef6e8a3b0d4a7c366
-            CAT.e("AlarmManager is null");
+            mCat.e("AlarmManager is null");
         }
         return mAlarmManager;
     }

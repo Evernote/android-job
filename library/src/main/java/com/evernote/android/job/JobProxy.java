@@ -26,12 +26,14 @@
 package com.evernote.android.job;
 
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-import com.evernote.android.job.util.JobApi;
-import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
 import net.vrallev.android.cat.CatLog;
@@ -51,11 +53,16 @@ public interface JobProxy {
 
     void plantPeriodic(JobRequest request);
 
+    void plantPeriodicFlexSupport(JobRequest request);
+
     void cancel(int jobId);
 
     boolean isPlatformJobScheduled(JobRequest request);
 
+    @SuppressWarnings("UnusedReturnValue")
     /*package*/ final class Common {
+
+        private static final Object COMMON_MONITOR = new Object();
 
         // see Google Guava: https://github.com/google/guava/blob/master/guava/src/com/google/common/math/LongMath.java
         private static long checkedAdd(long a, long b) {
@@ -68,15 +75,39 @@ public interface JobProxy {
         }
 
         public static long getStartMs(JobRequest request) {
-            return checkedAdd(request.getStartMs(), request.getBackoffOffset());
+            if (request.getFailureCount() > 0) {
+                return request.getBackoffOffset();
+            } else {
+                return request.getStartMs();
+            }
         }
 
         public static long getEndMs(JobRequest request) {
-            return checkedAdd(request.getEndMs(), request.getBackoffOffset());
+            if (request.getFailureCount() > 0) {
+                return request.getBackoffOffset();
+            } else {
+                return request.getEndMs();
+            }
         }
 
         public static long getAverageDelayMs(JobRequest request) {
             return checkedAdd(getStartMs(request), (getEndMs(request) - getStartMs(request)) / 2);
+        }
+
+        public static long getStartMsSupportFlex(JobRequest request) {
+            return Math.max(1, request.getIntervalMs() - request.getFlexMs());
+        }
+
+        public static long getEndMsSupportFlex(JobRequest request) {
+            return request.getIntervalMs();
+        }
+
+        public static long getAverageDelayMsSupportFlex(JobRequest request) {
+            return checkedAdd(getStartMsSupportFlex(request), (getEndMsSupportFlex(request) - getStartMsSupportFlex(request)) / 2);
+        }
+
+        public static int getRescheduleCount(JobRequest request) {
+            return request.getFailureCount();
         }
 
         private final Context mContext;
@@ -85,66 +116,92 @@ public interface JobProxy {
 
         private final JobManager mJobManager;
 
-        public Common(@NonNull Service service, int jobId) {
-            this(service, service.getClass().getSimpleName(), jobId);
+        public Common(@NonNull Service service, CatLog cat, int jobId) {
+            this((Context) service, cat, jobId);
         }
 
-        /*package*/ Common(@NonNull Context context, String loggingTag, int jobId) {
+        /*package*/ Common(@NonNull Context context, CatLog cat, int jobId) {
             mContext = context;
             mJobId = jobId;
-            mCat = new JobCat(loggingTag);
+            mCat = cat;
 
-            mJobManager = JobManager.create(context);
+            JobManager manager;
+            try {
+                manager = JobManager.create(context);
+            } catch (JobManagerCreateException e) {
+                mCat.e(e);
+                manager = null;
+            }
+            mJobManager = manager;
         }
 
-        public JobRequest getPendingRequest(boolean cleanUpOrphanedJob) {
-            // order is important for logging purposes
-            JobRequest request = mJobManager.getJobRequest(mJobId, true);
-            Job job = mJobManager.getJob(mJobId);
-            boolean periodic = request != null && request.isPeriodic();
+        public JobRequest getPendingRequest(@SuppressWarnings("SameParameterValue") boolean cleanUpOrphanedJob, boolean markStarting) {
+            synchronized (COMMON_MONITOR) {
+                if (mJobManager == null) {
+                    return null;
+                }
 
-            if (job != null && !job.isFinished()) {
-                // that's probably a platform bug http://stackoverflow.com/questions/33235754/jobscheduler-posting-jobs-twice-not-expected
-                mCat.d("Job %d is already running, %s", mJobId, request);
-                // not necessary to clean up, the running instance will do that
-                return null;
+                // order is important for logging purposes
+                JobRequest request = mJobManager.getJobRequest(mJobId, true);
+                Job job = mJobManager.getJob(mJobId);
+                boolean periodic = request != null && request.isPeriodic();
 
-            } else if (job != null && !periodic) {
-                mCat.d("Job %d already finished, %s", mJobId, request);
-                cleanUpOrphanedJob(cleanUpOrphanedJob);
-                return null;
+                if (job != null && !job.isFinished()) {
+                    // that's probably a platform bug http://stackoverflow.com/questions/33235754/jobscheduler-posting-jobs-twice-not-expected
+                    mCat.d("Job %d is already running, %s", mJobId, request);
+                    // not necessary to clean up, the running instance will do that
+                    return null;
 
-            } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < 2_000) {
-                // that's probably a platform bug http://stackoverflow.com/questions/33235754/jobscheduler-posting-jobs-twice-not-expected
-                mCat.d("Job %d is periodic and just finished, %s", mJobId, request);
-                // don't clean up, periodic job
-                return null;
+                } else if (job != null && !periodic) {
+                    mCat.d("Job %d already finished, %s", mJobId, request);
+                    cleanUpOrphanedJob(cleanUpOrphanedJob);
+                    return null;
 
-            } else if (request != null && request.isTransient()) {
-                mCat.d("Request %d is transient, %s", mJobId, request);
-                // not necessary to clean up, the JobManager will do this for transient jobs
-                return null;
+                } else if (job != null && System.currentTimeMillis() - job.getFinishedTimeStamp() < 2_000) {
+                    // that's probably a platform bug http://stackoverflow.com/questions/33235754/jobscheduler-posting-jobs-twice-not-expected
+                    mCat.d("Job %d is periodic and just finished, %s", mJobId, request);
+                    // don't clean up, periodic job
+                    return null;
 
-            } else if (request == null) {
-                mCat.d("Request for ID %d was null", mJobId);
-                cleanUpOrphanedJob(cleanUpOrphanedJob);
-                return null;
+                } else if (request != null && request.isStarted()) {
+                    mCat.d("Request %d already started, %s", mJobId, request);
+                    // not necessary to clean up, the JobManager will do this for started jobs
+                    return null;
+
+                } else if (request != null && mJobManager.getJobExecutor().isRequestStarting(request)) {
+                    mCat.d("Request %d is in the queue to start, %s", mJobId, request);
+                    return null;
+
+                } else if (request == null) {
+                    mCat.d("Request for ID %d was null", mJobId);
+                    cleanUpOrphanedJob(cleanUpOrphanedJob);
+                    return null;
+                }
+
+                if (markStarting) {
+                    markStarting(request);
+                }
+
+                return request;
             }
+        }
 
-            return request;
+        public void markStarting(@NonNull JobRequest request) {
+            mJobManager.getJobExecutor().markJobRequestStarting(request);
         }
 
         @NonNull
-        public Job.Result executeJobRequest(@NonNull JobRequest request) {
+        public Job.Result executeJobRequest(@NonNull JobRequest request, @Nullable Bundle transientExtras) {
             long waited = System.currentTimeMillis() - request.getScheduledAt();
             String timeWindow;
             if (request.isPeriodic()) {
-                timeWindow = "interval " + JobUtil.timeToString(request.getIntervalMs());
-            } else if (JobApi.V_14.equals(request.getJobApi())) {
-                timeWindow = "delay " + JobUtil.timeToString(getAverageDelayMs(request));
-            } else {
+                timeWindow = String.format(Locale.US, "interval %s, flex %s", JobUtil.timeToString(request.getIntervalMs()),
+                        JobUtil.timeToString(request.getFlexMs()));
+            } else if (request.getJobApi().supportsExecutionWindow()) {
                 timeWindow = String.format(Locale.US, "start %s, end %s", JobUtil.timeToString(getStartMs(request)),
                         JobUtil.timeToString(getEndMs(request)));
+            } else {
+                timeWindow = "delay " + JobUtil.timeToString(getAverageDelayMs(request));
             }
 
             if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -156,14 +213,18 @@ public interface JobProxy {
             Job job = null;
 
             try {
-                // create job first before setting it transient, avoids a race condition while rescheduling jobs
+                // create job first before setting it started, avoids a race condition while rescheduling jobs
                 job = mJobManager.getJobCreatorHolder().createJob(request.getTag());
 
                 if (!request.isPeriodic()) {
-                    request.setTransient(true);
+                    request.setStarted(true);
                 }
 
-                Future<Job.Result> future = jobExecutor.execute(mContext, request, job);
+                if (transientExtras == null) {
+                    transientExtras = Bundle.EMPTY;
+                }
+
+                Future<Job.Result> future = jobExecutor.execute(mContext, request, job, transientExtras);
                 if (future == null) {
                     return Job.Result.FAILURE;
                 }
@@ -186,6 +247,10 @@ public interface JobProxy {
             } finally {
                 if (!request.isPeriodic()) {
                     mJobManager.getJobStorage().remove(request);
+
+                } else if (request.isFlexSupport() && (job == null || !job.isDeleted())) {
+                    mJobManager.getJobStorage().remove(request); // remove, we store the new job in JobManager.schedule()
+                    request.reschedule(false, false);
                 }
             }
         }
@@ -196,7 +261,7 @@ public interface JobProxy {
             }
         }
 
-        public static void cleanUpOrphanedJob(Context context, int jobId) {
+        /*package*/ static void cleanUpOrphanedJob(Context context, int jobId) {
             /*
              * That's necessary if the database was deleted and jobs (especially the JobScheduler) are still around.
              * Then if a new job is being scheduled, it's possible that the new job has the ID of the old one. Here
@@ -204,9 +269,21 @@ public interface JobProxy {
              */
             for (JobApi jobApi : JobApi.values()) {
                 if (jobApi.isSupported(context)) {
-                    jobApi.getCachedProxy(context).cancel(jobId);
+                    try {
+                        jobApi.getProxy(context).cancel(jobId);
+                    } catch (Exception ignored) {
+                        // GCM API could crash if it's disabled, ignore crashes at this point and continue
+                    }
                 }
             }
+        }
+
+        public static ComponentName startWakefulService(Context context, Intent intent) {
+            return WakeLockUtil.startWakefulService(context, intent);
+        }
+
+        public static boolean completeWakefulIntent(Intent intent) {
+            return WakeLockUtil.completeWakefulIntent(intent);
         }
     }
 }

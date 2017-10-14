@@ -25,52 +25,43 @@
  */
 package com.evernote.android.job.v14;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.content.WakefulBroadcastReceiver;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
 
-import com.evernote.android.job.util.JobCat;
-import com.evernote.android.job.util.JobUtil;
-
-import net.vrallev.android.cat.CatLog;
+import com.evernote.android.job.JobProxy;
 
 /**
  * @author rwondratschek
  */
-public class PlatformAlarmReceiver extends WakefulBroadcastReceiver {
+public class PlatformAlarmReceiver extends BroadcastReceiver {
 
     /*package*/ static final String EXTRA_JOB_ID = "EXTRA_JOB_ID";
+    /*package*/ static final String EXTRA_JOB_EXACT = "EXTRA_JOB_EXACT";
+    /*package*/ static final String EXTRA_TRANSIENT_EXTRAS = "EXTRA_TRANSIENT_EXTRAS";
 
-    private static final CatLog CAT = new JobCat("PlatformAlarmReceiver");
-
-    /*package*/ static Intent createIntent(Context context, int jobId) {
-        return new Intent(context, PlatformAlarmReceiver.class).putExtra(EXTRA_JOB_ID, jobId);
+    /*package*/ static Intent createIntent(Context context, int jobId, boolean exact, @Nullable Bundle transientExtras) {
+        Intent intent = new Intent(context, PlatformAlarmReceiver.class).putExtra(EXTRA_JOB_ID, jobId).putExtra(EXTRA_JOB_EXACT, exact);
+        if (transientExtras != null) {
+            intent.putExtra(EXTRA_TRANSIENT_EXTRAS, transientExtras);
+        }
+        return intent;
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent == null || !intent.hasExtra(EXTRA_JOB_ID)) {
-            return;
-        }
+        if (intent != null && intent.hasExtra(EXTRA_JOB_ID) && intent.hasExtra(EXTRA_JOB_EXACT)) {
+            int jobId = intent.getIntExtra(EXTRA_JOB_ID, -1);
+            Bundle transientExtras = intent.getBundleExtra(EXTRA_TRANSIENT_EXTRAS);
 
-        Intent serviceIntent = PlatformAlarmService.createIntent(context, intent.getIntExtra(EXTRA_JOB_ID, -1));
-
-        if (JobUtil.hasWakeLockPermission(context)) {
-            try {
-                startWakefulService(context, serviceIntent);
-            } catch (Exception e) {
-                /*
-                 * Saw a SecurityException, although WAKE_LOCK permission is granted.
-                 * https://gist.github.com/vRallev/715777806e0abe3777bc
-                 *
-                 * The wake lock is acquired after the service was started, so it's not necessary
-                 * to start the service another time.
-                 */
-                CAT.e(e);
+            if (intent.getBooleanExtra(EXTRA_JOB_EXACT, false)) {
+                Intent serviceIntent = PlatformAlarmServiceExact.createIntent(context, jobId, transientExtras);
+                JobProxy.Common.startWakefulService(context, serviceIntent);
+            } else {
+                PlatformAlarmService.start(context, jobId, transientExtras);
             }
-
-        } else {
-            context.startService(serviceIntent);
         }
     }
 }

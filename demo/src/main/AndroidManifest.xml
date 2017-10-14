@@ -24,8 +24,16 @@
         </activity>
 
         <activity
-            android:name=".FileActivity"
+            android:name=".SyncHistoryActivity"
             android:label="@string/demo"/>
+
+        <receiver
+            android:name=".DemoJobCreator$AddReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.evernote.android.job.ADD_JOB_CREATOR"/>
+            </intent-filter>
+        </receiver>
 
     </application>
 </manifest>

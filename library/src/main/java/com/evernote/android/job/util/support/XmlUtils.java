@@ -18,7 +18,6 @@ package com.evernote.android.job.util.support;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
 import android.util.Base64;
 import android.util.Xml;
@@ -27,7 +26,6 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,7 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 /*package*/ @SuppressWarnings({"unused", "StatementWithEmptyBody", "FinalStaticMethod", "WhileLoopReplaceableByForEach",
-        "ForLoopReplaceableByForEach", "FinalPrivateMethod", "AccessStaticViaInstance", "unchecked", "IfCanBeSwitch"})
+        "ForLoopReplaceableByForEach", "FinalPrivateMethod", "AccessStaticViaInstance", "unchecked", "IfCanBeSwitch", "WeakerAccess", "SameParameterValue", "JavaDoc", "StringConcatenationInLoop"})
 final class XmlUtils {
 
     private XmlUtils() {
@@ -1485,16 +1483,6 @@ final class XmlUtils {
             return BitmapFactory.decodeByteArray(value, 0, value.length);
         } else {
             return null;
-        }
-    }
-
-    @Deprecated
-    public static void writeBitmapAttribute(XmlSerializer out, String name, Bitmap value)
-            throws IOException {
-        if (value != null) {
-            final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            value.compress(CompressFormat.PNG, 90, os);
-            writeByteArrayAttribute(out, name, os.toByteArray());
         }
     }
 

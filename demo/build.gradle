@@ -30,6 +30,7 @@ android {
         gcm.initWith(buildTypes.debug)
         gcm {
             applicationIdSuffix ".gcm"
+            matchingFallbacks = ['debug', 'release']
         }
     }
 
@@ -40,17 +41,17 @@ android {
 
     lintOptions {
         abortOnError true
-
-        htmlOutput file("$project.buildDir/reports/lint/lint.html")
-        xmlOutput file("$project.buildDir/reports/lint/lint.xml")
     }
 }
 
 dependencies {
-    compile project(':library')
-    compile "com.android.support:appcompat-v7:$rootProject.ext.supportLibVersion"
+    implementation project(':library')
+    implementation "com.android.support:support-v4:$supportLibVersion"
+    implementation "com.android.support:appcompat-v7:$supportLibVersion"
+    implementation "com.facebook.stetho:stetho:$stethoVersion"
+    implementation "net.vrallev.android:cat:$catVersion"
 
-    compile 'com.facebook.stetho:stetho:1.3.1'
-
-    gcmCompile "com.google.android.gms:play-services-gcm:$rootProject.ext.playServicesVersion"
+    gcmImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
 }
+
+uploadArchives.enabled false

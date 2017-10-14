@@ -25,64 +25,57 @@
  */
 package com.evernote.android.job.v14;
 
-import android.app.IntentService;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.JobIntentService;
 
+import com.evernote.android.job.JobIdsInternal;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
+import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.Cat;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import net.vrallev.android.cat.CatLog;
 
 /**
  * @author rwondratschek
  */
-public class PlatformAlarmService extends IntentService {
+public final class PlatformAlarmService extends JobIntentService {
 
-    private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
+    private static final CatLog CAT = new JobCat("PlatformAlarmService");
 
-    /*package*/ static Intent createIntent(Context context, int jobId) {
-        Intent intent = new Intent(context, PlatformAlarmService.class);
+    public static void start(Context context, int jobId, @Nullable Bundle transientExtras) {
+        Intent intent = new Intent();
         intent.putExtra(PlatformAlarmReceiver.EXTRA_JOB_ID, jobId);
-        return intent;
-    }
+        if (transientExtras != null) {
+            intent.putExtra(PlatformAlarmReceiver.EXTRA_TRANSIENT_EXTRAS, transientExtras);
+        }
 
-    public PlatformAlarmService() {
-        super(PlatformAlarmService.class.getSimpleName());
+        enqueueWork(context, PlatformAlarmService.class, JobIdsInternal.JOB_ID_PLATFORM_ALARM_SERVICE, intent);
     }
 
     @Override
-    protected void onHandleIntent(final Intent intent) {
+    protected void onHandleWork(@NonNull Intent intent) {
+        runJob(intent, this, CAT);
+    }
+
+    /*package*/ static void runJob(@Nullable Intent intent, @NonNull Service service, @NonNull CatLog cat) {
         if (intent == null) {
-            Cat.i("Delivered intent is null");
+            cat.i("Delivered intent is null");
             return;
         }
 
         int jobId = intent.getIntExtra(PlatformAlarmReceiver.EXTRA_JOB_ID, -1);
-        final JobProxy.Common common = new JobProxy.Common(this, jobId);
+        Bundle transientExtras = intent.getBundleExtra(PlatformAlarmReceiver.EXTRA_TRANSIENT_EXTRAS);
+        final JobProxy.Common common = new JobProxy.Common(service, cat, jobId);
 
         // create the JobManager. Seeing sometimes exceptions, that it wasn't created, yet.
-        final JobRequest request = common.getPendingRequest(true);
-        if (request == null) {
-            return;
+        final JobRequest request = common.getPendingRequest(true, true);
+        if (request != null) {
+            common.executeJobRequest(request, transientExtras);
         }
-
-        // parallel execution
-        EXECUTOR_SERVICE.execute(new Runnable() {
-            @Override
-            public void run() {
-                common.executeJobRequest(request);
-
-                // call here, our own wake lock could be acquired too late
-                try {
-                    PlatformAlarmReceiver.completeWakefulIntent(intent);
-                } catch (Exception e) {
-                    // could end in a NPE if the intent has no wake lock
-                }
-            }
-        });
     }
 }

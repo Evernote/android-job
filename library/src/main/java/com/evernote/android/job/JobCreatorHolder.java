@@ -4,8 +4,8 @@ import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.CatLog;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author rwondratschek
@@ -15,62 +15,40 @@ import java.util.List;
     private static final CatLog CAT = new JobCat("JobCreatorHolder");
 
     private final List<JobCreator> mJobCreators;
-    private final Object mMonitor;
 
     public JobCreatorHolder() {
-        mJobCreators = new ArrayList<>();
-        mMonitor = new Object();
+        mJobCreators = new CopyOnWriteArrayList<>();
     }
 
     public void addJobCreator(JobCreator creator) {
-        synchronized (mMonitor) {
-            mJobCreators.add(creator);
-        }
+        mJobCreators.add(creator);
     }
 
     public void removeJobCreator(JobCreator creator) {
-        synchronized (mMonitor) {
-            mJobCreators.remove(creator);
-        }
+        mJobCreators.remove(creator);
     }
 
     public Job createJob(String tag) {
-        ArrayList<JobCreator> jobCreators = null;
-        JobCreator singleJobCreator = null;
+        Job job = null;
+        boolean atLeastOneCreatorSeen = false;
 
-        synchronized (mMonitor) {
-            int count = mJobCreators.size();
-            if (count == 0) {
-                CAT.w("no JobCreator added");
-                return null;
+        for (JobCreator jobCreator : mJobCreators) {
+            atLeastOneCreatorSeen = true;
 
-            } else if (count == 1) {
-                // avoid creating an extra list when it's not necessary
-                singleJobCreator = mJobCreators.get(0);
-            } else {
-                jobCreators = new ArrayList<>(mJobCreators);
+            job = jobCreator.create(tag);
+            if (job != null) {
+                break;
             }
         }
 
-        if (singleJobCreator != null) {
-            return singleJobCreator.create(tag);
+        if (!atLeastOneCreatorSeen) {
+            CAT.w("no JobCreator added");
         }
 
-        if (jobCreators != null) {
-            for (JobCreator jobCreator : jobCreators) {
-                Job job = jobCreator.create(tag);
-                if (job != null) {
-                    return job;
-                }
-            }
-        }
-
-        return null;
+        return job;
     }
 
     public boolean isEmpty() {
-        synchronized (mMonitor) {
-            return mJobCreators.isEmpty();
-        }
+        return mJobCreators.isEmpty();
     }
 }

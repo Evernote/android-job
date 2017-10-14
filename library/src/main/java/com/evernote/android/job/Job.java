@@ -26,13 +26,11 @@
 package com.evernote.android.job;
 
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
+import android.os.Bundle;
 import android.os.PowerManager.WakeLock;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
-import android.support.v4.content.WakefulBroadcastReceiver;
 
 import com.evernote.android.job.util.Device;
 import com.evernote.android.job.util.JobCat;
@@ -47,7 +45,7 @@ import java.lang.ref.WeakReference;
  *
  * @author rwondratschek
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class Job {
 
     private static final CatLog CAT = new JobCat("Job");
@@ -59,12 +57,25 @@ public abstract class Job {
         SUCCESS,
         /**
          * Indicates that {@link #onRunJob(Params)} failed, but the {@link Job} shouldn't be rescheduled.
+         *
+         * <br>
+         * <br>
+         *
+         * Periodic jobs will continue to run. The failure count of the job is incremented, what
+         * can be helpful in the next interval.
+         *
+         * @see Params#getFailureCount()
          */
         FAILURE,
         /**
          * Indicates that {@link #onRunJob(Params)} failed and the {@link Job} should be rescheduled
          * with the defined back-off criteria. Note that returning {@code RESCHEDULE} for a periodic
          * {@link Job} is invalid and ignored.
+         *
+         * <br>
+         * <br>
+         *
+         * Returning RESCHEDULE for periodic jobs has the same effect as returning FAILURE.
          */
         RESCHEDULE
     }
@@ -74,6 +85,7 @@ public abstract class Job {
     private Context mApplicationContext;
 
     private boolean mCanceled;
+    private boolean mDeleted;
     private long mFinishedTimeStamp = -1;
 
     private Result mResult = Result.FAILURE;
@@ -158,7 +170,7 @@ public abstract class Job {
      * Otherwise always returns {@code true}.
      */
     protected boolean isRequirementChargingMet() {
-        return !(getParams().getRequest().requiresCharging() && !Device.isCharging(getContext()));
+        return !(getParams().getRequest().requiresCharging() && !Device.getBatteryStatus(getContext()).isCharging());
     }
 
     /**
@@ -170,27 +182,51 @@ public abstract class Job {
     }
 
     /**
+     * @return Whether the battery not low requirement is met. That's true either if it's not a requirement
+     * or if the battery actually isn't low. The battery is low, if less than 15% are left and the device isn't
+     * charging.
+     */
+    protected boolean isRequirementBatteryNotLowMet() {
+        return !(getParams().getRequest().requiresBatteryNotLow() && Device.getBatteryStatus(getContext()).isBatteryLow());
+    }
+
+    /**
+     * @return Whether the storage not low requirement is met. That's true either if it's not a requirement
+     * or if the storage actually isn't low.
+     */
+    protected boolean isRequirementStorageNotLowMet() {
+        return !(getParams().getRequest().requiresStorageNotLow() && Device.isStorageLow());
+    }
+
+    /**
      * @return {@code false} if the {@link Job} requires the device to be in a specific network state and it
      * isn't in this state. Otherwise always returns {@code true}.
      */
     protected boolean isRequirementNetworkTypeMet() {
         JobRequest.NetworkType requirement = getParams().getRequest().requiredNetworkType();
+        if (requirement == JobRequest.NetworkType.ANY) {
+            return true;
+        }
+
+        JobRequest.NetworkType current = Device.getNetworkType(getContext());
+
         switch (requirement) {
-            case ANY:
-                return true;
-            case UNMETERED:
-                JobRequest.NetworkType current = Device.getNetworkType(getContext());
-                return JobRequest.NetworkType.UNMETERED.equals(current);
             case CONNECTED:
-                current = Device.getNetworkType(getContext());
-                return !JobRequest.NetworkType.ANY.equals(current);
+                return current != JobRequest.NetworkType.ANY;
+            case NOT_ROAMING:
+                return current == JobRequest.NetworkType.NOT_ROAMING || current == JobRequest.NetworkType.UNMETERED || current == JobRequest.NetworkType.METERED;
+            case UNMETERED:
+                return current == JobRequest.NetworkType.UNMETERED;
+            case METERED:
+                return current == JobRequest.NetworkType.CONNECTED || current == JobRequest.NetworkType.NOT_ROAMING;
             default:
                 throw new IllegalStateException("not implemented");
         }
     }
 
-    /*package*/ final Job setRequest(JobRequest request) {
-        mParams = new Params(request);
+    @SuppressWarnings("UnusedReturnValue")
+    /*package*/ final Job setRequest(JobRequest request, @NonNull Bundle transientExtras) {
+        mParams = new Params(request, transientExtras);
         return this;
     }
 
@@ -223,8 +259,13 @@ public abstract class Job {
      * Cancel this {@link Job} if it hasn't finished, yet.
      */
     public final void cancel() {
+        cancel(false);
+    }
+
+    /*package*/ final void cancel(boolean deleted) {
         if (!isFinished()) {
             mCanceled = true;
+            mDeleted = deleted;
         }
     }
 
@@ -250,50 +291,8 @@ public abstract class Job {
         return mResult;
     }
 
-    /**
-     * Delegates calls to {@link WakefulBroadcastReceiver#startWakefulService(Context, Intent)}.
-     *
-     * <br>
-     * <br>
-     *
-     * Do a {@link android.content.Context#startService(android.content.Intent)
-     * Context.startService}, but holding a wake lock while the service starts.
-     * This will modify the Intent to hold an extra identifying the wake lock;
-     * when the service receives it in {@link android.app.Service#onStartCommand
-     * Service.onStartCommand}, it should pass back the Intent it receives there to
-     * {@link #completeWakefulIntent(android.content.Intent)} in order to release
-     * the wake lock.
-     *
-     * @param intent The Intent with which to start the service, as per
-     * {@link android.content.Context#startService(android.content.Intent)
-     * Context.startService}.
-     * @see WakefulBroadcastReceiver
-     */
-    protected ComponentName startWakefulService(@NonNull Intent intent) {
-        return WakefulBroadcastReceiver.startWakefulService(getContext(), intent);
-    }
-
-    /**
-     * Delegates calls to {@link WakefulBroadcastReceiver#completeWakefulIntent(Intent)}.
-     *
-     * <br>
-     * <br>
-     *
-     * Finish the execution from a previous {@link #startWakefulService}.  Any wake lock
-     * that was being held will now be released.
-     *
-     * @param intent The Intent as originally generated by {@link #startWakefulService}.
-     * @return Returns true if the intent is associated with a wake lock that is
-     * now released; returns false if there was no wake lock specified for it.
-     * @see WakefulBroadcastReceiver
-     */
-    public static boolean completeWakefulIntent(@NonNull Intent intent) {
-        try {
-            return WakefulBroadcastReceiver.completeWakefulIntent(intent);
-        } catch (Exception e) {
-            // could end in a NPE if the intent no wake lock was found
-            return true;
-        }
+    /*package*/ final boolean isDeleted() {
+        return mDeleted;
     }
 
     @Override
@@ -327,13 +326,15 @@ public abstract class Job {
     /**
      * Holds several parameters for the {@link Job} execution.
      */
-    protected static final class Params {
+    public static final class Params {
 
         private final JobRequest mRequest;
         private PersistableBundleCompat mExtras;
+        private Bundle mTransientExtras;
 
-        private Params(@NonNull JobRequest request) {
+        private Params(@NonNull JobRequest request, @NonNull Bundle transientExtras) {
             mRequest = request;
+            mTransientExtras = transientExtras;
         }
 
         /**
@@ -370,14 +371,6 @@ public abstract class Job {
         }
 
         /**
-         * @return If {@code true}, then the job persists across reboots.
-         * @see JobRequest#isPersisted()
-         */
-        public boolean isPersisted() {
-            return mRequest.isPersisted();
-        }
-
-        /**
          * Only valid if the job isn't periodic.
          *
          * @return The start of the time frame when the job will run after it's been scheduled.
@@ -405,6 +398,33 @@ public abstract class Job {
          */
         public long getIntervalMs() {
             return mRequest.getIntervalMs();
+        }
+
+        /**
+         * Flex time for this job. Only valid if this is a periodic job. The job can execute
+         * at any time in a window of flex length at the end of the period.
+         *
+         * @return How close to the end of an interval a periodic job is allowed to run.
+         * @see JobRequest#getFlexMs()
+         */
+        public long getFlexMs() {
+            return mRequest.getFlexMs();
+        }
+
+        /**
+         * Returns the time when this job was scheduled.
+         * <br>
+         * <br>
+         * <b>Note</b> that this value is only useful for non-periodic jobs. The time for periodic
+         * jobs is inconsistent. Sometimes it will return the value when the periodic job was scheduled
+         * for the first time and sometimes it will be updated after each period. The reason for this
+         * limitation is the flex parameter, which was backported to older Android versions. You can
+         * only rely on this value during the first interval of the periodic job.
+         *
+         * @return The time when the job was scheduled.
+         */
+        public long getScheduledAt() {
+            return mRequest.getScheduledAt();
         }
 
         /**
@@ -459,6 +479,20 @@ public abstract class Job {
         }
 
         /**
+         * @return If {@code true}, then the job should only run if the battery isn't low.
+         */
+        public boolean requiresBatteryNotLow() {
+            return mRequest.requiresBatteryNotLow();
+        }
+
+        /**
+         * @return If {@code true}, then the job should only run if the battery isn't low.
+         */
+        public boolean requiresStorageNotLow() {
+            return mRequest.requiresStorageNotLow();
+        }
+
+        /**
          * @return If {@code true}, then all requirements are checked before the job runs. If one requirement
          * isn't met, then the job is rescheduled right away.
          * @see JobRequest#requirementsEnforced()
@@ -474,7 +508,46 @@ public abstract class Job {
          * @return How often the job already has failed.
          */
         public int getFailureCount() {
-            return mRequest.getNumFailures();
+            return mRequest.getFailureCount();
+        }
+
+        /**
+         * Returns the time the job did run the last time. This is only useful for periodic jobs
+         * or jobs which were rescheduled. If the job didn't run, yet, then it returns 0.
+         *
+         * @return The last time the rescheduled or periodic job did run.
+         */
+        public long getLastRun() {
+            return mRequest.getLastRun();
+        }
+
+        /**
+         * Returns whether this is a transient jobs. <b>WARNING:</b> It's not guaranteed that a transient job
+         * will run at all, e.g. rebooting the device or force closing the app will cancel the
+         * job.
+         *
+         * @return If this is a transient job.
+         */
+        public boolean isTransient() {
+            return mRequest.isTransient();
+        }
+
+        /**
+         * Returns the transient extras you passed in when constructing this job with
+         * {@link JobRequest.Builder#setTransientExtras(Bundle)}. <b>WARNING:</b> It's not guaranteed that a transient job
+         * will run at all, e.g. rebooting the device or force closing the app will cancel the
+         * job.
+         *
+         * <br>
+         * <br>
+         *
+         * This will never be {@code null}. If you did not set any extras this will be an empty bundle.
+         *
+         * @return The transient extras you passed in when constructing this job.
+         */
+        @NonNull
+        public Bundle getTransientExtras() {
+            return mTransientExtras;
         }
 
         /**
