@@ -36,6 +36,7 @@ import android.content.pm.ResolveInfo;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.util.SparseArray;
 
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
@@ -44,6 +45,7 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 
 import net.vrallev.android.cat.CatLog;
 
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -304,7 +306,9 @@ public final class JobManager {
 
     /**
      * Jobs are cached in memory even if they already have finished. But finished jobs are never
-     * restored after the app has launched.
+     * restored after the app has launched. Since finished jobs could cause memory leaks, they wrapped
+     * inside of a {@link WeakReference} and can be removed from memory. If you need to know the results
+     * of finished jobs or whether a job has been run, you can call {@link #getAllJobResults()}.
      *
      * @param jobId The unique ID of the running or finished {@link Job}.
      * @return The {@link Job} if it's running or has been finished and is still cached. Returns
@@ -316,7 +320,9 @@ public final class JobManager {
 
     /**
      * Jobs are cached in memory even if they already have finished. But finished jobs are never
-     * restored after the app has relaunched.
+     * restored after the app has relaunched. Since finished jobs could cause memory leaks, they wrapped
+     * inside of a {@link WeakReference} and can be removed from memory. If you need to know the results
+     * of finished jobs or whether a job has been run, you can call {@link #getAllJobResults()}.
      *
      * @return A duplicate {@link Set} containing all running and cached finished jobs or an empty set.
      * Never returns {@code null}. The set may be modified without direct effects to the actual
@@ -329,7 +335,9 @@ public final class JobManager {
 
     /**
      * Jobs are cached in memory even if they already have finished. But finished jobs are never
-     * restored after the app has relaunched.
+     * restored after the app has relaunched. Since finished jobs could cause memory leaks, they wrapped
+     * inside of a {@link WeakReference} and can be removed from memory. If you need to know the results
+     * of finished jobs or whether a job has been run, you can call {@link #getAllJobResults()}.
      *
      * @param tag The tag of the running or finished jobs.
      * @return A duplicate {@link Set} containing all running and cached finished jobs associated with
@@ -339,6 +347,18 @@ public final class JobManager {
     @NonNull
     public Set<Job> getAllJobsForTag(@NonNull String tag) {
         return mJobExecutor.getAllJobsForTag(tag);
+    }
+
+    /**
+     * Finished jobs are kept in memory until the garbage collector cleans them up. This method returns
+     * the results of all finished jobs even after they have been cleaned up. However, neither finished jobs
+     * nor their results are restored after the has been relaunched.
+     *
+     * @return The results of all finished jobs. They key is the corresponding job ID.
+     */
+    @NonNull
+    public SparseArray<Job.Result> getAllJobResults() {
+        return mJobExecutor.getAllJobResults();
     }
 
     /**

@@ -25,11 +25,13 @@
  */
 package com.evernote.android.job;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.util.LruCache;
 import android.util.SparseArray;
 
@@ -37,6 +39,8 @@ import com.evernote.android.job.util.JobCat;
 
 import net.vrallev.android.cat.CatLog;
 
+import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -55,13 +59,15 @@ import java.util.concurrent.TimeUnit;
     private static final long WAKE_LOCK_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
 
     private final SparseArray<Job> mJobs; // only cached in memory, that's fine
-    private final LruCache<Integer, Job> mFinishedJobsCache;
+    private final LruCache<Integer, WeakReference<Job>> mFinishedJobsCache;
+    private final SparseArray<Job.Result> mFinishedJobResults;
 
     private final Set<JobRequest> mStartingRequests;
 
     public JobExecutor() {
         mJobs = new SparseArray<>();
         mFinishedJobsCache = new LruCache<>(20);
+        mFinishedJobResults = new SparseArray<>();
         mStartingRequests = new HashSet<>();
     }
 
@@ -85,7 +91,11 @@ import java.util.concurrent.TimeUnit;
 
     public synchronized Job getJob(int jobId) {
         Job job = mJobs.get(jobId);
-        return job != null ? job : mFinishedJobsCache.get(jobId);
+        if (job != null) {
+            return job;
+        }
+        WeakReference<Job> reference = mFinishedJobsCache.get(jobId);
+        return reference != null ? reference.get() : null;
     }
 
     public synchronized Set<Job> getAllJobs() {
@@ -101,14 +111,23 @@ import java.util.concurrent.TimeUnit;
             }
         }
 
-        Map<Integer, Job> snapshot = mFinishedJobsCache.snapshot();
-        for (Job job : snapshot.values()) {
+        Map<Integer, WeakReference<Job>> snapshot = mFinishedJobsCache.snapshot();
+        for (WeakReference<Job> reference : snapshot.values()) {
+            Job job = reference.get();
+            if (job == null) {
+                continue;
+            }
+
             if (tag == null || tag.equals(job.getParams().getTag())) {
                 result.add(job);
             }
         }
 
         return result;
+    }
+
+    public SparseArray<Job.Result> getAllJobResults() {
+        return mFinishedJobResults.clone();
     }
 
     public synchronized void markJobRequestStarting(@NonNull JobRequest request) {
@@ -119,10 +138,24 @@ import java.util.concurrent.TimeUnit;
         return request != null && mStartingRequests.contains(request);
     }
 
-    private synchronized void markJobAsFinished(Job job) {
+    @VisibleForTesting
+    /*package*/ synchronized void markJobAsFinished(Job job) {
         int id = job.getParams().getId();
         mJobs.remove(id);
-        mFinishedJobsCache.put(id, job);
+        cleanUpRoutine(mFinishedJobsCache);
+        mFinishedJobResults.put(id, job.getResult());
+        mFinishedJobsCache.put(id, new WeakReference<>(job));
+    }
+
+    @VisibleForTesting
+    @SuppressLint("UseSparseArrays")
+    /*package*/ void cleanUpRoutine(LruCache<Integer, WeakReference<Job>> cache) {
+        Map<Integer, WeakReference<Job>> snapshot = new HashMap<>(cache.snapshot());
+        for (Integer key : snapshot.keySet()) {
+            if (snapshot.get(key) == null || snapshot.get(key).get() == null) {
+                cache.remove(key);
+            }
+        }
     }
 
     private final class JobCallable implements Callable<Job.Result> {
