@@ -113,7 +113,7 @@ public abstract class Job {
      */
     @NonNull
     @WorkerThread
-    protected abstract Result onRunJob(Params params);
+    protected abstract Result onRunJob(@NonNull Params params);
 
     /*package*/ final Result runJob() {
         try {
