@@ -35,14 +35,12 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
 
-import net.vrallev.android.cat.CatLog;
-
 /**
  * @author rwondratschek
  */
 public class PlatformGcmService extends GcmTaskService {
 
-    private static final CatLog CAT = new JobCat("PlatformGcmService");
+    private static final JobCat CAT = new JobCat("PlatformGcmService");
 
     @Override
     public int onRunTask(TaskParams taskParams) {

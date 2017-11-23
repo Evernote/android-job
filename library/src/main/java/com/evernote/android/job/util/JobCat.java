@@ -26,18 +26,17 @@
 package com.evernote.android.job.util;
 
 import android.support.annotation.NonNull;
-
-import net.vrallev.android.cat.CatLog;
-import net.vrallev.android.cat.instance.CatLazy;
+import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.util.Arrays;
 
 /**
- * The default {@link CatLog} class for this library.
+ * The default {@link JobLogger} class for this library.
  *
  * @author rwondratschek
  */
-public class JobCat extends CatLazy {
+public class JobCat implements JobLogger {
 
     private static volatile JobLogger[] loggers = new JobLogger[0]; // use array to avoid synchronization while printing log statements
     private static volatile boolean logcatEnabled = true;
@@ -104,35 +103,84 @@ public class JobCat extends CatLazy {
         return logcatEnabled;
     }
 
-    private final String mTag;
-
-    public JobCat() {
-        this((String) null);
-    }
+    protected final String mTag;
+    protected final boolean mEnabled;
 
     public JobCat(Class<?> clazz) {
         this(clazz.getSimpleName());
     }
 
     public JobCat(String tag) {
+        this(tag, true);
+    }
+
+    public JobCat(String tag, boolean enabled) {
         mTag = tag;
+        mEnabled = enabled;
+    }
+
+    public void i(@NonNull String message) {
+        log(Log.INFO, mTag, message, null);
+    }
+
+    public void i(@NonNull String message, Object... args) {
+        log(Log.INFO, mTag, String.format(message, args), null);
+    }
+
+    public void d(@NonNull String message) {
+        log(Log.DEBUG, mTag, message, null);
+    }
+
+    public void d(@NonNull String message, Object... args) {
+        log(Log.DEBUG, mTag, String.format(message, args), null);
+    }
+
+    public void d(@NonNull Throwable t, String message, Object... args) {
+        log(Log.DEBUG, mTag, String.format(message, args), t);
+    }
+
+    public void w(@NonNull String message) {
+        log(Log.WARN, mTag, message, null);
+    }
+
+    public void w(@NonNull String message, Object... args) {
+        log(Log.WARN, mTag, String.format(message, args), null);
+    }
+
+    public void w(@NonNull Throwable t, @NonNull String message, Object... args) {
+        log(Log.WARN, mTag, String.format(message, args), t);
+    }
+
+    public void e(@NonNull Throwable t) {
+        String message = t.getMessage();
+        log(Log.ERROR, mTag, message == null ? "empty message" : message, t);
+    }
+
+    public void e(@NonNull String message) {
+        log(Log.ERROR, mTag, message, null);
+    }
+
+    public void e(@NonNull String message, Object... args) {
+        log(Log.ERROR, mTag, String.format(message, args), null);
+    }
+
+    public void e(@NonNull Throwable t, @NonNull String message, Object... args) {
+        log(Log.ERROR, mTag, String.format(message, args), t);
     }
 
     @Override
-    public String getTag() {
-        return mTag == null ? super.getTag() : mTag;
-    }
+    public void log(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+        if (!mEnabled) {
+            return;
+        }
 
-    @Override
-    protected void println(int priority, String message, Throwable t) {
         if (logcatEnabled) {
-            super.println(priority, message, t);
+            String stacktrace = t == null ? "" : ('\n' + Log.getStackTraceString(t));
+            Log.println(priority, tag, message + stacktrace);
         }
 
         JobLogger[] printers = JobCat.loggers;
         if (printers.length > 0) {
-            String tag = getTag();
-
             for (JobLogger logger : printers) {
                 if (logger != null) {
                     logger.log(priority, tag, message, t);

@@ -36,8 +36,6 @@ import com.evernote.android.job.util.Device;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.lang.ref.WeakReference;
 
 /**
@@ -48,7 +46,7 @@ import java.lang.ref.WeakReference;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class Job {
 
-    private static final CatLog CAT = new JobCat("Job");
+    private static final JobCat CAT = new JobCat("Job");
 
     public enum Result {
         /**

@@ -8,8 +8,6 @@ import android.support.annotation.WorkerThread;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class DailyJob extends Job {
 
-    private static final CatLog CAT = new JobCat("DailyJob");
+    private static final JobCat CAT = new JobCat("DailyJob");
 
     @VisibleForTesting
     /*package*/ static final String EXTRA_START_MS = "EXTRA_START_MS";

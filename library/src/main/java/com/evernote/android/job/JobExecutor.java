@@ -37,8 +37,6 @@ import android.util.SparseArray;
 
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,7 +53,7 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("WeakerAccess")
 /*package*/ class JobExecutor {
 
-    private static final CatLog CAT = new JobCat("JobExecutor");
+    private static final JobCat CAT = new JobCat("JobExecutor");
     private static final long WAKE_LOCK_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
 
     private final SparseArray<Job> mJobs; // only cached in memory, that's fine

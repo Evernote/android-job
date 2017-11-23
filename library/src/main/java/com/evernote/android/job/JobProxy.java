@@ -34,9 +34,8 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
-
-import net.vrallev.android.cat.CatLog;
 
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
@@ -112,15 +111,15 @@ public interface JobProxy {
 
         private final Context mContext;
         private final int mJobId;
-        private final CatLog mCat;
+        private final JobCat mCat;
 
         private final JobManager mJobManager;
 
-        public Common(@NonNull Service service, CatLog cat, int jobId) {
+        public Common(@NonNull Service service, JobCat cat, int jobId) {
             this((Context) service, cat, jobId);
         }
 
-        /*package*/ Common(@NonNull Context context, CatLog cat, int jobId) {
+        /*package*/ Common(@NonNull Context context, JobCat cat, int jobId) {
             mContext = context;
             mJobId = jobId;
             mCat = cat;

@@ -12,8 +12,6 @@ import com.evernote.android.job.util.JobCat;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.util.List;
 
 /**
@@ -21,7 +19,7 @@ import java.util.List;
  */
 /*package*/ final class GcmAvailableHelper {
 
-    private static final CatLog CAT = new JobCat("GcmAvailableHelper");
+    private static final JobCat CAT = new JobCat("GcmAvailableHelper");
 
     private static final String ACTION_TASK_READY = "com.google.android.gms.gcm.ACTION_TASK_READY";
     private static final String GCM_PERMISSION = "com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE";

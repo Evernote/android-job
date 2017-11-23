@@ -29,8 +29,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -48,7 +46,7 @@ public final class JobUtil {
 
     private static final long ONE_DAY = TimeUnit.DAYS.toMillis(1);
 
-    private static final CatLog CAT = new JobCat("JobUtil");
+    private static final JobCat CAT = new JobCat("JobUtil");
 
     private JobUtil() {
         // no op

@@ -39,8 +39,6 @@ import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -104,7 +102,7 @@ public final class JobRequest {
     private static final long WINDOW_THRESHOLD_WARNING = Long.MAX_VALUE / 3;
     private static final long WINDOW_THRESHOLD_MAX = (Long.MAX_VALUE / 3) * 2;
 
-    private static final CatLog CAT = new JobCat("JobRequest");
+    private static final JobCat CAT = new JobCat("JobRequest");
 
     /*package*/ static long getMinInterval() {
         return JobConfig.isAllowSmallerIntervalsForMarshmallow() ? TimeUnit.MINUTES.toMillis(1) : MIN_INTERVAL;

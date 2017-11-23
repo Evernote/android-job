@@ -3,6 +3,7 @@
 * Don't keep a strong reference to finished jobs to allow freeing memory, see #299
 * Allow running a daily job immediately once, this is helpful for testing purposes, see #317
 * Allow enforcing requirements for daily jobs, see #313
+* Remove the Cat dependency for logging, see 295
 
 ## 1.2.0 (2017-10-05)
 

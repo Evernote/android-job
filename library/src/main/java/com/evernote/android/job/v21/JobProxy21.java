@@ -40,8 +40,6 @@ import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.util.List;
 
 
@@ -56,7 +54,7 @@ public class JobProxy21 implements JobProxy {
     private static final int ERROR_BOOT_PERMISSION = -123;
 
     protected final Context mContext;
-    protected final CatLog mCat;
+    protected final JobCat mCat;
 
     public JobProxy21(Context context) {
         this(context, TAG);

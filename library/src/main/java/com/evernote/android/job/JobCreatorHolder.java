@@ -2,8 +2,6 @@ package com.evernote.android.job;
 
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -12,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 /*package*/ class JobCreatorHolder {
 
-    private static final CatLog CAT = new JobCat("JobCreatorHolder");
+    private static final JobCat CAT = new JobCat("JobCreatorHolder");
 
     private final List<JobCreator> mJobCreators;
 

@@ -36,8 +36,6 @@ import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -46,7 +44,7 @@ import java.util.Set;
  */
 public final class PlatformAlarmServiceExact extends Service {
 
-    private static final CatLog CAT = new JobCat("PlatformAlarmServiceExact");
+    private static final JobCat CAT = new JobCat("PlatformAlarmServiceExact");
 
     public static Intent createIntent(Context context, int jobId, @Nullable Bundle transientExtras) {
         Intent intent = new Intent(context, PlatformAlarmServiceExact.class);

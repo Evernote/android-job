@@ -5,8 +5,6 @@ import android.support.annotation.Nullable;
 
 import com.evernote.android.job.JobConfig;
 
-import net.vrallev.android.cat.print.CatPrinter;
-
 import org.junit.After;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -114,24 +112,7 @@ public class LoggerTest {
         assertThat(removedPrinter.mMessages).containsExactly("hello", "world");
     }
 
-    @Test
-    public void testNotVerboseLogging() {
-        JobCat cat = new JobCat("Tag");
-
-        TestLogger fakeLogcatPrinter = new TestLogger();
-        cat.addPrinter(fakeLogcatPrinter); // in this list logcat is enabled
-
-        cat.d("hello");
-
-        assertThat(fakeLogcatPrinter.mMessages).containsExactly("hello");
-
-        JobCat.setLogcatEnabled(false);
-
-        cat.d("world");
-        assertThat(fakeLogcatPrinter.mMessages).containsExactly("hello");
-    }
-
-    private static final class TestLogger implements JobLogger, CatPrinter {
+    private static final class TestLogger implements JobLogger {
 
         private final List<String> mTags = new ArrayList<>();
         private final List<String> mMessages = new ArrayList<>();
@@ -140,11 +121,6 @@ public class LoggerTest {
         public void log(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
             mTags.add(tag);
             mMessages.add(message);
-        }
-
-        @Override
-        public void println(int priority, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
-            log(priority, tag, message, t);
         }
     }
 }

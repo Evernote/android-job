@@ -11,8 +11,6 @@ import android.util.SparseArray;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  */
 /*package*/ final class WakeLockUtil {
 
-    private static final CatLog CAT = new JobCat("WakeLockUtil");
+    private static final JobCat CAT = new JobCat("WakeLockUtil");
 
     private static final String EXTRA_WAKE_LOCK_ID = "com.evernote.android.job.wakelockid";
 

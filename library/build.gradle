@@ -9,7 +9,6 @@ dependencies {
 
     //noinspection GradleDependency
     api "com.android.support:support-v4:$supportLibVersion"
-    implementation "net.vrallev.android:cat:$catVersion"
 
     androidTestImplementation 'com.android.support.test:runner:1.0.0'
     androidTestImplementation 'com.android.support.test:rules:1.0.0'

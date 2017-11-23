@@ -6,8 +6,7 @@ import android.os.NetworkOnMainThreadException;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
-
-import net.vrallev.android.cat.Cat;
+import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +59,7 @@ public class DemoSyncEngine {
         try {
             FileUtils.writeFile(getSuccessFile(), text, true);
         } catch (IOException e) {
-            Cat.e(e);
+            Log.e("Demo", e.getMessage(), e);
         }
     }
 

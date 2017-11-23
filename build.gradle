@@ -30,7 +30,6 @@ ext {
 
     supportLibVersion = '26.0.1'
     playServicesVersion = '11.0.2'
-    catVersion = '1.0.5'
     stethoVersion = '1.5.0'
     junitVersion = '4.12'
     assertjVersion = '3.6.2'

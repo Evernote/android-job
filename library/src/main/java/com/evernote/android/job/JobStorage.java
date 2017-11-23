@@ -42,8 +42,6 @@ import android.util.LruCache;
 
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -56,7 +54,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SuppressWarnings("WeakerAccess")
 /*package*/ class JobStorage {
 
-    private static final CatLog CAT = new JobCat("JobStorage");
+    private static final JobCat CAT = new JobCat("JobStorage");
 
     public static final String JOB_ID_COUNTER = "JOB_ID_COUNTER_v2";
     private static final String FAILED_DELETE_IDS = "FAILED_DELETE_IDS";

@@ -26,8 +26,6 @@ import android.util.Pair;
 
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.Cat;
-
 import java.io.File;
 import java.util.List;
 
@@ -61,7 +59,7 @@ import java.util.List;
      *              is detected.
      */
     public void onCorruption(SQLiteDatabase dbObj) {
-        Cat.e("Corruption reported by sqlite on database: " + dbObj.getPath());
+        CAT.e("Corruption reported by sqlite on database: " + dbObj.getPath());
 
         // is the corruption detected even before database could be 'opened'?
         if (!dbObj.isOpen()) {

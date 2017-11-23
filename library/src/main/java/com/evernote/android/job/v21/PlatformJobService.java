@@ -38,8 +38,6 @@ import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.Cat;
-
 /**
  * @author rwondratschek
  */
@@ -67,7 +65,7 @@ public class PlatformJobService extends JobService {
             if (TransientBundleCompat.startWithTransientBundle(this, request)) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     // should only happen during testing if an API is disabled
-                    Cat.d("PendingIntent for transient bundle is not null although running on O, using compat mode, request %s", request);
+                    CAT.d("PendingIntent for transient bundle is not null although running on O, using compat mode, request %s", request);
                 }
                 return false;
 

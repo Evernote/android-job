@@ -37,14 +37,12 @@ import com.google.android.gms.gcm.OneoffTask;
 import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
 
-import net.vrallev.android.cat.CatLog;
-
 /**
  * @author rwondratschek
  */
 public class JobProxyGcm implements JobProxy {
 
-    private static final CatLog CAT = new JobCat("JobProxyGcm");
+    private static final JobCat CAT = new JobCat("JobProxyGcm");
 
     /*
      * Requires charging doesn't work reliable. Like the documentation says, the job doesn't run if

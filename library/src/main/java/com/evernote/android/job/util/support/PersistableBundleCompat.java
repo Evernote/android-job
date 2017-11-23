@@ -30,8 +30,6 @@ import android.support.annotation.NonNull;
 
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
-
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.ByteArrayInputStream;
@@ -50,7 +48,7 @@ import java.util.Set;
 @SuppressWarnings("unused")
 public final class PersistableBundleCompat {
 
-    private static final CatLog CAT = new JobCat("PersistableBundleCompat");
+    private static final JobCat CAT = new JobCat("PersistableBundleCompat");
     private static final String UTF_8 = "UTF-8";
 
     private final Map<String, Object> mValues;

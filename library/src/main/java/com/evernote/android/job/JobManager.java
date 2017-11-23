@@ -43,8 +43,6 @@ import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.JobUtil;
 import com.google.android.gms.gcm.GcmNetworkManager;
 
-import net.vrallev.android.cat.CatLog;
-
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.Iterator;
@@ -82,7 +80,7 @@ import java.util.Set;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final class JobManager {
 
-    private static final CatLog CAT = new JobCat("JobManager");
+    private static final JobCat CAT = new JobCat("JobManager");
 
     @SuppressLint("StaticFieldLeak")
     private static volatile JobManager instance;

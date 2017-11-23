@@ -1,6 +1,6 @@
 package com.evernote.android.job.demo;
 
-import net.vrallev.android.cat.Cat;
+import android.util.Log;
 
 import java.io.Closeable;
 import java.io.File;
@@ -79,7 +79,7 @@ public final class FileUtils {
             try {
                 closeable.close();
             } catch (Exception e) {
-                Cat.e(e);
+                Log.e("Demo", e.getMessage(), e);
             }
         }
     }

@@ -38,14 +38,12 @@ import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
-
 /**
  * @author rwondratschek
  */
 public final class PlatformAlarmService extends JobIntentService {
 
-    private static final CatLog CAT = new JobCat("PlatformAlarmService");
+    private static final JobCat CAT = new JobCat("PlatformAlarmService");
 
     public static void start(Context context, int jobId, @Nullable Bundle transientExtras) {
         Intent intent = new Intent();
@@ -62,7 +60,7 @@ public final class PlatformAlarmService extends JobIntentService {
         runJob(intent, this, CAT);
     }
 
-    /*package*/ static void runJob(@Nullable Intent intent, @NonNull Service service, @NonNull CatLog cat) {
+    /*package*/ static void runJob(@Nullable Intent intent, @NonNull Service service, @NonNull JobCat cat) {
         if (intent == null) {
             cat.i("Delivered intent is null");
             return;

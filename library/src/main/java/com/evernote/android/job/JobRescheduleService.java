@@ -9,9 +9,6 @@ import android.support.v4.app.JobIntentService;
 
 import com.evernote.android.job.util.JobCat;
 
-import net.vrallev.android.cat.CatLog;
-import net.vrallev.android.cat.instance.CatEmpty;
-
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -25,7 +22,7 @@ import java.util.concurrent.CountDownLatch;
  */
 public final class JobRescheduleService extends JobIntentService {
 
-    private static final CatLog CAT = BuildConfig.DEBUG ? new JobCat("JobRescheduleService") : new CatEmpty();
+    private static final JobCat CAT = new JobCat("JobRescheduleService", BuildConfig.DEBUG);
 
     /*package*/ static void startService(Context context) {
         try {

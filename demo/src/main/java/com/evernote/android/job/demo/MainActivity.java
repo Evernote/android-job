@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,8 +17,6 @@ import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.JobApi;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
-
-import net.vrallev.android.cat.Cat;
 
 /**
  * @author rwondratschek
@@ -217,7 +216,7 @@ public class MainActivity extends Activity {
                 JobConfig.forceApi(api);
                 testSimple();
             } else {
-                Cat.w("%s is not supported", api);
+                Log.w("Demo", String.format("%s is not supported", api));
             }
         }
 

@@ -39,8 +39,6 @@ import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
 
-import net.vrallev.android.cat.CatLog;
-
 /**
  * @author rwondratschek
  */
@@ -50,7 +48,7 @@ public class JobProxy14 implements JobProxy {
     private static final String TAG = "JobProxy14";
 
     protected final Context mContext;
-    protected final CatLog mCat;
+    protected final JobCat mCat;
 
     private AlarmManager mAlarmManager;
 
