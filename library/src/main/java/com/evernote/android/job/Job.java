@@ -117,7 +117,8 @@ public abstract class Job {
 
     /*package*/ final Result runJob() {
         try {
-            if (meetsRequirements()) {
+            // daily jobs check the requirements manually
+            if (this instanceof DailyJob || meetsRequirements()) {
                 mResult = onRunJob(getParams());
             } else {
                 mResult = getParams().isPeriodic() ? Result.FAILURE : Result.RESCHEDULE;
@@ -143,7 +144,7 @@ public abstract class Job {
         // override me
     }
 
-    private boolean meetsRequirements() {
+    /*package*/ boolean meetsRequirements() {
         if (!getParams().getRequest().requirementsEnforced()) {
             return true;
         }

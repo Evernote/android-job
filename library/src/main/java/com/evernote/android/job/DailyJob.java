@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author rwondratschek
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class DailyJob extends Job {
 
     private static final CatLog CAT = new JobCat("DailyJob");
@@ -31,15 +31,15 @@ public abstract class DailyJob extends Job {
     @VisibleForTesting
     /*package*/ static final String EXTRA_END_MS = "EXTRA_END_MS";
     @VisibleForTesting
-    /*package*/ static final String EXTRA_ONCE = "EXTRA_ONCE";
+    private static final String EXTRA_ONCE = "EXTRA_ONCE";
 
     private static final long DAY = TimeUnit.DAYS.toMillis(1);
 
     /**
      * Schedules your daily job. A builder is required for this method call. Within the builder, you may specify
      * additional requirements and/or extras for the job. However, a daily job may not be exact,
-     * periodic or transient. Since the rescheduling of a daily job when requirements aren't met
-     * (e.g. low internet connectivity) isn't useful, the enforcing of such requirements isn't supported either.
+     * periodic or transient. If the requirements are enforced but are not met when the job runs, then the
+     * daily job will only be rescheduled for the next day. The back-off criteria is ignored in this case.
      * <br>
      * <br>
      * Daily jobs should use a unique tag and their classes shouldn't be reused for other jobs.
@@ -140,9 +140,6 @@ public abstract class DailyJob extends Job {
         if (newJob && (request.isExact() || request.isPeriodic() || request.isTransient())) {
             throw new IllegalArgumentException("Daily jobs cannot be exact, periodic or transient");
         }
-        if (newJob && (request.requirementsEnforced())) {
-            throw new IllegalArgumentException("Daily jobs cannot enforce requirements");
-        }
 
         return request.schedule();
     }
@@ -161,7 +158,13 @@ public abstract class DailyJob extends Job {
         DailyJobResult result = null;
 
         try {
-            result = onRunDailyJob(params);
+            if (meetsRequirements()) {
+                result = onRunDailyJob(params);
+            } else {
+                result = DailyJobResult.SUCCESS; // reschedule
+                CAT.i("Daily job requirements not met, reschedule for the next day");
+            }
+
         } finally {
             if (result == null) {
                 // shouldn't happen if the job follows the contract
