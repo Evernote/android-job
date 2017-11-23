@@ -4,7 +4,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0-rc1'
+        classpath 'com.android.tools.build:gradle:3.0.0'
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
     }
 }
@@ -35,10 +35,10 @@ ext {
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
     mockitoVersion = '2.7.22'
-    robolectricVersion = '3.4.2'
+    robolectricVersion = '3.5.1'
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.1'
-    distributionType = 'ALL'
+    gradleVersion = '4.3.1'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }

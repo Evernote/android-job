@@ -144,8 +144,8 @@ android.libraryVariants.all { variant ->
 
         source = variant.javaCompile.source
 
-        ext.androidJar = "${project.android.sdkDirectory}/platforms/${project.android.compileSdkVersion}/android.jar"
-        classpath += project.files(variant.javaCompile.classpath.files) + project.files(ext.androidJar)
+        classpath += project.files(variant.javaCompile.classpath)
+        classpath += project.files("${project.android.sdkDirectory}/platforms/${project.android.compileSdkVersion}/android.jar")
         classpath += files("$buildDir/generated/source/r/${variant.name}/")
         classpath += files("$buildDir/generated/source/buildConfig/${variant.name}/")
 
