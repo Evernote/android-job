@@ -24,7 +24,7 @@ public class DemoSyncJob extends Job {
 
     @Override
     @NonNull
-    protected Result onRunJob(final Params params) {
+    protected Result onRunJob(@NonNull final Params params) {
         boolean success = new DemoSyncEngine(getContext()).sync();
 
         PendingIntent pendingIntent = PendingIntent.getActivity(getContext(), 0, new Intent(getContext(), MainActivity.class), 0);

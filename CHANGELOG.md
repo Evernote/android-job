@@ -4,6 +4,7 @@
 * Allow running a daily job immediately once, this is helpful for testing purposes, see #317
 * Allow enforcing requirements for daily jobs, see #313
 * Remove the Cat dependency for logging, see 295
+* Add `@NonNull` annotation to `param` parameter, see #321 (thanks for the contribution @Jawnnypoo)
 
 ## 1.2.0 (2017-10-05)
 

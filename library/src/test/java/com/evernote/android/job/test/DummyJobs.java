@@ -24,7 +24,7 @@ public final class DummyJobs {
 
         @NonNull
         @Override
-        protected Result onRunJob(Params params) {
+        protected Result onRunJob(@NonNull Params params) {
             return Result.SUCCESS;
         }
     }
@@ -37,7 +37,7 @@ public final class DummyJobs {
 
         @NonNull
         @Override
-        protected Result onRunJob(Params params) {
+        protected Result onRunJob(@NonNull Params params) {
             return Result.RESCHEDULE;
         }
 
@@ -57,7 +57,7 @@ public final class DummyJobs {
 
         @NonNull
         @Override
-        protected Result onRunJob(Params params) {
+        protected Result onRunJob(@NonNull Params params) {
             return Result.FAILURE;
         }
     }
@@ -67,7 +67,7 @@ public final class DummyJobs {
 
         @NonNull
         @Override
-        protected Result onRunJob(Params params) {
+        protected Result onRunJob(@NonNull Params params) {
             try {
                 Thread.sleep(2_000);
             } catch (InterruptedException ignored) {
@@ -81,7 +81,7 @@ public final class DummyJobs {
 
         @NonNull
         @Override
-        protected DailyJobResult onRunDailyJob(Params params) {
+        protected DailyJobResult onRunDailyJob(@NonNull Params params) {
             return DailyJobResult.SUCCESS;
         }
     }

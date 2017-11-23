@@ -144,7 +144,7 @@ public abstract class DailyJob extends Job {
 
     @NonNull
     @Override
-    protected final Result onRunJob(Params params) {
+    protected final Result onRunJob(@NonNull Params params) {
         PersistableBundleCompat extras = params.getExtras();
         boolean runOnce = extras.getBoolean(EXTRA_ONCE, false);
 
@@ -211,7 +211,7 @@ public abstract class DailyJob extends Job {
     @SuppressWarnings("WeakerAccess")
     @NonNull
     @WorkerThread
-    protected abstract DailyJobResult onRunDailyJob(Params params);
+    protected abstract DailyJobResult onRunDailyJob(@NonNull Params params);
 
     public enum DailyJobResult {
         /**

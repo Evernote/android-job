@@ -271,7 +271,7 @@ public class DailyJobTest extends BaseJobManagerTest {
                 return new DailyJob() {
                     @NonNull
                     @Override
-                    protected DailyJobResult onRunDailyJob(Params params) {
+                    protected DailyJobResult onRunDailyJob(@NonNull Params params) {
                         atomicBoolean.set(false);
                         return DailyJobResult.SUCCESS;
                     }

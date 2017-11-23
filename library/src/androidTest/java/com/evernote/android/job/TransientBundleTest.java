@@ -130,7 +130,7 @@ public class TransientBundleTest {
 
         @NonNull
         @Override
-        protected Result onRunJob(Params params) {
+        protected Result onRunJob(@NonNull Params params) {
             mParams = params;
 
             mLatch.countDown();

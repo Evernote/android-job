@@ -76,7 +76,7 @@ public class TransientBundleRescheduleTest {
 
         @NonNull
         @Override
-        protected Result onRunJob(Params params) {
+        protected Result onRunJob(@NonNull Params params) {
             Bundle extras = params.getTransientExtras();
             assertThat(extras).isNotNull();
             assertThat(extras.getString("Key")).isEqualTo("Value");

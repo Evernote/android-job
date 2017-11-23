@@ -180,7 +180,7 @@ public class JobExecutionTest extends BaseJobManagerTest {
         final Job job = new Job() {
             @NonNull
             @Override
-            protected Result onRunJob(Params params) {
+            protected Result onRunJob(@NonNull Params params) {
                 manager().cancelAll();
                 return Result.RESCHEDULE;
             }

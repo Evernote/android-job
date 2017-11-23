@@ -164,7 +164,7 @@ public class PlatformTest {
 
         @NonNull
         @Override
-        protected Result onRunJob(Params params) {
+        protected Result onRunJob(@NonNull Params params) {
             mContext = getContext();
             mParams = params;
 
