@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
 import java.util.Calendar;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -213,5 +214,46 @@ public class DailyJobTest extends BaseJobManagerTest {
 
         assertThat(request).isNotNull();
         assertThat(request.isExact()).isFalse();
+    }
+
+    @Test
+    public void verifyScheduledTwiceOverridesExisting() {
+        long time = 1L;
+
+        DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessJob.class), time, time);
+        DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessJob.class), time, time);
+        Set<JobRequest> requests = manager().getAllJobRequests();
+
+        assertThat(requests).hasSize(1);
+        assertThat(requests.iterator().next().getTag()).isEqualTo(DummyJobs.SuccessJob.TAG);
+    }
+
+    @Test
+    public void verifyScheduledImmediatelyIsNotOverridden() {
+        long time = 1L;
+
+        DailyJob.startNowOnce(DummyJobs.createBuilder(DummyJobs.SuccessJob.class));
+        DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessJob.class), time, time);
+        Set<JobRequest> requests = manager().getAllJobRequests();
+
+        assertThat(requests).hasSize(2);
+        for (JobRequest request : requests) {
+            assertThat(request.getTag()).isEqualTo(DummyJobs.SuccessJob.TAG);
+        }
+    }
+
+    @Test
+    public void verifyImmediateExecution() {
+        long time = 1L;
+
+        int nowJobId = DailyJob.startNowOnce(DummyJobs.createBuilder(DummyJobs.SuccessJob.class));
+        int normalJobId = DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessJob.class), time, time);
+        assertThat(manager().getAllJobRequests()).hasSize(2);
+
+        assertThat(nowJobId).isEqualTo(1);
+        executeJob(nowJobId, Job.Result.SUCCESS);
+
+        assertThat(manager().getAllJobRequests()).hasSize(1);
+        assertThat(manager().getJobRequest(normalJobId)).isNotNull();
     }
 }

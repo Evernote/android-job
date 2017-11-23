@@ -1,6 +1,7 @@
 ## 1.2.1
 * Add option to override the default background executor, see #292
 * Don't keep a strong reference to finished jobs to allow freeing memory, see #299
+* Allow running a daily job immediately once, this is helpful for testing purposes, see #317
 
 ## 1.2.0 (2017-10-05)
 

@@ -526,7 +526,7 @@ public final class JobRequest {
         private static final int CREATE_ID = -8765; // magic number
 
         private int mId;
-        private final String mTag;
+        final String mTag;
 
         private long mStartMs;
         private long mEndMs;

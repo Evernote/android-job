@@ -11,6 +11,8 @@ import com.evernote.android.job.util.support.PersistableBundleCompat;
 import net.vrallev.android.cat.CatLog;
 
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,6 +30,8 @@ public abstract class DailyJob extends Job {
     /*package*/ static final String EXTRA_START_MS = "EXTRA_START_MS";
     @VisibleForTesting
     /*package*/ static final String EXTRA_END_MS = "EXTRA_END_MS";
+    @VisibleForTesting
+    /*package*/ static final String EXTRA_ONCE = "EXTRA_ONCE";
 
     private static final long DAY = TimeUnit.DAYS.toMillis(1);
 
@@ -64,6 +68,26 @@ public abstract class DailyJob extends Job {
         return schedule(baseBuilder, true, startMs, endMs);
     }
 
+    /**
+     * Schedules the daily job only once and runs it immediately. This is helpful if you want to reuse your job
+     * and want to trigger the execution immediately. It's possible to schedule a daily job normally with
+     * {@link #schedule(JobRequest.Builder, long, long)} and this method at the same time to trigger the
+     * execution immediately.
+     *
+     * @param baseBuilder The builder of your daily job.
+     * @return The unique ID for this job.
+     */
+    public static int startNowOnce(@NonNull JobRequest.Builder baseBuilder) {
+        PersistableBundleCompat extras = new PersistableBundleCompat();
+        extras.putBoolean(EXTRA_ONCE, true);
+
+        return baseBuilder
+                .startNow()
+                .addExtras(extras)
+                .build()
+                .schedule();
+    }
+
     private static int schedule(@NonNull JobRequest.Builder builder, boolean newJob, long startMs, long endMs) {
         if (startMs >= DAY || endMs >= DAY || startMs < 0 || endMs < 0) {
             throw new IllegalArgumentException("startMs or endMs should be less than one day (in milliseconds)");
@@ -98,9 +122,19 @@ public abstract class DailyJob extends Job {
 
         builder.addExtras(extras);
 
+        if (newJob) {
+            // cancel all previous jobs, but not the one scheduled immediately
+            JobManager manager = JobManager.instance();
+            Set<JobRequest> requests = new HashSet<>(manager.getAllJobRequestsForTag(builder.mTag));
+            for (JobRequest request : requests) {
+                if (!request.isExact() || request.getStartMs() != JobRequest.START_NOW) {
+                    manager.cancel(request.getJobId());
+                }
+            }
+        }
+
         JobRequest request = builder
                 .setExecutionWindow(Math.max(1L, startDelay), Math.max(1L, endDelay))
-                .setUpdateCurrent(newJob)
                 .build();
 
         if (newJob && (request.isExact() || request.isPeriodic() || request.isTransient())) {
@@ -117,7 +151,9 @@ public abstract class DailyJob extends Job {
     @Override
     protected final Result onRunJob(Params params) {
         PersistableBundleCompat extras = params.getExtras();
-        if (!extras.containsKey(EXTRA_START_MS) || !extras.containsKey(EXTRA_END_MS)) {
+        boolean runOnce = extras.getBoolean(EXTRA_ONCE, false);
+
+        if (!runOnce && (!extras.containsKey(EXTRA_START_MS) || !extras.containsKey(EXTRA_END_MS))) {
             CAT.e("Daily job doesn't contain start and end time");
             return Result.FAILURE;
         }
@@ -133,16 +169,18 @@ public abstract class DailyJob extends Job {
                 CAT.e("Daily job result was null");
             }
 
-            JobRequest request = params.getRequest();
-            if (result == DailyJobResult.SUCCESS) {
-                CAT.i("Rescheduling daily job %s", request);
+            if (!runOnce) {
+                JobRequest request = params.getRequest();
+                if (result == DailyJobResult.SUCCESS) {
+                    CAT.i("Rescheduling daily job %s", request);
 
-                // don't update current, it would cancel this currently running job
-                schedule(request.createBuilder(), false,
-                        extras.getLong(EXTRA_START_MS, 0) % DAY, extras.getLong(EXTRA_END_MS, 0L) % DAY);
+                    // don't update current, it would cancel this currently running job
+                    schedule(request.createBuilder(), false,
+                            extras.getLong(EXTRA_START_MS, 0) % DAY, extras.getLong(EXTRA_END_MS, 0L) % DAY);
 
-            } else {
-                CAT.i("Cancel daily job %s", request);
+                } else {
+                    CAT.i("Cancel daily job %s", request);
+                }
             }
         }
 
