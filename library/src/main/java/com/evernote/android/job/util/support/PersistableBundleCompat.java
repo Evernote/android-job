@@ -25,11 +25,10 @@
  */
 package com.evernote.android.job.util.support;
 
+import android.content.Intent;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
-
 import com.evernote.android.job.util.JobCat;
-
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.ByteArrayInputStream;
@@ -251,6 +250,39 @@ public final class PersistableBundleCompat {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public Intent toIntent() {
+        Intent intent = new Intent();
+        for (String key : mValues.keySet()) {
+            Object value = get(key);
+            if (value != null) {
+                if (value instanceof Boolean) {
+                    intent.putExtra(key, (Boolean) value);
+                } else if (value instanceof Double) {
+                    intent.putExtra(key, (Double) value);
+                } else if (value instanceof double[]) {
+                    intent.putExtra(key, (double[]) value);
+                } else if (value instanceof Integer) {
+                    intent.putExtra(key, (Integer) value);
+                } else if (value instanceof int[]) {
+                    intent.putExtra(key, (int[]) value);
+                } else if (value instanceof Long) {
+                    intent.putExtra(key, (Long) value);
+                } else if (value instanceof long[]) {
+                    intent.putExtra(key, (long[]) value);
+                } else if (value instanceof String) {
+                    intent.putExtra(key, (String) value);
+                } else if (value instanceof String[]) {
+                    intent.putExtra(key, (String[]) value);
+                } else if (value instanceof Map) {
+                    intent.putExtra(key, new PersistableBundleCompat((Map<String, Object>) value).toIntent());
+                }
+            }
+        }
+        return intent;
     }
 
     @SuppressWarnings("unchecked")
