@@ -350,7 +350,7 @@ public final class JobManager {
     /**
      * Finished jobs are kept in memory until the garbage collector cleans them up. This method returns
      * the results of all finished jobs even after they have been cleaned up. However, neither finished jobs
-     * nor their results are restored after the has been relaunched.
+     * nor their results are restored after the app has been relaunched.
      *
      * @return The results of all finished jobs. They key is the corresponding job ID.
      */
