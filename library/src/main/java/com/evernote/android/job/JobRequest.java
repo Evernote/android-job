@@ -252,6 +252,14 @@ public final class JobRequest {
     }
 
     /**
+     * @return Whether any of the requirements is different than the default value.
+     */
+    public boolean hasRequirements() {
+        return requiresCharging() || requiresDeviceIdle() || requiresBatteryNotLow() || requiresStorageNotLow()
+                || requiredNetworkType() != DEFAULT_NETWORK_TYPE;
+    }
+
+    /**
      * @return The extras for this job.
      */
     public PersistableBundleCompat getExtras() {

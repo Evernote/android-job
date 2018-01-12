@@ -68,7 +68,7 @@ public class JobProxy21 implements JobProxy {
     @Override
     public void plantOneOff(JobRequest request) {
         long startMs = Common.getStartMs(request);
-        long endMs = Common.getEndMs(request);
+        long endMs = Common.getEndMs(request, true);
 
         JobInfo jobInfo = createBuilderOneOff(createBaseBuilder(request, true), startMs, endMs).build();
         int scheduleResult = schedule(jobInfo);

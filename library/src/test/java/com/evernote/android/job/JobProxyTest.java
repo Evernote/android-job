@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.evernote.android.job.test.JobRobolectricTestRunner;
 
@@ -17,6 +18,8 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowAlarmManager;
 
 import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,11 +46,11 @@ public class JobProxyTest {
 
     @Test
     @Config(sdk = 21)
-    public void verifyRecoverWithJobScheduler() throws Exception {
+    public void verifyRecoverWithJobScheduler() {
         Context context = BaseJobManagerTest.createMockContext();
         Context applicationContext = context.getApplicationContext();
 
-        JobScheduler scheduler = (JobScheduler) applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        JobScheduler scheduler = getJobScheduler(applicationContext);
         when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(null, null, scheduler);
 
         JobManager.create(context);
@@ -57,7 +60,38 @@ public class JobProxyTest {
                 .build()
                 .schedule();
 
-        assertThat(scheduler.getAllPendingJobs()).isNotEmpty();
+        List<JobInfo> allPendingJobs = scheduler.getAllPendingJobs();
+        assertThat(allPendingJobs).hasSize(1);
+
+        JobInfo jobInfo = allPendingJobs.get(0);
+        assertThat(jobInfo.getMinLatencyMillis()).isEqualTo(200_000L);
+        assertThat(jobInfo.getMaxExecutionDelayMillis()).isEqualTo(300_000L);
+    }
+
+    @Test
+    @Config(sdk = 21)
+    public void verifyMaxExecutionDelayIsNotSetInJobScheduler() {
+        Context context = BaseJobManagerTest.createMockContext();
+        Context applicationContext = context.getApplicationContext();
+
+        JobScheduler scheduler = getJobScheduler(applicationContext);
+        when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(scheduler);
+
+        JobManager.create(context);
+
+        new JobRequest.Builder("tag")
+                .setExecutionWindow(3_000L, 4_000L)
+                .setRequiredNetworkType(JobRequest.NetworkType.CONNECTED)
+                .setRequirementsEnforced(true)
+                .build()
+                .schedule();
+
+        List<JobInfo> allPendingJobs = scheduler.getAllPendingJobs();
+        assertThat(allPendingJobs).hasSize(1);
+
+        JobInfo jobInfo = allPendingJobs.get(0);
+        assertThat(jobInfo.getMinLatencyMillis()).isEqualTo(3_000L);
+        assertThat(jobInfo.getMaxExecutionDelayMillis()).isGreaterThan(4_000L);
     }
 
     @Test
@@ -66,7 +100,7 @@ public class JobProxyTest {
         Context context = BaseJobManagerTest.createMockContext();
         Context applicationContext = context.getApplicationContext();
 
-        AlarmManager alarmManager = (AlarmManager) applicationContext.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager alarmManager = getAlarmManager(applicationContext);
 
         when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(null);
 
@@ -86,7 +120,7 @@ public class JobProxyTest {
         Context context = BaseJobManagerTest.createMockContext();
         Context applicationContext = context.getApplicationContext();
 
-        AlarmManager alarmManager = (AlarmManager) applicationContext.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager alarmManager = getAlarmManager(applicationContext);
 
         when(applicationContext.getSystemService(Context.ALARM_SERVICE)).thenReturn(null);
         when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(null);
@@ -107,7 +141,7 @@ public class JobProxyTest {
         Context context = BaseJobManagerTest.createMockContext();
         Context applicationContext = context.getApplicationContext();
 
-        AlarmManager alarmManager = (AlarmManager) applicationContext.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager alarmManager = getAlarmManager(applicationContext);
 
         when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(null, null, alarmManager);
 
@@ -127,7 +161,7 @@ public class JobProxyTest {
         Context context = BaseJobManagerTest.createMockContext();
         Context applicationContext = context.getApplicationContext();
 
-        AlarmManager alarmManager = (AlarmManager) applicationContext.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager alarmManager = getAlarmManager(applicationContext);
 
         when(applicationContext.getSystemService(Context.ALARM_SERVICE)).thenReturn(null);
 
@@ -141,13 +175,14 @@ public class JobProxyTest {
         verifyAlarmCount(alarmManager, 0);
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Test
     @Config(sdk = 21)
-    public void verifyRecoverWithoutBootPermissionJobScheduler() throws Exception {
+    public void verifyRecoverWithoutBootPermissionJobScheduler() {
         Context context = BaseJobManagerTest.createMockContext();
         Context applicationContext = context.getApplicationContext();
 
-        JobScheduler scheduler = spy((JobScheduler) applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE));
+        JobScheduler scheduler = spy(getJobScheduler(applicationContext));
         when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(scheduler);
 
         doThrow(new IllegalArgumentException("Error: requested job be persisted without holding RECEIVE_BOOT_COMPLETED permission."))
@@ -176,9 +211,9 @@ public class JobProxyTest {
         Context context = BaseJobManagerTest.createMockContext();
         Context applicationContext = context.getApplicationContext();
 
-        AlarmManager alarmManager = (AlarmManager) applicationContext.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager alarmManager = getAlarmManager(applicationContext);
 
-        JobScheduler scheduler = spy((JobScheduler) applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE));
+        JobScheduler scheduler = spy(getJobScheduler(applicationContext));
         when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(scheduler);
 
         doThrow(new IllegalArgumentException("No such service ComponentInfo{com.evernote/com.evernote.android.job.v21.PlatformJobService}"))
@@ -202,9 +237,9 @@ public class JobProxyTest {
         Context context = BaseJobManagerTest.createMockContext();
         Context applicationContext = context.getApplicationContext();
 
-        AlarmManager alarmManager = (AlarmManager) applicationContext.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager alarmManager = getAlarmManager(applicationContext);
 
-        JobScheduler scheduler = spy((JobScheduler) applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE));
+        JobScheduler scheduler = spy(getJobScheduler(applicationContext));
         when(applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(scheduler);
 
         doThrow(new NullPointerException("Attempt to invoke interface method 'int android.app.job.IJobScheduler.schedule(android.app.job.JobInfo)' on a null object reference"))
@@ -227,5 +262,15 @@ public class JobProxyTest {
         declaredField.setAccessible(true);
         ShadowAlarmManager shadowAlarmManager = (ShadowAlarmManager) declaredField.get(alarmManager);
         assertThat(shadowAlarmManager.getScheduledAlarms()).hasSize(count);
+    }
+
+    @NonNull
+    private AlarmManager getAlarmManager(@NonNull Context context) {
+        return Objects.requireNonNull((AlarmManager) context.getSystemService(Context.ALARM_SERVICE));
+    }
+
+    @NonNull
+    private JobScheduler getJobScheduler(@NonNull Context context) {
+        return Objects.requireNonNull((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE));
     }
 }

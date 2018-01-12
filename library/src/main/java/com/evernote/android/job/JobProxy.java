@@ -69,6 +69,19 @@ public interface JobProxy {
             return checkNoOverflow(result, (a ^ b) < 0 | (a ^ result) >= 0);
         }
 
+        @SuppressWarnings("SameParameterValue")
+        private static long checkedMultiply(long a, long b) {
+            int leadingZeros = Long.numberOfLeadingZeros(a) + Long.numberOfLeadingZeros(~a) + Long.numberOfLeadingZeros(b) + Long.numberOfLeadingZeros(~b);
+            if (leadingZeros > Long.SIZE + 1) {
+                return a * b;
+            }
+            long result = a * b;
+            result = checkNoOverflow(result, leadingZeros >= Long.SIZE);
+            result = checkNoOverflow(result, a >= 0 | b != Long.MIN_VALUE);
+            result = checkNoOverflow(result, a == 0 || result / a == b);
+            return result;
+        }
+
         private static long checkNoOverflow(long result, boolean condition) {
             return condition ? result : Long.MAX_VALUE;
         }
@@ -82,11 +95,21 @@ public interface JobProxy {
         }
 
         public static long getEndMs(JobRequest request) {
+            return getEndMs(request, false);
+        }
+
+        public static long getEndMs(JobRequest request, boolean shiftEnd) {
+            long endMs;
             if (request.getFailureCount() > 0) {
-                return request.getBackoffOffset();
+                endMs = request.getBackoffOffset();
             } else {
-                return request.getEndMs();
+                endMs = request.getEndMs();
             }
+            if (shiftEnd && request.requirementsEnforced() && request.hasRequirements()) {
+                // move the end backwards if the API is smart with the requirements
+                endMs = checkedMultiply(endMs, 100);
+            }
+            return endMs;
         }
 
         public static long getAverageDelayMs(JobRequest request) {
