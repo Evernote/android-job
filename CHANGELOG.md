@@ -1,3 +1,6 @@
+## 1.2.2
+* Use only the `support-compat` instead of the full `support-v4` library, see #326
+
 ## 1.2.1 (2017-11-23)
 * Add option to override the default background executor, see #292
 * Don't keep a strong reference to finished jobs to allow freeing memory, see #299
