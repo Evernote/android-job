@@ -146,7 +146,7 @@ public class DailyJobTest extends BaseJobManagerTest {
         verifyExecutionAndSuccessfulReschedule(clock, TimeUnit.HOURS.toMillis(23),  TimeUnit.HOURS.toMillis(6));
     }
 
-    private void verifyExecutionAndSuccessfulReschedule(Clock clock, long start, long end) {
+    private JobRequest verifyExecutionAndSuccessfulReschedule(Clock clock, long start, long end) {
         JobConfig.setClock(clock);
 
         int jobId = DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessDailyJob.class), start, end);
@@ -155,7 +155,10 @@ public class DailyJobTest extends BaseJobManagerTest {
         executeJob(jobId, Job.Result.SUCCESS);
 
         assertThat(manager().getAllJobRequests()).hasSize(1);
-        assertThat(manager().getJobRequest(jobId + 1)).isNotNull();
+
+        JobRequest newRequest = manager().getJobRequest(jobId + 1);
+        assertThat(newRequest).isNotNull();
+        return newRequest;
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -257,6 +260,15 @@ public class DailyJobTest extends BaseJobManagerTest {
 
         assertThat(manager().getAllJobRequests()).hasSize(1);
         assertThat(manager().getJobRequest(normalJobId)).isNotNull();
+    }
+
+    @Test
+    public void verifyLastRunIsSet() {
+        TestClock clock = new TestClock();
+        clock.setTime(13, 0);
+
+        JobRequest request = verifyExecutionAndSuccessfulReschedule(clock, 0, 1);
+        assertThat(request.getLastRun()).isEqualTo(clock.currentTimeMillis());
     }
 
     @Test

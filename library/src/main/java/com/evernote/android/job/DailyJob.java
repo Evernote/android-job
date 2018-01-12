@@ -176,8 +176,13 @@ public abstract class DailyJob extends Job {
                     CAT.i("Rescheduling daily job %s", request);
 
                     // don't update current, it would cancel this currently running job
-                    schedule(request.createBuilder(), false,
+                    int newJobId = schedule(request.createBuilder(), false,
                             extras.getLong(EXTRA_START_MS, 0) % DAY, extras.getLong(EXTRA_END_MS, 0L) % DAY);
+
+                    request = JobManager.instance().getJobRequest(newJobId);
+                    if (request != null) {
+                        request.updateStats(false, true);
+                    }
 
                 } else {
                     CAT.i("Cancel daily job %s", request);
