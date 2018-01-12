@@ -47,6 +47,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author rwondratschek
@@ -111,12 +113,15 @@ import java.util.concurrent.atomic.AtomicInteger;
     private final JobOpenHelper mDbHelper;
     private SQLiteDatabase mInjectedDatabase;
 
+    private final ReadWriteLock mLock;
+
     public JobStorage(Context context) {
         this(context, DATABASE_NAME);
     }
 
     public JobStorage(Context context, String databasePath) {
         mPreferences = context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE);
+        mLock = new ReentrantReadWriteLock();
 
         mCacheId = new JobCacheId();
 
@@ -128,18 +133,25 @@ import java.util.concurrent.atomic.AtomicInteger;
         }
     }
 
-    public synchronized void put(final JobRequest request) {
-        // don't write to db async, there could be a race condition with remove()
-        store(request);
+    public void put(final JobRequest request) {
+        mLock.writeLock().lock();
+        try {
+            // don't write to db async, there could be a race condition with remove()
+            store(request);
 
-        // put in cache if store() was successful
-        updateRequestInCache(request);
+            // put in cache if store() was successful
+            updateRequestInCache(request);
+        } finally {
+            mLock.writeLock().unlock();
+        }
     }
 
-    public synchronized void update(JobRequest request, ContentValues contentValues) {
-        updateRequestInCache(request);
+    public void update(JobRequest request, ContentValues contentValues) {
         SQLiteDatabase database = null;
+        mLock.writeLock().lock();
+
         try {
+            updateRequestInCache(request);
             database = getDatabase();
             database.update(JOB_TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(request.getJobId())});
         } catch (Exception e) {
@@ -147,6 +159,7 @@ import java.util.concurrent.atomic.AtomicInteger;
             CAT.e(e, "could not update %s", request);
         } finally {
             closeDatabase(database);
+            mLock.writeLock().unlock();
         }
     }
 
@@ -154,16 +167,24 @@ import java.util.concurrent.atomic.AtomicInteger;
         mCacheId.put(request.getJobId(), request);
     }
 
-    public synchronized JobRequest get(int id) {
-        // not necessary to check if failed to delete, the cache is doing this
-        return mCacheId.get(id);
+    public JobRequest get(int id) {
+        mLock.readLock().lock();
+        try {
+            // not necessary to check if failed to delete, the cache is doing this
+            return mCacheId.get(id);
+        } finally {
+            mLock.readLock().unlock();
+        }
     }
 
-    public synchronized Set<JobRequest> getAllJobRequests(@Nullable String tag, boolean includeStarted) {
+    public Set<JobRequest> getAllJobRequests(@Nullable String tag, boolean includeStarted) {
         Set<JobRequest> result = new HashSet<>();
 
         SQLiteDatabase database = null;
         Cursor cursor = null;
+
+        mLock.readLock().lock();
+
         try {
             String where; // filter started requests
             String[] args;
@@ -199,19 +220,23 @@ import java.util.concurrent.atomic.AtomicInteger;
         } finally {
             closeCursor(cursor);
             closeDatabase(database);
+            mLock.readLock().unlock();
         }
 
         return result;
     }
 
-    public synchronized void remove(JobRequest request) {
+    public void remove(JobRequest request) {
         remove(request, request.getJobId());
     }
 
-    private synchronized boolean remove(@Nullable JobRequest request, int jobId) {
-        mCacheId.remove(jobId);
+    private boolean remove(@Nullable JobRequest request, int jobId) {
         SQLiteDatabase database = null;
+        mLock.writeLock().lock();
+
         try {
+            mCacheId.remove(jobId);
+
             database = getDatabase();
             database.delete(JOB_TABLE_NAME, COLUMN_ID + "=?", new String[]{String.valueOf(jobId)});
             return true;
@@ -221,6 +246,7 @@ import java.util.concurrent.atomic.AtomicInteger;
             return false;
         } finally {
             closeDatabase(database);
+            mLock.writeLock().unlock();
         }
     }
 

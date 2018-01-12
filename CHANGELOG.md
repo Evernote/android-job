@@ -1,5 +1,6 @@
 ## 1.2.2
 * Use only the `support-compat` instead of the full `support-v4` library, see #326
+* Use a `ReadWriteLock` for synchronizing the database reads and writes, see #344
 
 ## 1.2.1 (2017-11-23)
 * Add option to override the default background executor, see #292
