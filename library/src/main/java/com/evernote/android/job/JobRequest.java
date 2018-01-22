@@ -1026,7 +1026,7 @@ public final class JobRequest {
          * then this request calls {@link JobManager#cancelAllForTag(String)} with the given tag before
          * being scheduled.
          *
-         * @param updateCurrent If {code true} this request will cancel any preexisting job with the same tag
+         * @param updateCurrent If {@code true} this request will cancel any preexisting job with the same tag
          *                      while being scheduled.
          */
         public Builder setUpdateCurrent(boolean updateCurrent) {
