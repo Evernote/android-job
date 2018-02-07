@@ -71,6 +71,20 @@ public final class JobRequest {
     public static final NetworkType DEFAULT_NETWORK_TYPE = NetworkType.ANY;
 
     /**
+     * The default callback that is used when you schedule a {@link JobRequest} asynchronously in
+     * {@link #scheduleAsync()}. This implementation only logs a message in case of a failure and
+     * doesn't crash.
+     */
+    public static final JobScheduledCallback DEFAULT_JOB_SCHEDULED_CALLBACK = new JobScheduledCallback() {
+        @Override
+        public void onJobScheduled(int jobId, @NonNull String tag, @Nullable Exception exception) {
+            if (exception != null) {
+                CAT.e(exception, "The job with tag %s couldn't be scheduled", tag);
+            }
+        }
+    };
+
+    /**
      * The minimum interval of a periodic job. Specifying a smaller interval will result in an exception.
      *
      * <br>
@@ -405,6 +419,14 @@ public final class JobRequest {
     }
 
     /**
+     * Schedule a request which will be executed in the future. If you want to update an existing
+     * {@link JobRequest}, call {@link JobRequest#cancelAndEdit()}, update your parameters and call
+     * this method again. Calling this method on the same request instance multiple times without
+     * cancelling is idempotent.
+     *
+     * <br>
+     * <br>
+     *
      * Convenience method. Internally it calls {@link JobManager#schedule(JobRequest)}
      * and {@link #getJobId()} for this request.
      *
@@ -413,6 +435,40 @@ public final class JobRequest {
     public int schedule() {
         JobManager.instance().schedule(this);
         return getJobId();
+    }
+
+    /**
+     * Helper method to schedule a request on a background thread. This is helpful to avoid IO operations
+     * on the main thread. The callback notifies you about the job ID or a possible failure.
+     *
+     * <br>
+     * <br>
+     *
+     * In case of a failure an error is logged, but the application doesn't crash.
+     */
+    public void scheduleAsync() {
+        scheduleAsync(DEFAULT_JOB_SCHEDULED_CALLBACK);
+    }
+
+    /**
+     * Helper method to schedule a request on a background thread. This is helpful to avoid IO operations
+     * on the main thread. The callback notifies you about the job ID or a possible failure.
+     *
+     * @param callback The callback which is invoked after the request has been scheduled.
+     */
+    public void scheduleAsync(@NonNull final JobScheduledCallback callback) {
+        JobPreconditions.checkNotNull(callback);
+        JobConfig.getExecutorService().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int jobId = schedule();
+                    callback.onJobScheduled(jobId, getTag(), null);
+                } catch (Exception e) {
+                    callback.onJobScheduled(JobScheduledCallback.JOB_ID_ERROR, getTag(), e);
+                }
+            }
+        });
     }
 
     /**
@@ -489,7 +545,7 @@ public final class JobRequest {
         return contentValues;
     }
 
-    /*package*/ static JobRequest fromCursor(Cursor cursor) throws Exception {
+    /*package*/ static JobRequest fromCursor(Cursor cursor) {
         JobRequest request = new Builder(cursor).build();
         request.mFailureCount = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_NUM_FAILURES));
         request.mScheduledAt = cursor.getLong(cursor.getColumnIndex(JobStorage.COLUMN_SCHEDULED_AT));
@@ -586,7 +642,7 @@ public final class JobRequest {
         }
 
         @SuppressWarnings("unchecked")
-        private Builder(Cursor cursor) throws Exception {
+        private Builder(Cursor cursor) {
             mId = cursor.getInt(cursor.getColumnIndex(JobStorage.COLUMN_ID));
             mTag = cursor.getString(cursor.getColumnIndex(JobStorage.COLUMN_TAG));
 
@@ -1164,5 +1220,24 @@ public final class JobRequest {
          * This job requires metered connectivity such as most cellular data networks.
          */
         METERED
+    }
+
+    /**
+     * Callback that is used when scheduling a {@link JobRequest} asynchronously on a background thread.
+     */
+    public interface JobScheduledCallback {
+        /**
+         * The job ID in case scheduling the request failed.
+         */
+        int JOB_ID_ERROR = -1;
+
+        /**
+         * Called after your request was scheduled.
+         *
+         * @param jobId The unique ID of your new scheduled {@link JobRequest}. Or {@link #JOB_ID_ERROR} in case of a failure.
+         * @param tag The tag of the scheduled request.
+         * @param exception If scheduling the request failed, then the exception won't be {@code null}.
+         */
+        void onJobScheduled(int jobId, @NonNull String tag, @Nullable Exception exception);
     }
 }

@@ -105,6 +105,24 @@ public class JobManagerTest extends BaseJobManagerTest {
     }
 
     @Test
+    public void testScheduleIsNotIdempotentWithNewRequest() throws Exception {
+        JobRequest.Builder builder = DummyJobs.createBuilder(DummyJobs.SuccessJob.class).setExecutionWindow(300_000, 400_000);
+        JobRequest request1 = builder.build();
+        int jobId = request1.schedule();
+
+        long scheduledAt = request1.getScheduledAt();
+        assertThat(scheduledAt).isGreaterThan(0L);
+
+        Thread.sleep(10);
+
+        JobRequest request2 = builder.build();
+        int newJobId = request2.schedule();
+
+        assertThat(newJobId).isGreaterThan(jobId);
+        assertThat(request2.getScheduledAt()).isGreaterThan(scheduledAt);
+    }
+
+    @Test
     public void testSimultaneousCancel() throws Exception {
         final int threadCount = 5;
         final int jobCount = 25;
