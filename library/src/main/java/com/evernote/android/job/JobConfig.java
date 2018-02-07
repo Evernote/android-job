@@ -90,6 +90,7 @@ public final class JobConfig {
 
     private static volatile Clock clock = Clock.DEFAULT;
     private static volatile ExecutorService executorService = DEFAULT_EXECUTOR_SERVICE;
+    private static volatile boolean closeDatabase = false;
 
     static {
         ENABLED_APIS = new EnumMap<>(JobApi.class);
@@ -316,6 +317,23 @@ public final class JobConfig {
     }
 
     /**
+     * @return Whether the internal database is closed after each access. The default value is {@code false}.
+     */
+    public static boolean isCloseDatabase() {
+        return closeDatabase;
+    }
+
+    /**
+     * Controls whether the internal database should be closed after each access to clean up
+     * resources. The default value is {@code false}.
+     *
+     * @param closeDatabase Whether to close the database after each access.
+     */
+    public static void setCloseDatabase(boolean closeDatabase) {
+        JobConfig.closeDatabase = closeDatabase;
+    }
+
+    /**
      * Resets all adjustments in the config.
      */
     public static void reset() {
@@ -330,6 +348,7 @@ public final class JobConfig {
         forceRtc = false;
         clock = Clock.DEFAULT;
         executorService = DEFAULT_EXECUTOR_SERVICE;
+        closeDatabase = false;
         JobCat.setLogcatEnabled(true);
         JobCat.clearLogger();
     }

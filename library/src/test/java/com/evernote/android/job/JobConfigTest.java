@@ -1,5 +1,6 @@
 package com.evernote.android.job;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 
 import com.evernote.android.job.test.DummyJobs;
@@ -12,6 +13,12 @@ import org.junit.runners.MethodSorters;
 import org.robolectric.annotation.Config;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author rwondratschek
@@ -157,5 +164,25 @@ public class JobConfigTest extends BaseJobManagerTest {
     public void verifyJobIdOffsetBounds() {
         JobConfig.setJobIdOffset(0);
         JobConfig.setJobIdOffset(2147480000 - 500);
+    }
+
+    @Test
+    public void verifyCloseDatabase() {
+        assertThat(JobConfig.isCloseDatabase()).isFalse(); // default
+
+        SQLiteDatabase database = mock(SQLiteDatabase.class);
+
+        JobStorage storage = manager().getJobStorage();
+        storage.injectDatabase(database);
+
+        storage.get(1);
+        verify(database, times(1)).query(anyString(), nullable(String[].class), anyString(), any(String[].class), nullable(String.class), nullable(String.class), nullable(String.class));
+        verify(database, times(0)).close();
+
+        JobConfig.setCloseDatabase(true);
+
+        storage.get(1);
+        verify(database, times(2)).query(anyString(), nullable(String[].class), anyString(), any(String[].class), nullable(String.class), nullable(String.class), nullable(String.class));
+        verify(database, times(1)).close();
     }
 }

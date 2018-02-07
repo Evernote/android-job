@@ -1,6 +1,7 @@
 ## 1.2.3
 * Add an `onCancel()` method to get notified when the job is canceled, see #359
 * Expose the `meetsRequirements()` method to have the option to check all requirements manually, see #349
+* Don't close the database automatically after each interaction, but give an option in the `JobConfig` class to revert this behavior, see #344
 
 ## 1.2.2 (2018-01-13)
 * Use only the `support-compat` instead of the full `support-v4` library, see #326
