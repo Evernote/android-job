@@ -2,6 +2,7 @@ package com.evernote.android.job;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.app.JobIntentServiceReset;
 
 import com.evernote.android.job.test.TestLogger;
 
@@ -23,6 +24,8 @@ public final class JobManagerRule extends ExternalResource {
 
     @Override
     protected void before() throws Throwable {
+        JobIntentServiceReset.reset();
+
         JobConfig.addLogger(TestLogger.INSTANCE);
         JobConfig.setSkipJobReschedule(true);
 
