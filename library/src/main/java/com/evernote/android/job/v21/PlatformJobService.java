@@ -104,7 +104,6 @@ public class PlatformJobService extends JobService {
             CAT.d("Called onStopJob, job %d not found", params.getJobId());
         }
 
-
         // do not reschedule
         return false;
     }

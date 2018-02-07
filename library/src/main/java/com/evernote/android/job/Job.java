@@ -113,6 +113,18 @@ public abstract class Job {
     @WorkerThread
     protected abstract Result onRunJob(@NonNull Params params);
 
+    /**
+     * This method is intended to be overwritten. It is called once when the job is still running, but was
+     * canceled. This can happen when the system wants to stop the job or if you manually cancel the job
+     * yourself. It's a good indicator to stop your work and maybe retry your job later again. Alternatively,
+     * you can also call {@link #isCanceled()}.
+     *
+     * @see #isCanceled()
+     */
+    protected void onCancel() {
+        // override me
+    }
+
     /*package*/ final Result runJob() {
         try {
             // daily jobs check the requirements manually
@@ -263,7 +275,10 @@ public abstract class Job {
 
     /*package*/ final void cancel(boolean deleted) {
         if (!isFinished()) {
-            mCanceled = true;
+            if (!mCanceled) {
+                mCanceled = true;
+                onCancel();
+            }
             mDeleted = deleted;
         }
     }
