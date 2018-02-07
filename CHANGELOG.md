@@ -1,4 +1,4 @@
-## 1.2.3
+## 1.2.3 (2018-02-07)
 * Add an `onCancel()` method to get notified when the job is canceled, see #359
 * Expose the `meetsRequirements()` method to have the option to check all requirements manually, see #349
 * Don't close the database automatically after each interaction, but give an option in the `JobConfig` class to revert this behavior, see #344
