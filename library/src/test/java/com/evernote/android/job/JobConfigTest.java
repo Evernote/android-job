@@ -176,13 +176,15 @@ public class JobConfigTest extends BaseJobManagerTest {
         storage.injectDatabase(database);
 
         storage.get(1);
-        verify(database, times(1)).query(anyString(), nullable(String[].class), anyString(), any(String[].class), nullable(String.class), nullable(String.class), nullable(String.class));
+        verify(database, times(1)).query(anyString(), nullable(String[].class), anyString(),
+                any(String[].class), nullable(String.class), nullable(String.class), nullable(String.class));
         verify(database, times(0)).close();
 
         JobConfig.setCloseDatabase(true);
 
         storage.get(1);
-        verify(database, times(2)).query(anyString(), nullable(String[].class), anyString(), any(String[].class), nullable(String.class), nullable(String.class), nullable(String.class));
+        verify(database, times(2)).query(anyString(), nullable(String[].class), anyString(),
+                any(String[].class), nullable(String.class), nullable(String.class), nullable(String.class));
         verify(database, times(1)).close();
     }
 }
