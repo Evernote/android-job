@@ -5,7 +5,6 @@ import android.app.job.JobScheduler;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 
 import com.evernote.android.job.test.JobRobolectricTestRunner;
@@ -30,7 +29,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 public class JobRescheduleTest extends BaseJobManagerTest {
 
     @Test
-    @Config(sdk = Build.VERSION_CODES.LOLLIPOP_MR1)
+    @Config(sdk = 21)
     public void verifyOneOffJobRescheduled() throws Exception {
         assertThat(manager().getAllJobRequests()).isEmpty();
 
@@ -50,7 +49,7 @@ public class JobRescheduleTest extends BaseJobManagerTest {
     }
 
     @Test
-    @Config(sdk = Build.VERSION_CODES.LOLLIPOP_MR1)
+    @Config(sdk = 21)
     public void verifyPeriodicJobRescheduled() throws Exception {
         assertThat(manager().getAllJobRequests()).isEmpty();
 
@@ -73,7 +72,7 @@ public class JobRescheduleTest extends BaseJobManagerTest {
     }
 
     @Test
-    @Config(sdk = Build.VERSION_CODES.LOLLIPOP_MR1)
+    @Config(sdk = 21)
     public void verifyExactJobRescheduled() throws Exception {
         assertThat(manager().getAllJobRequests()).isEmpty();
 
