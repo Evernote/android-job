@@ -128,7 +128,7 @@ public abstract class Job {
     /*package*/ final Result runJob() {
         try {
             // daily jobs check the requirements manually
-            if (this instanceof DailyJob || meetsRequirements()) {
+            if (this instanceof DailyJob || meetsRequirements(true)) {
                 mResult = onRunJob(getParams());
             } else {
                 mResult = getParams().isPeriodic() ? Result.FAILURE : Result.RESCHEDULE;
@@ -154,8 +154,18 @@ public abstract class Job {
         // override me
     }
 
-    /*package*/ boolean meetsRequirements() {
-        if (!getParams().getRequest().requirementsEnforced()) {
+    /**
+     * Checks all requirements for this job. It's also possible to check all requirements separately
+     * with the corresponding methods.
+     *
+     * @return Whether all set requirements are met.
+     */
+    protected boolean meetsRequirements() {
+        return meetsRequirements(false);
+    }
+
+    /*package*/ boolean meetsRequirements(boolean checkRequirementsEnforced) {
+        if (checkRequirementsEnforced && !getParams().getRequest().requirementsEnforced()) {
             return true;
         }
 
@@ -170,6 +180,15 @@ public abstract class Job {
         if (!isRequirementNetworkTypeMet()) {
             CAT.w("Job requires network to be %s, but was %s", getParams().getRequest().requiredNetworkType(),
                     Device.getNetworkType(getContext()));
+            return false;
+        }
+        if (!isRequirementBatteryNotLowMet()) {
+            CAT.w("Job requires battery not be low, reschedule");
+            return false;
+        }
+
+        if (!isRequirementStorageNotLowMet()) {
+            CAT.w("Job requires storage not be low, reschedule");
             return false;
         }
 
