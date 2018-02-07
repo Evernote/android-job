@@ -1,3 +1,6 @@
+## 1.2.3
+* Add an `onCancel()` method to get notified when the job is canceled, see #359
+
 ## 1.2.2 (2018-01-13)
 * Use only the `support-compat` instead of the full `support-v4` library, see #326
 * Use a `ReadWriteLock` for synchronizing the database reads and writes, see #344
