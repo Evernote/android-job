@@ -613,7 +613,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
     private static void closeDatabase(@Nullable SQLiteDatabase database) {
         // SQLiteDatabase doesn't implement Closable on some 4.0.3 devices, see #182
-        if (database != null) {
+        if (database != null && JobConfig.isCloseDatabase()) {
             try {
                 database.close();
             } catch (Exception ignored) {
