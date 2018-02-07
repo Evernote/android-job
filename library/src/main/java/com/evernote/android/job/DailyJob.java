@@ -156,7 +156,7 @@ public abstract class DailyJob extends Job {
         DailyJobResult result = null;
 
         try {
-            if (meetsRequirements()) {
+            if (meetsRequirements(true)) {
                 result = onRunDailyJob(params);
             } else {
                 result = DailyJobResult.SUCCESS; // reschedule

@@ -3,6 +3,7 @@ package com.evernote.android.job;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.PowerManager;
 import android.test.mock.MockContext;
 
 import com.evernote.android.job.test.DummyJobs;
@@ -25,125 +26,215 @@ public class JobRequirementTest {
 
     @Test
     public void verifyRequirementNetworkMeteredOnRoaming() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.METERED, true, ConnectivityManager.TYPE_MOBILE, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.METERED, true, ConnectivityManager.TYPE_MOBILE, true);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkMeteredOnMobile() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.METERED, true, ConnectivityManager.TYPE_MOBILE, false);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.METERED, true, ConnectivityManager.TYPE_MOBILE, false);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkMeteredOnWifi() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.METERED, true, ConnectivityManager.TYPE_WIFI, false);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.METERED, true, ConnectivityManager.TYPE_WIFI, false);
         assertThat(job.isRequirementNetworkTypeMet()).isFalse();
     }
 
     @Test
     public void verifyRequirementNetworkMeteredNoConnection() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.METERED, false, ConnectivityManager.TYPE_WIFI, false);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.METERED, false, ConnectivityManager.TYPE_WIFI, false);
         assertThat(job.isRequirementNetworkTypeMet()).isFalse();
     }
 
     @Test
     public void verifyRequirementNetworkNotRoamingOnRoaming() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.NOT_ROAMING, true, ConnectivityManager.TYPE_MOBILE, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.NOT_ROAMING, true, ConnectivityManager.TYPE_MOBILE, true);
         assertThat(job.isRequirementNetworkTypeMet()).isFalse();
     }
 
     @Test
     public void verifyRequirementNetworkNotRoamingOnMobile() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.NOT_ROAMING, true, ConnectivityManager.TYPE_MOBILE, false);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.NOT_ROAMING, true, ConnectivityManager.TYPE_MOBILE, false);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkNotRoamingOnWifi() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.NOT_ROAMING, true, ConnectivityManager.TYPE_WIFI, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.NOT_ROAMING, true, ConnectivityManager.TYPE_WIFI, true);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkNotRoamingNoConnection() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.NOT_ROAMING, false, ConnectivityManager.TYPE_WIFI, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.NOT_ROAMING, false, ConnectivityManager.TYPE_WIFI, true);
         assertThat(job.isRequirementNetworkTypeMet()).isFalse();
     }
 
     @Test
     public void verifyRequirementNetworkUnmeteredOnRoaming() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.UNMETERED, true, ConnectivityManager.TYPE_MOBILE, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.UNMETERED, true, ConnectivityManager.TYPE_MOBILE, true);
         assertThat(job.isRequirementNetworkTypeMet()).isFalse();
     }
 
     @Test
     public void verifyRequirementNetworkUnmeteredOnMobile() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.UNMETERED, true, ConnectivityManager.TYPE_MOBILE, false);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.UNMETERED, true, ConnectivityManager.TYPE_MOBILE, false);
         assertThat(job.isRequirementNetworkTypeMet()).isFalse();
     }
 
     @Test
     public void verifyRequirementNetworkUnmeteredOnWifi() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.UNMETERED, true, ConnectivityManager.TYPE_WIFI, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.UNMETERED, true, ConnectivityManager.TYPE_WIFI, true);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkUnmeteredNoConnection() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.UNMETERED, false, ConnectivityManager.TYPE_WIFI, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.UNMETERED, false, ConnectivityManager.TYPE_WIFI, true);
         assertThat(job.isRequirementNetworkTypeMet()).isFalse();
     }
 
     @Test
     public void verifyRequirementNetworkConnectedOnRoaming() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.CONNECTED, true, ConnectivityManager.TYPE_MOBILE, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.CONNECTED, true, ConnectivityManager.TYPE_MOBILE, true);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkConnectedOnMobile() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.CONNECTED, true, ConnectivityManager.TYPE_MOBILE, false);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.CONNECTED, true, ConnectivityManager.TYPE_MOBILE, false);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkConnectedWifi() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.CONNECTED, true, ConnectivityManager.TYPE_WIFI, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.CONNECTED, true, ConnectivityManager.TYPE_WIFI, true);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkConnectedNoConnection() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.CONNECTED, false, ConnectivityManager.TYPE_WIFI, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.CONNECTED, false, ConnectivityManager.TYPE_WIFI, true);
         assertThat(job.isRequirementNetworkTypeMet()).isFalse();
     }
 
     @Test
     public void verifyRequirementNetworkAnyOnRoaming() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.ANY, true, ConnectivityManager.TYPE_MOBILE, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.ANY, true, ConnectivityManager.TYPE_MOBILE, true);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkAnyOnMobile() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.ANY, true, ConnectivityManager.TYPE_MOBILE, false);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.ANY, true, ConnectivityManager.TYPE_MOBILE, false);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkAnyWifi() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.ANY, true, ConnectivityManager.TYPE_WIFI, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.ANY, true, ConnectivityManager.TYPE_WIFI, true);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
     @Test
     public void verifyRequirementNetworkAnyNoConnection() {
-        Job job = setupNetworkRequirement(JobRequest.NetworkType.ANY, false, ConnectivityManager.TYPE_WIFI, true);
+        Job job = createMockedJob();
+        setupNetworkRequirement(job, JobRequest.NetworkType.ANY, false, ConnectivityManager.TYPE_WIFI, true);
         assertThat(job.isRequirementNetworkTypeMet()).isTrue();
     }
 
-    private Job setupNetworkRequirement(JobRequest.NetworkType requirement, boolean connected, int networkType, boolean roaming) {
+    @Test
+    public void verifyRequirementDeviceIdleIsIdle() {
+        Job job = createMockedJob();
+        setupDeviceIdle(job, true, true);
+        assertThat(job.isRequirementDeviceIdleMet()).isTrue();
+    }
+
+    @Test
+    public void verifyRequirementDeviceIdleIsNotIdle() {
+        Job job = createMockedJob();
+        setupDeviceIdle(job, true, false);
+        assertThat(job.isRequirementDeviceIdleMet()).isFalse();
+    }
+
+    @Test
+    public void verifyRequirementDeviceNoRequirement() {
+        Job job = createMockedJob();
+        setupDeviceIdle(job, false, false);
+        assertThat(job.isRequirementDeviceIdleMet()).isTrue();
+
+        setupDeviceIdle(job, false, true);
+        assertThat(job.isRequirementDeviceIdleMet()).isTrue();
+    }
+
+    @Test
+    public void verifyMeetsRequirementsAllMet() {
+        Job job = createMockedJob();
+        setupDeviceIdle(job, true, true);
+        setupNetworkRequirement(job, JobRequest.NetworkType.CONNECTED, true, ConnectivityManager.TYPE_WIFI, false);
+
+        assertThat(job.isRequirementDeviceIdleMet()).isTrue();
+        assertThat(job.isRequirementNetworkTypeMet()).isTrue();
+        assertThat(job.meetsRequirements()).isTrue();
+    }
+
+    @Test
+    public void verifyMeetsRequirementsOnlyIdle() {
+        Job job = createMockedJob();
+        setupDeviceIdle(job, true, true);
+        setupNetworkRequirement(job, JobRequest.NetworkType.CONNECTED, false, ConnectivityManager.TYPE_WIFI, false);
+
+        assertThat(job.isRequirementDeviceIdleMet()).isTrue();
+        assertThat(job.isRequirementNetworkTypeMet()).isFalse();
+        assertThat(job.meetsRequirements()).isFalse();
+    }
+
+    @Test
+    public void verifyMeetsRequirementsOnlyNetwork() {
+        Job job = createMockedJob();
+        setupDeviceIdle(job, true, false);
+        setupNetworkRequirement(job, JobRequest.NetworkType.CONNECTED, true, ConnectivityManager.TYPE_WIFI, false);
+
+        assertThat(job.isRequirementDeviceIdleMet()).isFalse();
+        assertThat(job.isRequirementNetworkTypeMet()).isTrue();
+        assertThat(job.meetsRequirements()).isFalse();
+    }
+
+    @Test
+    public void verifyMeetsRequirementsEnforcedIgnored() {
+        Job job = createMockedJob();
+        when(job.getParams().getRequest().requirementsEnforced()).thenReturn(false);
+        setupDeviceIdle(job, true, false);
+        setupNetworkRequirement(job, JobRequest.NetworkType.CONNECTED, false, ConnectivityManager.TYPE_WIFI, false);
+
+        assertThat(job.isRequirementDeviceIdleMet()).isFalse();
+        assertThat(job.isRequirementNetworkTypeMet()).isFalse();
+        assertThat(job.meetsRequirements()).isFalse();
+        assertThat(job.meetsRequirements(true)).isTrue();
+    }
+
+    private void setupNetworkRequirement(Job job, JobRequest.NetworkType requirement, boolean connected, int networkType, boolean roaming) {
         NetworkInfo networkInfo = mock(NetworkInfo.class);
         when(networkInfo.isConnected()).thenReturn(connected);
         when(networkInfo.isConnectedOrConnecting()).thenReturn(connected);
@@ -153,12 +244,28 @@ public class JobRequirementTest {
         ConnectivityManager connectivityManager = mock(ConnectivityManager.class);
         when(connectivityManager.getActiveNetworkInfo()).thenReturn(networkInfo);
 
+        when(job.getContext().getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager);
+
+        when(job.getParams().getRequest().requiredNetworkType()).thenReturn(requirement);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void setupDeviceIdle(Job job, boolean requirement, boolean deviceIdle) {
+        PowerManager powerManager = mock(PowerManager.class);
+        when(powerManager.isDeviceIdleMode()).thenReturn(deviceIdle);
+        when(powerManager.isInteractive()).thenReturn(!deviceIdle);
+        when(powerManager.isScreenOn()).thenReturn(!deviceIdle);
+        when(powerManager.isInteractive()).thenReturn(!deviceIdle);
+
+        when(job.getParams().getRequest().requiresDeviceIdle()).thenReturn(requirement);
+
+        when(job.getContext().getSystemService(Context.POWER_SERVICE)).thenReturn(powerManager);
+    }
+
+    private Job createMockedJob() {
         Context context = mock(MockContext.class);
-        when(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager);
 
         JobRequest request = mock(JobRequest.class);
-        when(request.requiredNetworkType()).thenReturn(requirement);
-
         Job.Params params = mock(Job.Params.class);
         when(params.getRequest()).thenReturn(request);
 
