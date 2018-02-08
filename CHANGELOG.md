@@ -1,4 +1,4 @@
-## 1.2.4
+## 1.2.4 (2018-02-08)
 * Add `scheduleAsync()` to the `DailyJob` class for scheduling daily jobs asynchronously to avoid IO operations on the main thread, see #371
 
 ## 1.2.3 (2018-02-07)
