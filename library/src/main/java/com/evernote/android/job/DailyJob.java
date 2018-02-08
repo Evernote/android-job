@@ -6,6 +6,7 @@ import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 
 import com.evernote.android.job.util.JobCat;
+import com.evernote.android.job.util.JobPreconditions;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
 import java.util.Calendar;
@@ -64,6 +65,42 @@ public abstract class DailyJob extends Job {
      */
     public static int schedule(@NonNull JobRequest.Builder baseBuilder, long startMs, long endMs) {
         return schedule(baseBuilder, true, startMs, endMs);
+    }
+
+    /**
+     * Helper method to schedule a daily job on a background thread. This is helpful to avoid IO operations
+     * on the main thread. For more information about scheduling daily jobs see {@link #schedule(JobRequest.Builder, long, long)}.
+     *
+     * <br>
+     * <br>
+     *
+     * In case of a failure an error is logged, but the application doesn't crash.
+     */
+    public static void scheduleAsync(@NonNull JobRequest.Builder baseBuilder, long startMs, long endMs) {
+        scheduleAsync(baseBuilder, startMs, endMs, JobRequest.DEFAULT_JOB_SCHEDULED_CALLBACK);
+    }
+
+    /**
+     * Helper method to schedule a daily job on a background thread. This is helpful to avoid IO operations
+     * on the main thread. The callback notifies you about the job ID or a possible failure. For more
+     * information about scheduling daily jobs see {@link #schedule(JobRequest.Builder, long, long)}.
+     *
+     * @param callback The callback which is invoked after the request has been scheduled.
+     */
+    public static void scheduleAsync(@NonNull final JobRequest.Builder baseBuilder, final long startMs, final long endMs,
+                                     @NonNull final JobRequest.JobScheduledCallback callback) {
+        JobPreconditions.checkNotNull(callback);
+        JobConfig.getExecutorService().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int jobId = schedule(baseBuilder, startMs, endMs);
+                    callback.onJobScheduled(jobId, baseBuilder.mTag, null);
+                } catch (Exception e) {
+                    callback.onJobScheduled(JobRequest.JobScheduledCallback.JOB_ID_ERROR, baseBuilder.mTag, e);
+                }
+            }
+        });
     }
 
     /**

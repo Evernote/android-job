@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
+import com.evernote.android.job.test.TestClock;
 import com.evernote.android.job.util.JobLogger;
 
 import org.junit.Before;
@@ -106,6 +107,44 @@ public class AsyncScheduleTest extends BaseJobManagerTest {
         waitUntilScheduled();
 
         assertThat(specificError.get()).isEqualTo(1);
+    }
+
+    @Test
+    public void verifyJobIdAsyncDailyJob() throws Exception {
+        JobConfig.setClock(new TestClock());
+
+        final AtomicInteger jobId = new AtomicInteger(-2);
+        DailyJob.scheduleAsync(DummyJobs.createBuilder(DummyJobs.SuccessJob.class), 1000, 2000, new JobRequest.JobScheduledCallback() {
+            @Override
+            public void onJobScheduled(int id, @NonNull String tag, @Nullable Exception exception) {
+                jobId.set(id);
+            }
+        });
+
+        waitUntilScheduled();
+        assertThat(manager().getJobRequest(jobId.get())).isNotNull();
+    }
+
+    @Test
+    public void verifyErrorAsyncDailyJob() throws Exception {
+        JobConfig.setClock(new TestClock());
+
+        JobScheduler jobScheduler = mock(JobScheduler.class);
+        when(jobScheduler.schedule(any(JobInfo.class))).thenThrow(new RuntimeException("test"));
+        when(context().getSystemService(Context.JOB_SCHEDULER_SERVICE)).thenReturn(jobScheduler);
+
+        final AtomicReference<Exception> reference = new AtomicReference<>();
+
+        DailyJob.scheduleAsync(DummyJobs.createBuilder(DummyJobs.SuccessJob.class), 1000, 2000, new JobRequest.JobScheduledCallback() {
+            @Override
+            public void onJobScheduled(int jobId, @NonNull String tag, @Nullable Exception exception) {
+                assertThat(jobId).isEqualTo(JOB_ID_ERROR);
+                reference.set(exception);
+            }
+        });
+
+        waitUntilScheduled();
+        assertThat(reference.get()).isInstanceOf(RuntimeException.class);
     }
 
     private void waitUntilScheduled() throws Exception {

@@ -439,7 +439,7 @@ public final class JobRequest {
 
     /**
      * Helper method to schedule a request on a background thread. This is helpful to avoid IO operations
-     * on the main thread. The callback notifies you about the job ID or a possible failure.
+     * on the main thread.
      *
      * <br>
      * <br>

@@ -1,3 +1,6 @@
+## 1.2.4
+* Add `scheduleAsync()` to the `DailyJob` class for scheduling daily jobs asynchronously to avoid IO operations on the main thread, see #371
+
 ## 1.2.3 (2018-02-07)
 * Add an `onCancel()` method to get notified when the job is canceled, see #359
 * Expose the `meetsRequirements()` method to have the option to check all requirements manually, see #349
