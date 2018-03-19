@@ -293,4 +293,35 @@ public class JobManagerTest extends BaseJobManagerTest {
         JobRequest request = manager().getJobRequest(newId);
         assertThat(request.getEndMs()).isGreaterThan(9_000);
     }
+
+    @Test
+    public void testWithUpdateCurrentRaceCondition() throws InterruptedException {
+        final JobRequest.Builder builder = new JobRequest.Builder("any").setExecutionWindow(300_000, 400_000).setUpdateCurrent(true);
+
+        final CountDownLatch latchWait = new CountDownLatch(2);
+        final CountDownLatch latchStart = new CountDownLatch(1);
+        final CountDownLatch latchFinished = new CountDownLatch(2);
+
+        for (int i = 0; i < 5; i++) {
+            new Thread() {
+                @Override
+                public void run() {
+                    latchWait.countDown();
+                    try {
+                        latchStart.await();
+                    } catch (InterruptedException e) {
+                        throw new IllegalStateException(e);
+                    }
+                    manager().schedule(builder.build());
+                    latchFinished.countDown();
+                }
+            }.start();
+        }
+
+        assertThat(latchWait.await(10, TimeUnit.SECONDS)).isTrue();
+        latchStart.countDown();
+        assertThat(latchFinished.await(10, TimeUnit.SECONDS)).isTrue();
+
+        assertThat(manager().getAllJobRequests().size()).isEqualTo(1);
+    }
 }
