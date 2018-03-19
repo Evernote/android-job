@@ -1,6 +1,7 @@
 ## 1.2.5
 * Handle platform bug where querying the network state throws an NPE internally, see #380
 * Fix database access on main thread, see #385
+* Fix misleading log message for some internal improvements, see #391
 
 ## 1.2.4 (2018-02-08)
 * Add `scheduleAsync()` to the `DailyJob` class for scheduling daily jobs asynchronously to avoid IO operations on the main thread, see #371
