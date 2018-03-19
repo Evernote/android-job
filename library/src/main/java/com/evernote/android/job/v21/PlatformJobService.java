@@ -52,35 +52,35 @@ public class PlatformJobService extends JobService {
 
     @Override
     public boolean onStartJob(final JobParameters params) {
-        final int jobId = params.getJobId();
-        final JobProxy.Common common = new JobProxy.Common(this, CAT, jobId);
-
-        // don't mark starting!
-        final JobRequest request = common.getPendingRequest(true, false);
-        if (request == null) {
-            return false;
-        }
-
-        if (request.isTransient()) {
-            if (TransientBundleCompat.startWithTransientBundle(this, request)) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    // should only happen during testing if an API is disabled
-                    CAT.d("PendingIntent for transient bundle is not null although running on O, using compat mode, request %s", request);
-                }
-                return false;
-
-            } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                CAT.d("PendingIntent for transient job %s expired", request);
-                return false;
-            }
-        }
-
-        common.markStarting(request);
-
         JobConfig.getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {
+                    final int jobId = params.getJobId();
+                    final JobProxy.Common common = new JobProxy.Common(PlatformJobService.this, CAT, jobId);
+
+                    // don't mark starting!
+                    final JobRequest request = common.getPendingRequest(true, false);
+                    if (request == null) {
+                        return;
+                    }
+
+                    if (request.isTransient()) {
+                        if (TransientBundleCompat.startWithTransientBundle(PlatformJobService.this, request)) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                // should only happen during testing if an API is disabled
+                                CAT.d("PendingIntent for transient bundle is not null although running on O, using compat mode, request %s", request);
+                            }
+                            return;
+
+                        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                            CAT.d("PendingIntent for transient job %s expired", request);
+                            return;
+                        }
+                    }
+
+                    common.markStarting(request);
+
                     common.executeJobRequest(request, getTransientBundle(params));
 
                 } finally {
