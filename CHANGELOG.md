@@ -1,4 +1,4 @@
-## 1.2.5
+## 1.2.5 (2018-03-19)
 * Handle platform bug where querying the network state throws an NPE internally, see #380
 * Fix database access on main thread, see #385
 * Fix misleading log message for some internal improvements, see #391
