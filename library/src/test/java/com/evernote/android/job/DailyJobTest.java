@@ -271,6 +271,22 @@ public class DailyJobTest extends BaseJobManagerTest {
         assertThat(request.getLastRun()).isEqualTo(clock.currentTimeMillis());
     }
 
+    @SuppressWarnings("ConstantConditions")
+    @Test
+    public void verifyEarlyExecution() {
+        TestClock clock = new TestClock();
+        clock.setTime(13, 0);
+
+        JobRequest request = verifyExecutionAndSuccessfulReschedule(clock, TimeUnit.HOURS.toMillis(14), TimeUnit.HOURS.toMillis(15));
+        assertThat(request.getStartMs()).isEqualTo(TimeUnit.HOURS.toMillis(25));
+        assertThat(request.getEndMs()).isEqualTo(TimeUnit.HOURS.toMillis(26));
+
+        int id = DailyJob.schedule(DummyJobs.createBuilder(DummyJobs.SuccessDailyJob.class), TimeUnit.HOURS.toMillis(14), TimeUnit.HOURS.toMillis(15));
+        request = manager().getJobRequest(id);
+        assertThat(request.getStartMs()).isEqualTo(TimeUnit.HOURS.toMillis(1));
+        assertThat(request.getEndMs()).isEqualTo(TimeUnit.HOURS.toMillis(2));
+    }
+
     @Test
     public void verifyRequirementsEnforcedSkipsJob() {
         long time = 1L;

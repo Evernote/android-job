@@ -64,7 +64,7 @@ public abstract class DailyJob extends Job {
      * @return The unique ID for this job.
      */
     public static int schedule(@NonNull JobRequest.Builder baseBuilder, long startMs, long endMs) {
-        return schedule(baseBuilder, true, startMs, endMs);
+        return schedule(baseBuilder, true, startMs, endMs, false);
     }
 
     /**
@@ -123,7 +123,7 @@ public abstract class DailyJob extends Job {
                 .schedule();
     }
 
-    private static int schedule(@NonNull JobRequest.Builder builder, boolean newJob, long startMs, long endMs) {
+    private static int schedule(@NonNull JobRequest.Builder builder, boolean newJob, long startMs, long endMs, boolean isReschedule) {
         if (startMs >= DAY || endMs >= DAY || startMs < 0 || endMs < 0) {
             throw new IllegalArgumentException("startMs or endMs should be less than one day (in milliseconds)");
         }
@@ -144,6 +144,11 @@ public abstract class DailyJob extends Job {
                 + TimeUnit.DAYS.toMillis(1); // add one day, otherwise result could be negative, e.g. if startMs is 0 and time is 00:08
 
         startDelay = (startDelay + startMs) % TimeUnit.DAYS.toMillis(1);
+
+        if (isReschedule && startDelay < TimeUnit.HOURS.toMillis(12)) {
+            // it happens that the job runs too early and while rescheduling we schedule the job for the same day again
+            startDelay += TimeUnit.DAYS.toMillis(1);
+        }
 
         if (startMs > endMs) {
             // e.g. when job should run between 10pm and 2am
@@ -214,7 +219,7 @@ public abstract class DailyJob extends Job {
 
                     // don't update current, it would cancel this currently running job
                     int newJobId = schedule(request.createBuilder(), false,
-                            extras.getLong(EXTRA_START_MS, 0) % DAY, extras.getLong(EXTRA_END_MS, 0L) % DAY);
+                            extras.getLong(EXTRA_START_MS, 0) % DAY, extras.getLong(EXTRA_END_MS, 0L) % DAY, true);
 
                     request = JobManager.instance().getJobRequest(newJobId);
                     if (request != null) {

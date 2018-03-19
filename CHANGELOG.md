@@ -3,6 +3,7 @@
 * Fix database access on main thread, see #385
 * Fix misleading log message for some internal improvements, see #391
 * Fix race condition when scheduling a job with `setUpdateCurrent(true)` where multiple jobs could have been scheduled, see #396
+* Fix bug where a daily job runs twice a day, see #406
 
 ## 1.2.4 (2018-02-08)
 * Add `scheduleAsync()` to the `DailyJob` class for scheduling daily jobs asynchronously to avoid IO operations on the main thread, see #371
