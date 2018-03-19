@@ -41,47 +41,89 @@ public class JobPeriodicCancelTest extends BaseJobManagerTest {
 
     @Test
     @Config(sdk = Build.VERSION_CODES.N)
-    public void verifyPeriodicFlexNotRescheduledN() throws Exception {
-        runJobAndCancelAllDuringExecution(true);
+    public void verifyPeriodicFlexNotRescheduledN() {
+        runJobAndCancelAllDuringExecution(true, false);
         assertThat(manager().getAllJobRequests()).isEmpty();
     }
 
     @Test
     @Config(sdk = Build.VERSION_CODES.N)
-    public void verifyPeriodicNotRescheduledN() throws Exception {
-        runJobAndCancelAllDuringExecution(false);
+    public void verifyPeriodicNotRescheduledN() {
+        runJobAndCancelAllDuringExecution(false, false);
+        assertThat(manager().getAllJobRequests()).isEmpty();
+    }
+
+    @Test
+    @Config(sdk = Build.VERSION_CODES.N)
+    public void verifyPeriodicFlexNotRescheduledNSwap() {
+        runJobAndCancelAllDuringExecution(true, true);
+        assertThat(manager().getAllJobRequests()).isEmpty();
+    }
+
+    @Test
+    @Config(sdk = Build.VERSION_CODES.N)
+    public void verifyPeriodicNotRescheduledNSwao() {
+        runJobAndCancelAllDuringExecution(false, true);
         assertThat(manager().getAllJobRequests()).isEmpty();
     }
 
     @Test
     @Config(sdk = Build.VERSION_CODES.M)
-    public void verifyPeriodicFlexNotRescheduledM() throws Exception {
-        runJobAndCancelAllDuringExecution(true);
+    public void verifyPeriodicFlexNotRescheduledM() {
+        runJobAndCancelAllDuringExecution(true, false);
         assertThat(manager().getAllJobRequests()).isEmpty();
     }
 
     @Test
     @Config(sdk = Build.VERSION_CODES.M)
-    public void verifyPeriodicNotRescheduledM() throws Exception {
-        runJobAndCancelAllDuringExecution(false);
+    public void verifyPeriodicNotRescheduledM() {
+        runJobAndCancelAllDuringExecution(false, false);
+        assertThat(manager().getAllJobRequests()).isEmpty();
+    }
+
+    @Test
+    @Config(sdk = Build.VERSION_CODES.M)
+    public void verifyPeriodicFlexNotRescheduledMSwap() {
+        runJobAndCancelAllDuringExecution(true, true);
+        assertThat(manager().getAllJobRequests()).isEmpty();
+    }
+
+    @Test
+    @Config(sdk = Build.VERSION_CODES.M)
+    public void verifyPeriodicNotRescheduledMSwap() {
+        runJobAndCancelAllDuringExecution(false, true);
         assertThat(manager().getAllJobRequests()).isEmpty();
     }
 
     @Test
     @Config(sdk = Build.VERSION_CODES.KITKAT)
-    public void verifyPeriodicFlexNotRescheduledK() throws Exception {
-        runJobAndCancelAllDuringExecution(true);
+    public void verifyPeriodicFlexNotRescheduledK() {
+        runJobAndCancelAllDuringExecution(true, false);
         assertThat(manager().getAllJobRequests()).isEmpty();
     }
 
     @Test
     @Config(sdk = Build.VERSION_CODES.KITKAT)
-    public void verifyPeriodicNotRescheduledK() throws Exception {
-        runJobAndCancelAllDuringExecution(false);
+    public void verifyPeriodicNotRescheduledK() {
+        runJobAndCancelAllDuringExecution(false, false);
         assertThat(manager().getAllJobRequests()).isEmpty();
     }
 
-    private void runJobAndCancelAllDuringExecution(boolean flex) {
+    @Test
+    @Config(sdk = Build.VERSION_CODES.KITKAT)
+    public void verifyPeriodicFlexNotRescheduledKSwap() {
+        runJobAndCancelAllDuringExecution(true, true);
+        assertThat(manager().getAllJobRequests()).isEmpty();
+    }
+
+    @Test
+    @Config(sdk = Build.VERSION_CODES.KITKAT)
+    public void verifyPeriodicNotRescheduledKSwap() {
+        runJobAndCancelAllDuringExecution(false, true);
+        assertThat(manager().getAllJobRequests()).isEmpty();
+    }
+
+    private void runJobAndCancelAllDuringExecution(boolean flex, boolean swapCancelOrder) {
         try {
             final int jobId = new JobRequest.Builder("any")
                 .setPeriodic(TimeUnit.MINUTES.toMillis(15), TimeUnit.MINUTES.toMillis(flex ? 5 : 15))
@@ -101,12 +143,18 @@ public class JobPeriodicCancelTest extends BaseJobManagerTest {
                 }
             }.start();
 
-            assertThat(mJob.mStartedLatch.await(3, TimeUnit.SECONDS)).isTrue();
+            assertThat(mJob.mStartedLatch.await(30, TimeUnit.SECONDS)).isTrue();
 
-            manager().cancelAll();
+            if (swapCancelOrder) {
+                manager().getJob(request.getJobId()).cancel(); // this might be called in onStopJob()
+                manager().cancelAll();
+            } else {
+                manager().cancelAll();
+                manager().getJob(request.getJobId()).cancel(); // this might be called in onStopJob()
+            }
 
             mJob.mBlockingLatch.countDown();
-            assertThat(waitFinishExecution.await(3, TimeUnit.SECONDS)).isTrue();
+            assertThat(waitFinishExecution.await(30, TimeUnit.SECONDS)).isTrue();
 
 
         } catch (InterruptedException e) {

@@ -82,9 +82,9 @@ public abstract class Job {
     private WeakReference<Context> mContextReference;
     private Context mApplicationContext;
 
-    private boolean mCanceled;
-    private boolean mDeleted;
-    private long mFinishedTimeStamp = -1;
+    private volatile boolean mCanceled;
+    private volatile boolean mDeleted;
+    private volatile long mFinishedTimeStamp = -1;
 
     private Result mResult = Result.FAILURE;
 
@@ -292,31 +292,34 @@ public abstract class Job {
         cancel(false);
     }
 
-    /*package*/ final void cancel(boolean deleted) {
+    /*package*/ final synchronized boolean cancel(boolean deleted) {
         if (!isFinished()) {
             if (!mCanceled) {
                 mCanceled = true;
                 onCancel();
             }
-            mDeleted = deleted;
+            mDeleted |= deleted;
+            return true;
+        } else {
+            return false;
         }
     }
 
     /**
      * @return {@code true} if this {@link Job} was canceled.
      */
-    protected final boolean isCanceled() {
+    protected final synchronized boolean isCanceled() {
         return mCanceled;
     }
 
     /**
      * @return {@code true} if the {@link Job} finished.
      */
-    public final boolean isFinished() {
+    public final synchronized boolean isFinished() {
         return mFinishedTimeStamp > 0;
     }
 
-    /*package*/ final long getFinishedTimeStamp() {
+    /*package*/ final synchronized long getFinishedTimeStamp() {
         return mFinishedTimeStamp;
     }
 
@@ -324,7 +327,7 @@ public abstract class Job {
         return mResult;
     }
 
-    /*package*/ final boolean isDeleted() {
+    /*package*/ final synchronized boolean isDeleted() {
         return mDeleted;
     }
 
