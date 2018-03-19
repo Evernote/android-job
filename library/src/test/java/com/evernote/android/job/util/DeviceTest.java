@@ -129,4 +129,15 @@ public class DeviceTest {
 
         assertThat(Device.getNetworkType(context)).isEqualTo(JobRequest.NetworkType.UNMETERED);
     }
+
+    @Test
+    public void testPlatformBug() {
+        ConnectivityManager connectivityManager = mock(ConnectivityManager.class);
+        when(connectivityManager.getActiveNetworkInfo()).thenThrow(new NullPointerException());
+
+        Context context = mock(MockContext.class);
+        when(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager);
+
+        assertThat(Device.getNetworkType(context)).isEqualTo(JobRequest.NetworkType.ANY);
+    }
 }

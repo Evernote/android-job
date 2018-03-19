@@ -99,7 +99,13 @@ public final class Device {
     @NonNull
     public static JobRequest.NetworkType getNetworkType(@NonNull Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        NetworkInfo networkInfo;
+        try {
+            networkInfo = connectivityManager.getActiveNetworkInfo();
+        } catch (Throwable t) {
+            return JobRequest.NetworkType.ANY;
+        }
+
         if (networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
             return JobRequest.NetworkType.ANY;
         }
