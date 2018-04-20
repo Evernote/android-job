@@ -39,7 +39,7 @@ android.libraryVariants.all { variant ->
         File outputFile = output.outputFile
         if (outputFile != null && outputFile.name.endsWith('.aar') && 'release'.equals(variant.buildType.name)) {
             def fileName = "${project.archivesBaseName}-${version}.aar"
-            output.outputFileName = new File(outputFile.parent, fileName)
+            output.outputFileName = fileName
         }
     }
 }
