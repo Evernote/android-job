@@ -1,3 +1,6 @@
+## 1.2.6
+* Make the license in Java files clearer, see #422
+
 ## 1.2.5 (2018-03-19)
 * Handle platform bug where querying the network state throws an NPE internally, see #380
 * Fix database access on main thread, see #385
