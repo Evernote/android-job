@@ -78,6 +78,8 @@ public abstract class Job {
 
     private Result mResult = Result.FAILURE;
 
+    private final Object mMonitor = new Object();
+
     /**
      * This method is invoked from a background thread. You should run your desired task here.
      * This method is thread safe. Each time a job starts executing a new instance of your {@link Job}
@@ -282,43 +284,53 @@ public abstract class Job {
         cancel(false);
     }
 
-    /*package*/ final synchronized boolean cancel(boolean deleted) {
-        if (!isFinished()) {
-            if (!mCanceled) {
-                mCanceled = true;
-                onCancel();
+    /*package*/ final boolean cancel(boolean deleted) {
+        synchronized (mMonitor) {
+            if (!isFinished()) {
+                if (!mCanceled) {
+                    mCanceled = true;
+                    onCancel();
+                }
+                mDeleted |= deleted;
+                return true;
+            } else {
+                return false;
             }
-            mDeleted |= deleted;
-            return true;
-        } else {
-            return false;
         }
     }
 
     /**
      * @return {@code true} if this {@link Job} was canceled.
      */
-    protected final synchronized boolean isCanceled() {
-        return mCanceled;
+    protected final boolean isCanceled() {
+        synchronized (mMonitor) {
+            return mCanceled;
+        }
     }
 
     /**
      * @return {@code true} if the {@link Job} finished.
      */
-    public final synchronized boolean isFinished() {
-        return mFinishedTimeStamp > 0;
+    public final boolean isFinished() {
+        synchronized (mMonitor) {
+            return mFinishedTimeStamp > 0;
+        }
     }
 
-    /*package*/ final synchronized long getFinishedTimeStamp() {
-        return mFinishedTimeStamp;
+    /*package*/ final long getFinishedTimeStamp() {
+        synchronized (mMonitor) {
+            return mFinishedTimeStamp;
+        }
     }
 
     /*package*/ final Result getResult() {
         return mResult;
     }
 
-    /*package*/ final synchronized boolean isDeleted() {
-        return mDeleted;
+    /*package*/ final boolean isDeleted() {
+        synchronized (mMonitor) {
+            return mDeleted;
+        }
     }
 
     @Override

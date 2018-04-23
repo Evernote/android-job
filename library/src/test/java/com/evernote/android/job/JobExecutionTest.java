@@ -217,7 +217,54 @@ public class JobExecutionTest extends BaseJobManagerTest {
     }
 
     @Test
-    public void verifyReschedulingTransientJobsWorks() throws Throwable {
+    public void verifySynchronizedAllowed() throws InterruptedException {
+        final CountDownLatch start = new CountDownLatch(1);
+
+        final Job job = new Job() {
+            @NonNull
+            @Override
+            protected synchronized Result onRunJob(@NonNull Params params) {
+                start.countDown();
+                try {
+                    Thread.sleep(8_000L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return Result.SUCCESS;
+            }
+        };
+
+        JobCreator jobCreator = new JobCreator() {
+            @Override
+            public Job create(@NonNull String tag) {
+                return job;
+            }
+        };
+
+        manager().addJobCreator(jobCreator);
+
+        final int jobId = new JobRequest.Builder("something")
+                .setExecutionWindow(200_000L, 400_000L)
+                .build()
+                .schedule();
+
+        executeJobAsync(jobId, Job.Result.SUCCESS);
+        assertThat(start.await(2, TimeUnit.SECONDS)).isTrue();
+
+        final CountDownLatch canceledWithin2Seconds = new CountDownLatch(1);
+        new Thread() {
+            @Override
+            public void run() {
+                job.cancel();
+                canceledWithin2Seconds.countDown();
+            }
+        }.start();
+
+        assertThat(canceledWithin2Seconds.await(2, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void verifyReschedulingTransientJobsWorks() {
         Bundle extras = new Bundle();
         extras.putString("key", "hello");
 
