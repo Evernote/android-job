@@ -38,12 +38,13 @@ import com.evernote.android.job.JobProxy;
  */
 public class PlatformAlarmReceiver extends BroadcastReceiver {
 
+    /*package*/ static final String ALARM_ALERT_FILTER = "com.evernote.android.job.v14.ALARM_ALERT";
     /*package*/ static final String EXTRA_JOB_ID = "EXTRA_JOB_ID";
     /*package*/ static final String EXTRA_JOB_EXACT = "EXTRA_JOB_EXACT";
     /*package*/ static final String EXTRA_TRANSIENT_EXTRAS = "EXTRA_TRANSIENT_EXTRAS";
 
     /*package*/ static Intent createIntent(Context context, int jobId, boolean exact, @Nullable Bundle transientExtras) {
-        Intent intent = new Intent(context, PlatformAlarmReceiver.class).putExtra(EXTRA_JOB_ID, jobId).putExtra(EXTRA_JOB_EXACT, exact);
+        Intent intent = new Intent(ALARM_ALERT_FILTER).putExtra(EXTRA_JOB_ID, jobId).putExtra(EXTRA_JOB_EXACT, exact);
         if (transientExtras != null) {
             intent.putExtra(EXTRA_TRANSIENT_EXTRAS, transientExtras);
         }
