@@ -3,9 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application tools:ignore="AllowBackup">
 
@@ -33,17 +31,6 @@
             </intent-filter>
         </receiver>
 
-        <receiver
-            android:name="com.evernote.android.job.JobBootReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
-                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
-            </intent-filter>
-        </receiver>
-
         <service
             android:name="com.evernote.android.job.gcm.PlatformGcmService"
             android:enabled="false"
@@ -54,10 +41,6 @@
             </intent-filter>
         </service>
 
-        <service
-            android:name="com.evernote.android.job.JobRescheduleService"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
 
 </manifest>
