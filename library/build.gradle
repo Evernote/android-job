@@ -1,42 +1,39 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.ben-manes.versions'
-apply from: '../build-config/gradle-quality.gradle'
 
 archivesBaseName = 'android-job'
 
 dependencies {
-    compileOnly "com.google.android.gms:play-services-gcm:$playServicesVersion"
+    compileOnly "com.google.android.gms:play-services-gcm:$playServices"
 
     //noinspection GradleCompatible,GradleDependency
-    api "com.android.support:support-compat:$supportLibVersion"
+    api "com.android.support:support-compat:$supportLibraryVersion"
 
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test:rules:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-    androidTestImplementation 'com.squareup.assertj:assertj-android:1.1.1'
-    androidTestImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
+    androidTestImplementation "com.android.support.test:runner:$libTestRunnerVersion"
+    androidTestImplementation "com.android.support.test:rules:$libTestRunnerVersion"
 
-    androidTestImplementation "com.facebook.stetho:stetho:$stethoVersion"
-    androidTestImplementation "com.android.support:support-v4:$supportLibVersion"
+    androidTestImplementation "com.android.support.test.espresso:espresso-core:$espressoVersion"
+    androidTestImplementation "com.squareup.assertj:assertj-android:$libAssertjAndroidVersion"
+    androidTestImplementation "com.google.android.gms:play-services-gcm:$playServices"
 
-    testImplementation "junit:junit:$junitVersion"
-    testImplementation "org.mockito:mockito-core:$mockitoVersion"
-    testImplementation "org.assertj:assertj-core:$assertjVersion"
-    testImplementation "org.robolectric:robolectric:$robolectricVersion"
+    androidTestImplementation "com.facebook.stetho:stetho:$libStethoVersion"
+    androidTestImplementation "com.android.support:support-v4:$supportLibraryVersion"
+
+    testImplementation "junit:junit:$libJUintVersion"
+    testImplementation "org.mockito:mockito-core:$libMockitoVersion"
+    testImplementation "org.assertj:assertj-core:$libAssertjVersion"
+    testImplementation "org.robolectric:robolectric:$libRobolectricVersion"
 }
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
+    compileSdkVersion rootProject.ext.compileSdk
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     resourcePrefix 'job_'
 
     defaultConfig {
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-
-        versionName project.VERSION_NAME
-        versionCode Integer.parseInt(project.VERSION_CODE)
+        minSdkVersion rootProject.ext.minSdk
+        targetSdkVersion rootProject.ext.compileSdk
 
         consumerProguardFiles 'proguard.cfg'
 
@@ -62,5 +59,3 @@ android {
         }
     }
 }
-
-apply from: '../build-config/gradle-push.gradle'

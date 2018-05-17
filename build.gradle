@@ -21,21 +21,6 @@ allprojects {
     }
 }
 
-ext {
-    compileSdkVersion = 26
-    targetSdkVersion = compileSdkVersion
-    minSdkVersion = 14
-
-    buildToolsVersion = '27.0.3'
-
-    supportLibVersion = '26.0.2'
-    playServicesVersion = '11.0.2'
-    stethoVersion = '1.5.0'
-    junitVersion = '4.12'
-    assertjVersion = '3.6.2'
-    mockitoVersion = '2.7.22'
-    robolectricVersion = '3.6.1'
-}
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.6'

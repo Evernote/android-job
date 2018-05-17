@@ -154,10 +154,6 @@ public final class JobManager {
         mJobCreatorHolder = new JobCreatorHolder();
         mJobStorage = new JobStorage(context);
         mJobExecutor = new JobExecutor();
-
-        if (!JobConfig.isSkipJobReschedule()) {
-            JobRescheduleService.startService(mContext);
-        }
     }
 
     /**
