@@ -86,7 +86,7 @@ public class PlatformJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        Job job = JobManager.instance().getJob(params.getJobId());
+        Job job = JobManager.create(this).getJob(params.getJobId());
         if (job != null) {
             job.cancel();
             CAT.d("Called onStopJob for %s", job);
