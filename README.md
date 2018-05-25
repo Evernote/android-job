@@ -159,6 +159,12 @@ dependencies {
 ```
 Crashes after removing the GCM dependency is a known limitation of the Google Play Services. Please take a look at [this workaround](https://github.com/evernote/android-job/wiki/FAQ#how-can-i-remove-the-gcm-dependency-from-my-app) to avoid those crashes.
 
+## WorkManager
+
+[WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager) is a new architecture component from Google and tries to solve a very similar problem this library tries to solve: implementing background jobs only once for all Android versions. The API is very similar to this library, but provides more features like chaining work items and it runs its own executor.
+
+If you start a new project, you should be using `WorkManager` instead of this library. You should also start migrating your code from this library to `WorkManager`. At some point in the future this library will deprecated.
+
 ## License
 ```
 Copyright (c) 2007-2017 by Evernote Corporation, All rights reserved.
