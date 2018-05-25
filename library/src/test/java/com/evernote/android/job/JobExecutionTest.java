@@ -1,5 +1,6 @@
 package com.evernote.android.job;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
@@ -11,6 +12,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.robolectric.annotation.Config;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -286,5 +288,69 @@ public class JobExecutionTest extends BaseJobManagerTest {
 
             previousJobId = request.getJobId();
         }
+    }
+
+    @Test
+    public void verifyNotFoundJobCanceledOneOff() {
+        final String tag = "something";
+        final int jobId = new JobRequest.Builder(tag)
+                .setExecutionWindow(TimeUnit.HOURS.toMillis(4), TimeUnit.HOURS.toMillis(5))
+                .build()
+                .schedule();
+
+        assertThat(manager().getAllJobRequestsForTag(tag)).hasSize(1);
+        executeJob(jobId, Job.Result.FAILURE);
+        assertThat(manager().getAllJobRequestsForTag(tag)).isEmpty();
+    }
+
+    @Test
+    public void verifyNotFoundJobCanceledExact() {
+        final String tag = "something";
+        final int jobId = new JobRequest.Builder(tag)
+                .setExact(TimeUnit.HOURS.toMillis(4))
+                .build()
+                .schedule();
+
+        assertThat(manager().getAllJobRequestsForTag(tag)).hasSize(1);
+        executeJob(jobId, Job.Result.FAILURE);
+        assertThat(manager().getAllJobRequestsForTag(tag)).isEmpty();
+    }
+
+
+    @Test
+    public void verifyNotFoundJobCanceledDailyJob() {
+        final String tag = "something";
+        int jobId = DailyJob.schedule(new JobRequest.Builder(tag), TimeUnit.HOURS.toMillis(5), TimeUnit.HOURS.toMillis(6));
+
+        assertThat(manager().getAllJobRequestsForTag(tag)).hasSize(1);
+        executeJob(jobId, Job.Result.FAILURE);
+        assertThat(manager().getAllJobRequestsForTag(tag)).isEmpty();
+    }
+
+    @Test
+    public void verifyNotFoundJobCanceledPeriodic() {
+        final String tag = "something";
+        final int jobId = new JobRequest.Builder(tag)
+                .setPeriodic(TimeUnit.HOURS.toMillis(4))
+                .build()
+                .schedule();
+
+        assertThat(manager().getAllJobRequestsForTag(tag)).hasSize(1);
+        executeJob(jobId, Job.Result.FAILURE);
+        assertThat(manager().getAllJobRequestsForTag(tag)).isEmpty();
+    }
+
+    @Test
+    @Config(sdk = Build.VERSION_CODES.M)
+    public void verifyNotFoundJobCanceledPeriodicFlexSupport() {
+        final String tag = "something";
+        final int jobId = new JobRequest.Builder(tag)
+                .setPeriodic(TimeUnit.HOURS.toMillis(4))
+                .build()
+                .schedule();
+
+        assertThat(manager().getAllJobRequestsForTag(tag)).hasSize(1);
+        executeJob(jobId, Job.Result.FAILURE);
+        assertThat(manager().getAllJobRequestsForTag(tag)).isEmpty();
     }
 }

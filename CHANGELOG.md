@@ -1,6 +1,7 @@
 ## 1.2.6
 * Make the license in Java files clearer, see #422
 * Use own internal monitor for synchronizing access to variables in order to avoid deadlocks when using the library, see #414
+* Cleanup jobs in the database if no job creator returns an instance during execution, see #413
 
 ## 1.2.5 (2018-03-19)
 * Handle platform bug where querying the network state throws an NPE internally, see #380

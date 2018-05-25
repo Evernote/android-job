@@ -73,7 +73,7 @@ public abstract class BaseJobManagerTest {
         try {
             executeJobAsync(jobId, expected).get(3, TimeUnit.SECONDS);
         } catch (Exception e) {
-            throw new AssertionError("Job timeout");
+            throw new AssertionError(e.getMessage(), e);
         }
     }
 

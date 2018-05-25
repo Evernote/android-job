@@ -257,10 +257,13 @@ public interface JobProxy {
                 return Job.Result.FAILURE;
 
             } finally {
-                if (!request.isPeriodic()) {
+                if (job == null) {
                     mJobManager.getJobStorage().remove(request);
 
-                } else if (request.isFlexSupport() && (job == null || !job.isDeleted())) {
+                } else if (!request.isPeriodic()) {
+                    mJobManager.getJobStorage().remove(request);
+
+                } else if (request.isFlexSupport() && !job.isDeleted()) {
                     mJobManager.getJobStorage().remove(request); // remove, we store the new job in JobManager.schedule()
                     request.reschedule(false, false);
                 }
