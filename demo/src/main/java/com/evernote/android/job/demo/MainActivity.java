@@ -79,6 +79,11 @@ public class MainActivity extends Activity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
+        if (JobApi.WORK_MANAGER.isSupported(this)) {
+            menu.findItem(R.id.action_force_work).setChecked(false);
+        } else {
+            menu.findItem(R.id.action_force_work).setVisible(false);
+        }
         if (JobApi.V_26.isSupported(this)) {
             menu.findItem(R.id.action_force_26).setChecked(false);
         } else {
@@ -111,6 +116,9 @@ public class MainActivity extends Activity {
         }
 
         switch (JobApi.getDefault(this)) {
+            case WORK_MANAGER:
+                menu.findItem(R.id.action_force_work).setChecked(true);
+                break;
             case V_26:
                 menu.findItem(R.id.action_force_26).setChecked(true);
                 break;

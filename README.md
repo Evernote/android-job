@@ -12,6 +12,8 @@ dependencies {
 }
 ```
 
+Starting with version `1.3.0` the library will use the `WorkManager` internally, please read the [documentation](https://github.com/evernote/android-job#workmanager) and opt-in.
+
 If you didn't turn off the manifest merger from the Gradle build tools, then no further step is required to setup the library. Otherwise you manually need to add the permissions and services like in this [AndroidManifest](library/src/main/AndroidManifest.xml).
 
 You can read the [JavaDoc here](https://evernote.github.io/android-job/javadoc/).
@@ -149,6 +151,23 @@ The library doesn't use reflection, but it relies on three `Service`s and two `B
 
 See the [FAQ](https://github.com/evernote/android-job/wiki/FAQ) in the [Wiki](https://github.com/evernote/android-job/wiki).
 
+## WorkManager
+
+[WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager) is a new architecture component from Google and tries to solve a very similar problem this library tries to solve: implementing background jobs only once for all Android versions. The API is very similar to this library, but provides more features like chaining work items and it runs its own executor.
+
+If you start a new project, you should be using `WorkManager` instead of this library. You should also start migrating your code from this library to `WorkManager`. At some point in the future this library will be deprecated.
+
+Starting with version `1.3.0` this library will use the `WorkManager` internally for scheduling jobs. That should ease the transition to the new architecture component. You only need to add the `WorkManager` to your classpath, e.g.
+```groovy
+dependencies {
+    implementation "android.arch.work:work-runtime:$work_version"
+}
+```
+This library will detect the `WorkManager` at runtime and use it from now on. To opt-out of this change (what isn't recommended) either exclude `WorkManager` from your app or turn the API off with
+```java
+JobConfig.setApiEnabled(JobApi.WORK_MANAGER, false);
+```
+
 ## Google Play Services
 
 This library does **not** automatically bundle the Google Play Services, because the dependency is really heavy and not all apps want to include them. That's why you need to add the dependency manually, if you want that the library uses the `GcmNetworkManager` on Android 4, then include the following dependency.
@@ -167,12 +186,6 @@ Because of recent changes in the support library, you must turn on the service m
 If you don't turn on the service, the library will always use the `AlarmManager` on Android 4.x.
 
 Crashes after removing the GCM dependency is a known limitation of the Google Play Services. Please take a look at [this workaround](https://github.com/evernote/android-job/wiki/FAQ#how-can-i-remove-the-gcm-dependency-from-my-app) to avoid those crashes.
-
-## WorkManager
-
-[WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager) is a new architecture component from Google and tries to solve a very similar problem this library tries to solve: implementing background jobs only once for all Android versions. The API is very similar to this library, but provides more features like chaining work items and it runs its own executor.
-
-If you start a new project, you should be using `WorkManager` instead of this library. You should also start migrating your code from this library to `WorkManager`. At some point in the future this library will be deprecated.
 
 ## License
 ```

@@ -15,7 +15,6 @@
  */
 package com.evernote.android.job;
 
-import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -128,11 +127,7 @@ public interface JobProxy {
 
         private final JobManager mJobManager;
 
-        public Common(@NonNull Service service, JobCat cat, int jobId) {
-            this((Context) service, cat, jobId);
-        }
-
-        /*package*/ Common(@NonNull Context context, JobCat cat, int jobId) {
+        public Common(@NonNull Context context, JobCat cat, int jobId) {
             mContext = context;
             mJobId = jobId;
             mCat = cat;

@@ -51,6 +51,7 @@ dependencies {
     implementation "com.facebook.stetho:stetho:$stethoVersion"
 
     gcmImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
+    gcmImplementation "android.arch.work:work-runtime:$workVersion"
 }
 
 uploadArchives.enabled false

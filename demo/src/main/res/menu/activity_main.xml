@@ -6,6 +6,10 @@
 
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/action_force_work"
+            android:title="WorkManager"
+            app:showAsAction="never"/>
+        <item
             android:id="@+id/action_force_26"
             android:title="v26"
             app:showAsAction="never"/>

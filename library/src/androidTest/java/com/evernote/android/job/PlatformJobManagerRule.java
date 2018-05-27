@@ -24,6 +24,7 @@ public class PlatformJobManagerRule extends ExternalResource {
     protected void before() throws Throwable {
         JobConfig.setJobReschedulePause(0, TimeUnit.MILLISECONDS);
         JobConfig.setSkipJobReschedule(true);
+        JobConfig.setApiEnabled(JobApi.WORK_MANAGER, false);
 
         mManager = JobManager.create(InstrumentationRegistry.getTargetContext());
         mManager.cancelAll();

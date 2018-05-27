@@ -1,5 +1,6 @@
 package com.evernote.android.job;
 
+import android.app.Application;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -76,6 +77,11 @@ public class PlatformTest {
     }
 
     @Test
+    public void testApiWorkManager() throws Exception {
+        testOneOff(JobApi.WORK_MANAGER);
+    }
+
+    @Test
     public void testExactRealTime() throws Exception {
         testJobExact();
     }
@@ -129,6 +135,9 @@ public class PlatformTest {
             case V_24:
             case V_26:
                 mJob = new TestJob(PlatformJobService.class);
+                break;
+            case WORK_MANAGER:
+                mJob = new TestJob(Application.class);
                 break;
             default:
                 throw new IllegalStateException("not implemented");
