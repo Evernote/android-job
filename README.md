@@ -171,6 +171,17 @@ This library will detect the `WorkManager` at runtime and use it from now on. To
 JobConfig.setApiEnabled(JobApi.WORK_MANAGER, false);
 ```
 
+The API and feature set of `android-job` and `WorkManager` are really similar. However, some features are unique and only supported by one or the other
+Feature | android-job | WorkManager
+--- | --- | ---
+Exact jobs | Yes | No
+Transient jobs | Yes | No
+Daily jobs | Yes | No
+Custom Logger | Yes | No
+Observe job status | No | Yes
+Chained jobs | No | Yes
+Work sequences | No | Yes
+
 ## Google Play Services
 
 This library does **not** automatically bundle the Google Play Services, because the dependency is really heavy and not all apps want to include them. That's why you need to add the dependency manually, if you want that the library uses the `GcmNetworkManager` on Android 4, then include the following dependency.
