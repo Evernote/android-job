@@ -3,6 +3,7 @@
 * Use own internal monitor for synchronizing access to variables in order to avoid deadlocks when using the library, see #414
 * Cleanup jobs in the database if no job creator returns an instance during execution, see #413
 * Make sure that the `JobManager` is created when canceling jobs, see #442
+* Don't crash on Android 4.X with the recent Google Play Services, see #415
 * Explain the relation to `WorkManager`, see [here](https://github.com/evernote/android-job#WorkManager)
 
 ## 1.2.5 (2018-03-19)

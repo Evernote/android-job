@@ -19,6 +19,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.evernote.android.job.JobProxy;
+import com.evernote.android.job.JobProxyIllegalStateException;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.util.JobUtil;
@@ -60,7 +61,7 @@ public class JobProxyGcm implements JobProxy {
                 .setExecutionWindow(startSeconds, endSeconds)
                 .build();
 
-        mGcmNetworkManager.schedule(task);
+        scheduleTask(task);
 
         CAT.d("Scheduled OneoffTask, %s, start %s, end %s (from now), reschedule count %d", request, JobUtil.timeToString(startMs),
                 JobUtil.timeToString(endMs), Common.getRescheduleCount(request));
@@ -73,7 +74,7 @@ public class JobProxyGcm implements JobProxy {
                 .setFlex(request.getFlexMs() / 1_000)
                 .build();
 
-        mGcmNetworkManager.schedule(task);
+        scheduleTask(task);
 
         CAT.d("Scheduled PeriodicTask, %s, interval %s, flex %s", request, JobUtil.timeToString(request.getIntervalMs()),
                 JobUtil.timeToString(request.getFlexMs()));
@@ -90,7 +91,7 @@ public class JobProxyGcm implements JobProxy {
                 .setExecutionWindow(startMs / 1_000, endMs / 1_000)
                 .build();
 
-        mGcmNetworkManager.schedule(task);
+        scheduleTask(task);
 
         CAT.d("Scheduled periodic (flex support), %s, start %s, end %s, flex %s", request, JobUtil.timeToString(startMs),
                 JobUtil.timeToString(endMs), JobUtil.timeToString(request.getFlexMs()));
@@ -105,6 +106,18 @@ public class JobProxyGcm implements JobProxy {
     public boolean isPlatformJobScheduled(JobRequest request) {
         // there is no option to check whether a task is scheduled, assume it is
         return true;
+    }
+
+    private void scheduleTask(Task task) {
+        try {
+            mGcmNetworkManager.schedule(task);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() != null && e.getMessage().startsWith("The GcmTaskService class you provided")) {
+                throw new JobProxyIllegalStateException(e);
+            } else {
+                throw e;
+            }
+        }
     }
 
     protected <T extends Task.Builder> T prepareBuilder(T builder, JobRequest request) {
