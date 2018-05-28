@@ -1,4 +1,4 @@
-## 1.3.0-alpha01
+## 1.3.0-alpha01 (2018-05-28)
 * Implement an API that uses the `WorkManager` for scheduling work items
 
 ## 1.2.6 (2018-05-27)
