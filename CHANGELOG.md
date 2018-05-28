@@ -1,4 +1,4 @@
-## 1.2.6
+## 1.2.6 (2018-05-27)
 * Make the license in Java files clearer, see #422
 * Use own internal monitor for synchronizing access to variables in order to avoid deadlocks when using the library, see #414
 * Cleanup jobs in the database if no job creator returns an instance during execution, see #413
