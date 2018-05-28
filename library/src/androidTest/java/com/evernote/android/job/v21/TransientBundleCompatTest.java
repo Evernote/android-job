@@ -87,13 +87,14 @@ public class TransientBundleCompatTest {
 
         assertThat(mJobManagerRule.getAllPendingJobsFromScheduler()).isNotNull().isNotEmpty();
 
-        assertThat(mJobManagerRule.getManager().getJobRequest(jobId).isTransient()).isTrue();
+        JobRequest request = mJobManagerRule.getManager().getJobRequest(jobId);
+        assertThat(request.isTransient()).isTrue();
 
         final Intent intent = PlatformAlarmServiceExact.createIntent(context(), jobId, null);
         PendingIntent pendingIntent = PendingIntent.getService(context(), jobId, intent, PendingIntent.FLAG_NO_CREATE);
         assertThat(pendingIntent).isNotNull();
 
-        boolean started = TransientBundleCompat.startWithTransientBundle(context(), mJobManagerRule.getManager().getJobRequest(jobId));
+        boolean started = TransientBundleCompat.startWithTransientBundle(context(), request);
         assertThat(started).isTrue();
 
         pendingIntent = PendingIntent.getService(context(), jobId, intent, PendingIntent.FLAG_NO_CREATE);
