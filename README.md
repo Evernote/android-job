@@ -172,15 +172,16 @@ JobConfig.setApiEnabled(JobApi.WORK_MANAGER, false);
 ```
 
 The API and feature set of `android-job` and `WorkManager` are really similar. However, some features are unique and only supported by one or the other
-Feature | android-job | WorkManager
---- | --- | ---
-Exact jobs | Yes | No
-Transient jobs | Yes | No
-Daily jobs | Yes | No
-Custom Logger | Yes | No
-Observe job status | No | Yes
-Chained jobs | No | Yes
-Work sequences | No | Yes
+
+| Feature | android-job | WorkManager |
+| --- | --- | --- |
+| Exact jobs | Yes | No |
+| Transient jobs | Yes | No |
+| Daily jobs | Yes | No |
+| Custom Logger | Yes | No |
+| Observe job status | No | Yes |
+| Chained jobs | No | Yes |
+| Work sequences | No | Yes |
 
 ## Google Play Services
 
