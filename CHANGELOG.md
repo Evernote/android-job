@@ -1,6 +1,7 @@
 ## 1.3.0-alpha02 (2018-06-10)
 * Initialize the job storage on a background thread, see $471
 * Restrict usage of internal classes for internal usage only, see #465
+* Add a workaround for the internal crash in `JobIntentService`, see #255
 * Fix RuntimeException with WorkManager, see #464
 
 ## 1.3.0-alpha01 (2018-05-28)
