@@ -15,6 +15,8 @@
  */
 package com.evernote.android.job;
 
+import android.support.annotation.RestrictTo;
+
 /**
  * Indicates illegal states during the creation of the {@link JobManager}.
  *
@@ -26,6 +28,7 @@ package com.evernote.android.job;
  * @author rwondratschek
  */
 public class JobManagerCreateException extends IllegalStateException {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public JobManagerCreateException(String s) {
         super(s);
     }

@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobProxy;
@@ -32,6 +33,7 @@ import java.util.Set;
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class PlatformAlarmServiceExact extends Service {
 
     private static final JobCat CAT = new JobCat("PlatformAlarmServiceExact");

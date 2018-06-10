@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.util.SparseArray;
 
 import com.evernote.android.job.util.JobCat;
@@ -31,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 /*package*/ final class WakeLockUtil {
 
     private static final JobCat CAT = new JobCat("WakeLockUtil");

@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.JobIntentService;
 
@@ -35,6 +36,7 @@ import java.util.concurrent.CountDownLatch;
  *
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class JobRescheduleService extends JobIntentService {
 
     private static final JobCat CAT = new JobCat("JobRescheduleService", BuildConfig.DEBUG);

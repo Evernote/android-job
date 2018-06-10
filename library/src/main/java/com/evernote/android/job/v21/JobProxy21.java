@@ -23,6 +23,7 @@ import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobProxyIllegalStateException;
@@ -37,6 +38,7 @@ import java.util.List;
  * @author rwondratschek
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class JobProxy21 implements JobProxy {
 
     private static final String TAG = "JobProxy21";

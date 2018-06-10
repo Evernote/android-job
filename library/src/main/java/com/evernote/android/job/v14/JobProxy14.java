@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobProxy;
@@ -33,6 +34,7 @@ import com.evernote.android.job.util.JobUtil;
  * @author rwondratschek
  */
 @SuppressWarnings("WeakerAccess")
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class JobProxy14 implements JobProxy {
 
     private static final String TAG = "JobProxy14";

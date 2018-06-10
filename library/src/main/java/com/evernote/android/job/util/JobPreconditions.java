@@ -16,6 +16,7 @@
 
 package com.evernote.android.job.util;
 
+import android.support.annotation.RestrictTo;
 import android.text.TextUtils;
 
 import java.util.Collection;
@@ -26,6 +27,7 @@ import java.util.Locale;
  * correct arguments and state.
  */
 @SuppressWarnings("UnusedDeclaration")
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class JobPreconditions {
 
     private JobPreconditions() {

@@ -1,8 +1,11 @@
 package com.evernote.android.job;
 
+import android.support.annotation.RestrictTo;
+
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 /*package*/ final class WorkManagerAvailableHelper {
 
     private static final boolean MANAGER_IN_CLASSPATH;

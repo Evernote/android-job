@@ -20,6 +20,7 @@ import android.app.job.JobInfo;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.v21.JobProxy21;
@@ -29,6 +30,7 @@ import com.evernote.android.job.v21.JobProxy21;
  * @author rwondratschek
  */
 @TargetApi(Build.VERSION_CODES.N)
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class JobProxy24 extends JobProxy21 {
 
     private static final String TAG = "JobProxy24";

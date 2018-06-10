@@ -26,6 +26,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.LruCache;
@@ -44,6 +45,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author rwondratschek
  */
 @SuppressWarnings("WeakerAccess")
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 /*package*/ class JobStorage {
 
     private static final JobCat CAT = new JobCat("JobStorage");

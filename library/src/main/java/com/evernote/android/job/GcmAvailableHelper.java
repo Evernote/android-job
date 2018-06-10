@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.gcm.PlatformGcmService;
@@ -32,6 +33,7 @@ import java.util.List;
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 /*package*/ final class GcmAvailableHelper {
 
     private static final JobCat CAT = new JobCat("GcmAvailableHelper");

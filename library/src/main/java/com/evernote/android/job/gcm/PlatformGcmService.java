@@ -15,6 +15,8 @@
  */
 package com.evernote.android.job.gcm;
 
+import android.support.annotation.RestrictTo;
+
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobManagerCreateException;
@@ -28,6 +30,7 @@ import com.google.android.gms.gcm.TaskParams;
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class PlatformGcmService extends GcmTaskService {
 
     private static final JobCat CAT = new JobCat("PlatformGcmService");

@@ -1,5 +1,6 @@
 ## 1.3.0-alpha02
 * Initialize the job storage on a background thread, see $471
+* Restrict usage of internal classes for internal usage only, see #465
 
 ## 1.3.0-alpha01 (2018-05-28)
 * Implement an API that uses the `WorkManager` for scheduling work items

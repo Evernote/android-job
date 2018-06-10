@@ -18,6 +18,7 @@ package com.evernote.android.job;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.RestrictTo;
 
 /**
  * A {@code BroadcastReceiver} rescheduling jobs after a reboot, if the underlying {@link JobApi} can't
@@ -25,6 +26,7 @@ import android.content.Intent;
  *
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class JobBootReceiver extends BroadcastReceiver {
 
     @Override

@@ -18,6 +18,7 @@ package com.evernote.android.job.util;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.support.annotation.RestrictTo;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class JobUtil {
 
     private static final ThreadLocal<SimpleDateFormat> FORMAT = new ThreadLocal<>();

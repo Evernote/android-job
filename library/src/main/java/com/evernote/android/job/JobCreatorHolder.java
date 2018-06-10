@@ -15,6 +15,8 @@
  */
 package com.evernote.android.job;
 
+import android.support.annotation.RestrictTo;
+
 import com.evernote.android.job.util.JobCat;
 
 import java.util.List;
@@ -23,6 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 /*package*/ class JobCreatorHolder {
 
     private static final JobCat CAT = new JobCat("JobCreatorHolder");

@@ -16,10 +16,12 @@
 package com.evernote.android.job.util;
 
 import android.os.SystemClock;
+import android.support.annotation.RestrictTo;
 
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface Clock {
 
     long currentTimeMillis();

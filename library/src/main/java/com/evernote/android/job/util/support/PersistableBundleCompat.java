@@ -17,6 +17,7 @@ package com.evernote.android.job.util.support;
 
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.util.JobCat;
 
@@ -36,6 +37,7 @@ import java.util.Set;
  * @author rwondratschek
  */
 @SuppressWarnings("unused")
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class PersistableBundleCompat {
 
     private static final JobCat CAT = new JobCat("PersistableBundleCompat");

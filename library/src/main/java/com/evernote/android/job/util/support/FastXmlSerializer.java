@@ -16,6 +16,8 @@
 
 package com.evernote.android.job.util.support;
 
+import android.support.annotation.RestrictTo;
+
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -38,6 +40,7 @@ import java.nio.charset.UnsupportedCharsetException;
  */
 /*package*/
 @SuppressWarnings({"TryWithIdenticalCatches", "FieldCanBeLocal", "ConstantIfStatement", "ConstantConditions"})
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 class FastXmlSerializer implements XmlSerializer {
     private static final String[] ESCAPE_TABLE = new String[] {
             null,     null,     null,     null,     null,     null,     null,     null,  // 0-7

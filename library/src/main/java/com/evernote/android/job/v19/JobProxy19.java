@@ -20,6 +20,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobUtil;
@@ -29,6 +30,7 @@ import com.evernote.android.job.v14.JobProxy14;
  * @author rwondratschek
  */
 @TargetApi(Build.VERSION_CODES.KITKAT)
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class JobProxy19 extends JobProxy14 {
 
     private static final String TAG = "JobProxy19";

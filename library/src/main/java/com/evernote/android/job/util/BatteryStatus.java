@@ -15,9 +15,12 @@
  */
 package com.evernote.android.job.util;
 
+import android.support.annotation.RestrictTo;
+
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class BatteryStatus {
 
     public static final BatteryStatus DEFAULT = new BatteryStatus(false, 1f);

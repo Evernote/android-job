@@ -19,6 +19,7 @@ package com.evernote.android.job.util.support;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.support.annotation.RestrictTo;
 import android.util.Base64;
 import android.util.Xml;
 
@@ -40,6 +41,7 @@ import java.util.Set;
 
 /*package*/ @SuppressWarnings({"unused", "StatementWithEmptyBody", "FinalStaticMethod", "WhileLoopReplaceableByForEach",
         "ForLoopReplaceableByForEach", "FinalPrivateMethod", "AccessStaticViaInstance", "unchecked", "IfCanBeSwitch", "WeakerAccess", "SameParameterValue", "JavaDoc", "StringConcatenationInLoop"})
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 final class XmlUtils {
 
     private XmlUtils() {

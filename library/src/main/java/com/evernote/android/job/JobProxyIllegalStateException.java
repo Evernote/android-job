@@ -15,16 +15,20 @@
  */
 package com.evernote.android.job;
 
+import android.support.annotation.RestrictTo;
+
 /**
  * Indicates an illegal state when a proxy tries to schedule a job, but something weird happens.
  *
  * @author rwondratschek
  */
 public class JobProxyIllegalStateException extends IllegalStateException {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public JobProxyIllegalStateException(String s) {
         super(s);
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public JobProxyIllegalStateException(Throwable cause) {
         super(cause);
     }

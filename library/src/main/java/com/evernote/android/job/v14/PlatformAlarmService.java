@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.v4.app.JobIntentService;
 
 import com.evernote.android.job.JobIdsInternal;
@@ -31,6 +32,7 @@ import com.evernote.android.job.util.JobCat;
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class PlatformAlarmService extends JobIntentService {
 
     private static final JobCat CAT = new JobCat("PlatformAlarmService");

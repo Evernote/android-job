@@ -20,12 +20,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.JobProxy;
 
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class PlatformAlarmReceiver extends BroadcastReceiver {
 
     /*package*/ static final String EXTRA_JOB_ID = "EXTRA_JOB_ID";

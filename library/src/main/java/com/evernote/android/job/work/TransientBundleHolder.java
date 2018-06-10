@@ -2,11 +2,13 @@ package com.evernote.android.job.work;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.util.SparseArray;
 
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 /*package*/ final class TransientBundleHolder {
 
     private TransientBundleHolder() {

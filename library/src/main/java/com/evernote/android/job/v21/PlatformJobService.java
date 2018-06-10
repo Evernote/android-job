@@ -20,6 +20,7 @@ import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobConfig;
@@ -32,6 +33,7 @@ import com.evernote.android.job.util.JobCat;
  * @author rwondratschek
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class PlatformJobService extends JobService {
 
     /*

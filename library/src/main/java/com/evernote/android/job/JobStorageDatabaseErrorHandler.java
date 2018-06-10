@@ -21,6 +21,7 @@ import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.Build;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 import android.util.Pair;
 
@@ -48,6 +49,7 @@ import java.util.List;
  * as the default {@link DatabaseErrorHandler}.
  */
 @SuppressWarnings("WeakerAccess")
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 /*package*/ final class JobStorageDatabaseErrorHandler implements DatabaseErrorHandler {
 
     private static final JobCat CAT = new JobCat("DatabaseErrorHandler");

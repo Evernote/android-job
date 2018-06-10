@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobRequest;
@@ -27,6 +28,7 @@ import androidx.work.WorkStatus;
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class JobProxyWorkManager implements JobProxy {
 
     private static final String PREFIX = "android-job-";

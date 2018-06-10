@@ -17,6 +17,7 @@ package com.evernote.android.job.gcm;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobProxyIllegalStateException;
@@ -31,6 +32,7 @@ import com.google.android.gms.gcm.Task;
 /**
  * @author rwondratschek
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class JobProxyGcm implements JobProxy {
 
     private static final JobCat CAT = new JobCat("JobProxyGcm");
