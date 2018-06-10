@@ -38,6 +38,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Entry point for scheduling jobs. Depending on the platform and SDK version it uses different APIs
@@ -136,18 +138,28 @@ public final class JobManager {
 
     private final Context mContext;
     private final JobCreatorHolder mJobCreatorHolder;
-    private final JobStorage mJobStorage;
     private final JobExecutor mJobExecutor;
 
-    private JobManager(Context context) {
+    private JobStorage mJobStorage;
+    private final CountDownLatch mJobStorageLatch;
+
+    private JobManager(final Context context) {
         mContext = context;
         mJobCreatorHolder = new JobCreatorHolder();
-        mJobStorage = new JobStorage(context);
         mJobExecutor = new JobExecutor();
 
         if (!JobConfig.isSkipJobReschedule()) {
             JobRescheduleService.startService(mContext);
         }
+
+        mJobStorageLatch = new CountDownLatch(1);
+        JobConfig.getExecutorService().execute(new Runnable() {
+            @Override
+            public void run() {
+                mJobStorage = new JobStorage(context);
+                mJobStorageLatch.countDown();
+            }
+        });
     }
 
     /**
@@ -181,7 +193,7 @@ public final class JobManager {
 
         request.setScheduledAt(JobConfig.getClock().currentTimeMillis());
         request.setFlexSupport(flexSupport);
-        mJobStorage.put(request);
+        getJobStorage().put(request);
 
         try {
             scheduleWithApi(request, jobApi, periodic, flexSupport);
@@ -191,7 +203,7 @@ public final class JobManager {
 
         } catch (Exception e) {
             // if something fails, don't keep the job in the database, it would be rescheduled later
-            mJobStorage.remove(request);
+            getJobStorage().remove(request);
             throw e;
         }
 
@@ -204,7 +216,7 @@ public final class JobManager {
         } catch (Exception e) {
             if (jobApi == JobApi.V_14 || jobApi == JobApi.V_19) {
                 // at this stage we cannot do anything
-                mJobStorage.remove(request);
+                getJobStorage().remove(request);
                 throw e;
             } else {
                 jobApi = JobApi.V_19.isSupported(mContext) ? JobApi.V_19 : JobApi.V_14; // try one last time
@@ -215,7 +227,7 @@ public final class JobManager {
             scheduleWithApi(request, jobApi, periodic, flexSupport);
         } catch (Exception e) {
             // if something fails, don't keep the job in the database, it would be rescheduled later
-            mJobStorage.remove(request);
+            getJobStorage().remove(request);
             throw e;
         }
     }
@@ -248,7 +260,7 @@ public final class JobManager {
     }
 
     /*package*/ JobRequest getJobRequest(int jobId, boolean includeStarted) {
-        JobRequest jobRequest = mJobStorage.get(jobId);
+        JobRequest jobRequest = getJobStorage().get(jobId);
         if (!includeStarted && jobRequest != null && jobRequest.isStarted()) {
             return null;
         } else {
@@ -278,14 +290,14 @@ public final class JobManager {
     }
 
     /*package*/ Set<JobRequest> getAllJobRequests(@Nullable String tag, boolean includeStarted, boolean cleanUpTransient) {
-        Set<JobRequest> requests = mJobStorage.getAllJobRequests(tag, includeStarted);
+        Set<JobRequest> requests = getJobStorage().getAllJobRequests(tag, includeStarted);
 
         if (cleanUpTransient) {
             Iterator<JobRequest> iterator = requests.iterator();
             while (iterator.hasNext()) {
                 JobRequest request = iterator.next();
                 if (request.isTransient() && !request.getJobApi().getProxy(mContext).isPlatformJobScheduled(request)) {
-                    mJobStorage.remove(request);
+                    getJobStorage().remove(request);
                     iterator.remove();
                 }
             }
@@ -444,6 +456,14 @@ public final class JobManager {
     }
 
     /*package*/ JobStorage getJobStorage() {
+        if (mJobStorage == null) {
+            try {
+                mJobStorageLatch.await(3, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         return mJobStorage;
     }
 
