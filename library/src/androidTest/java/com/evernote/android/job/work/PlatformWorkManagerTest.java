@@ -3,6 +3,8 @@ package com.evernote.android.job.work;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
@@ -173,7 +175,15 @@ public class PlatformWorkManagerTest {
                 if (reference.get() == null) {
                     reference.set(workStatuses);
                 }
-                liveData.removeObserver(this);
+
+                final Observer<List<WorkStatus>> observer = this;
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        liveData.removeObserver(observer);
+                    }
+                });
+
                 latch.countDown();
             }
         });

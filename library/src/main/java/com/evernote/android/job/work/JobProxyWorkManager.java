@@ -4,6 +4,8 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.content.Context;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
@@ -37,9 +39,11 @@ public class JobProxyWorkManager implements JobProxy {
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private final Context mContext;
+    private final Handler mHandler;
 
     public JobProxyWorkManager(Context context) {
         mContext = context;
+        mHandler = new Handler(Looper.getMainLooper());
     }
 
     @Override
@@ -149,7 +153,15 @@ public class JobProxyWorkManager implements JobProxy {
                 if (reference.get() == null) {
                     reference.set(workStatuses);
                 }
-                liveData.removeObserver(this);
+
+                final Observer<List<WorkStatus>> observer = this;
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        liveData.removeObserver(observer);
+                    }
+                });
+
                 latch.countDown();
             }
         });
