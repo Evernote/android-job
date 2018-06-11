@@ -1,3 +1,6 @@
+## 1.3.0-alpha03 (2018-06-11)
+* Remove wrong restriction for `PersistableBundleCompat`
+
 ## 1.3.0-alpha02 (2018-06-10)
 * Initialize the job storage on a background thread, see #471
 * Restrict usage of internal classes for internal usage only, see #465
