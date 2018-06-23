@@ -22,14 +22,14 @@ public class PlatformWorker extends Worker {
 
     @NonNull
     @Override
-    public WorkerResult doWork() {
+    public Result doWork() {
         final int jobId = getJobId();
         try {
             JobProxy.Common common = new JobProxy.Common(getApplicationContext(), CAT, jobId);
 
             JobRequest request = common.getPendingRequest(true, true);
             if (request == null) {
-                return WorkerResult.FAILURE;
+                return Result.FAILURE;
             }
 
             Bundle transientBundle = null;
@@ -37,15 +37,15 @@ public class PlatformWorker extends Worker {
                 transientBundle = TransientBundleHolder.getBundle(jobId);
                 if (transientBundle == null) {
                     CAT.d("Transient bundle is gone for request %s", request);
-                    return WorkerResult.FAILURE;
+                    return Result.FAILURE;
                 }
             }
 
             Job.Result result = common.executeJobRequest(request, transientBundle);
             if (Job.Result.SUCCESS == result) {
-                return WorkerResult.SUCCESS;
+                return Result.SUCCESS;
             } else {
-                return WorkerResult.FAILURE;
+                return Result.FAILURE;
             }
         } finally {
             TransientBundleHolder.cleanUpBundle(jobId);
@@ -53,7 +53,7 @@ public class PlatformWorker extends Worker {
     }
 
     @Override
-    public void onStopped() {
+    public void onStopped(boolean cancelled) {
         int jobId = getJobId();
         Job job = JobManager.create(getApplicationContext()).getJob(jobId);
 
