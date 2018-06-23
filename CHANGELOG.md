@@ -1,3 +1,6 @@
+## 1.3.0-alpha04
+* Fix rare NPE when `WorkManager` is null for some reason, see #477
+
 ## 1.3.0-alpha03 (2018-06-11)
 * Remove wrong restriction for `PersistableBundleCompat`
 

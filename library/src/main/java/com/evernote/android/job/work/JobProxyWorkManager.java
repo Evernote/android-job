@@ -11,14 +11,17 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.JobProxy;
+import com.evernote.android.job.JobProxyIllegalStateException;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import androidx.work.Configuration;
 import androidx.work.Constraints;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
@@ -60,7 +63,12 @@ public class JobProxyWorkManager implements JobProxy {
 
         // don't set the back-off criteria, android-job is handling this
 
-        getWorkManager().enqueue(workRequest);
+        WorkManager workManager = getWorkManager();
+        if (workManager == null) {
+            throw new JobProxyIllegalStateException("WorkManager is null");
+        }
+
+        workManager.enqueue(workRequest);
     }
 
     @Override
@@ -71,7 +79,12 @@ public class JobProxyWorkManager implements JobProxy {
                 .addTag(createTag(request.getJobId()))
                 .build();
 
-        getWorkManager().enqueue(workRequest);
+        WorkManager workManager = getWorkManager();
+        if (workManager == null) {
+            throw new JobProxyIllegalStateException("WorkManager is null");
+        }
+
+        workManager.enqueue(workRequest);
     }
 
     @Override
@@ -82,7 +95,12 @@ public class JobProxyWorkManager implements JobProxy {
 
     @Override
     public void cancel(int jobId) {
-        getWorkManager().cancelAllWorkByTag(createTag(jobId));
+        WorkManager workManager = getWorkManager();
+        if (workManager == null) {
+            return;
+        }
+
+        workManager.cancelAllWorkByTag(createTag(jobId));
         TransientBundleHolder.cleanUpBundle(jobId);
     }
 
@@ -139,14 +157,26 @@ public class JobProxyWorkManager implements JobProxy {
 
     private WorkManager getWorkManager() {
         // don't cache the instance, it could change under the hood, e.g. during tests
-        return WorkManager.getInstance();
+        WorkManager workManager = WorkManager.getInstance();
+        if (workManager == null) {
+            WorkManager.initialize(mContext, new Configuration.Builder().build());
+            workManager = WorkManager.getInstance();
+            CAT.w("WorkManager getInstance() returned null, now: %s", workManager);
+        }
+
+        return workManager;
     }
 
     private List<WorkStatus> getWorkStatusBlocking(String tag) {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<List<WorkStatus>> reference = new AtomicReference<>();
 
-        final LiveData<List<WorkStatus>> liveData = WorkManager.getInstance().getStatusesByTag(tag);
+        WorkManager workManager = getWorkManager();
+        if (workManager == null) {
+            return Collections.emptyList();
+        }
+
+        final LiveData<List<WorkStatus>> liveData = workManager.getStatusesByTag(tag);
         liveData.observeForever(new Observer<List<WorkStatus>>() {
             @Override
             public void onChanged(@Nullable List<WorkStatus> workStatuses) {
