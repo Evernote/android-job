@@ -1,14 +1,16 @@
 package com.evernote.android.job;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 
 import org.junit.rules.ExternalResource;
 
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import androidx.work.Configuration;
-import androidx.work.impl.WorkManagerImpl;
+import androidx.work.WorkManager;
 import androidx.work.test.WorkManagerTestInitHelper;
 
 /**
@@ -17,10 +19,24 @@ import androidx.work.test.WorkManagerTestInitHelper;
 public class PlatformWorkManagerRule extends ExternalResource {
 
     private JobManager mManager;
+    private Executor mExecutor;
+    private boolean mAllowExecution;
 
     @Override
     protected void before() {
         Context context = InstrumentationRegistry.getTargetContext();
+
+        mAllowExecution = false;
+        mExecutor = new Executor() {
+            @Override
+            public void execute(@NonNull Runnable command) {
+                if (mAllowExecution) {
+                    command.run();
+                }
+            }
+        };
+
+        WorkManagerTestInitHelper.initializeTestWorkManager(context, new Configuration.Builder().setExecutor(mExecutor).build());
 
         JobConfig.setJobReschedulePause(0, TimeUnit.MILLISECONDS);
         JobConfig.setSkipJobReschedule(true);
@@ -36,18 +52,14 @@ public class PlatformWorkManagerRule extends ExternalResource {
         mManager.destroy();
 
         JobConfig.reset();
-        resetWorkManager();
-    }
-
-    public void resetWorkManager() {
-        WorkManagerImpl.setDelegate(new WorkManagerImpl(InstrumentationRegistry.getTargetContext(), new Configuration.Builder().build()));
-    }
-
-    public void initTestWorkManager() {
-        WorkManagerTestInitHelper.initializeTestWorkManager(InstrumentationRegistry.getTargetContext());
+        WorkManager.getInstance().cancelAllWork();
     }
 
     public JobManager getManager() {
         return mManager;
+    }
+
+    public void setAllowExecution(boolean allowExecution) {
+        mAllowExecution = allowExecution;
     }
 }

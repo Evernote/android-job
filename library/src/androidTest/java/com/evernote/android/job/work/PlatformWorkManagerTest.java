@@ -99,7 +99,7 @@ public class PlatformWorkManagerTest {
         mWorkManagerRule.getManager().cancel(jobId);
         assertThat(TransientBundleHolder.getBundle(jobId)).isNull();
 
-        mWorkManagerRule.initTestWorkManager();
+        mWorkManagerRule.setAllowExecution(true);
 
         jobId = builder.build().schedule();
         assertThat(TransientBundleHolder.getBundle(jobId)).isNull();
@@ -129,7 +129,7 @@ public class PlatformWorkManagerTest {
             }
         });
 
-        mWorkManagerRule.initTestWorkManager();
+        mWorkManagerRule.setAllowExecution(true);
 
         int jobId = new JobRequest.Builder(TAG)
                 .setExecutionWindow(TimeUnit.HOURS.toMillis(4), TimeUnit.HOURS.toMillis(5))
