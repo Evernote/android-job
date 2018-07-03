@@ -81,7 +81,8 @@ import java.util.List;
         if (gcmServiceAvailable < 0) {
             synchronized (JobApi.class) {
                 if (gcmServiceAvailable < 0) {
-                    Intent intent = new Intent(context, PlatformGcmService.class);
+                    try {
+                    Intent intent = new Intent(context, Class.forName("com.evernote.android.job.gcm.PlatformGcmService"));
                     List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(intent, 0);
                     if (!hasPermission(resolveInfos)) {
                         gcmServiceAvailable = ConnectionResult.SERVICE_MISSING;
@@ -97,6 +98,9 @@ import java.util.List;
                     }
 
                     gcmServiceAvailable = ConnectionResult.SUCCESS;
+                    } catch (ClassNotFoundException e) {
+                        gcmServiceAvailable = ConnectionResult.SERVICE_MISSING;
+                    }
                 }
             }
         }
