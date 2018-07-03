@@ -80,22 +80,22 @@ import java.util.List;
             synchronized (JobApi.class) {
                 if (gcmServiceAvailable < 0) {
                     try {
-                        Intent intent = new Intent(context, Class.forName("com.evernote.android.job.gcm.PlatformGcmService"));
-                        List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(intent, 0);
-                        if (!hasPermission(resolveInfos)) {
-                            gcmServiceAvailable = ConnectionResult.SERVICE_MISSING;
-                            return gcmServiceAvailable;
-                        }
+                    Intent intent = new Intent(context, Class.forName("com.evernote.android.job.gcm.PlatformGcmService"));
+                    List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(intent, 0);
+                    if (!hasPermission(resolveInfos)) {
+                        gcmServiceAvailable = ConnectionResult.SERVICE_MISSING;
+                        return gcmServiceAvailable;
+                    }
 
-                        intent = new Intent(ACTION_TASK_READY);
-                        intent.setPackage(context.getPackageName());
-                        resolveInfos = context.getPackageManager().queryIntentServices(intent, 0);
-                        if (!hasPermission(resolveInfos)) {
-                            gcmServiceAvailable = ConnectionResult.SERVICE_MISSING;
-                            return gcmServiceAvailable;
-                        }
+                    intent = new Intent(ACTION_TASK_READY);
+                    intent.setPackage(context.getPackageName());
+                    resolveInfos = context.getPackageManager().queryIntentServices(intent, 0);
+                    if (!hasPermission(resolveInfos)) {
+                        gcmServiceAvailable = ConnectionResult.SERVICE_MISSING;
+                        return gcmServiceAvailable;
+                    }
 
-                        gcmServiceAvailable = ConnectionResult.SUCCESS;
+                    gcmServiceAvailable = ConnectionResult.SUCCESS;
                     } catch (ClassNotFoundException e) {
                         gcmServiceAvailable = ConnectionResult.SERVICE_MISSING;
                     }
