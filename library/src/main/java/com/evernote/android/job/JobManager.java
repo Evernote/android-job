@@ -140,7 +140,7 @@ public final class JobManager {
     private final JobCreatorHolder mJobCreatorHolder;
     private final JobExecutor mJobExecutor;
 
-    private JobStorage mJobStorage;
+    private volatile JobStorage mJobStorage;
     private final CountDownLatch mJobStorageLatch;
 
     private JobManager(final Context context) {
