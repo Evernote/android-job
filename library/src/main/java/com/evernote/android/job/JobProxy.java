@@ -283,12 +283,12 @@ public interface JobProxy {
              * we make sure, that no job is left in the system.
              */
             for (JobApi jobApi : JobApi.values()) {
-                if (jobApi.isSupported(context)) {
-                    try {
+                try {
+                    if (jobApi.isSupported(context)) {
                         jobApi.getProxy(context).cancel(jobId);
-                    } catch (Exception ignored) {
-                        // GCM API could crash if it's disabled, ignore crashes at this point and continue
                     }
+                } catch (Exception ignored) {
+                    // GCM API could crash if it's disabled, ignore crashes at this point and continue
                 }
             }
         }
