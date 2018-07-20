@@ -2,6 +2,7 @@
 * Fix rare NPE when `WorkManager` is null for some reason, see #477
 * Fix rare NPE when `JobStorage` is null, see #492
 * Fix class loading error for the GCM API, see #487
+* Use a `JobIntentService` implementation that doesn't crash, see #255
 
 ## 1.3.0-alpha03 (2018-06-11)
 * Remove wrong restriction for `PersistableBundleCompat`
