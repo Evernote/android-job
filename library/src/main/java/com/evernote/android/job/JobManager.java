@@ -153,13 +153,13 @@ public final class JobManager {
         }
 
         mJobStorageLatch = new CountDownLatch(1);
-        JobConfig.getExecutorService().execute(new Runnable() {
+        new Thread("AndroidJob-storage-init") {
             @Override
             public void run() {
                 mJobStorage = new JobStorage(context);
                 mJobStorageLatch.countDown();
             }
-        });
+        }.start();
     }
 
     /**
@@ -455,13 +455,17 @@ public final class JobManager {
         mJobCreatorHolder.removeJobCreator(jobCreator);
     }
 
+    @NonNull
     /*package*/ JobStorage getJobStorage() {
         if (mJobStorage == null) {
             try {
-                mJobStorageLatch.await(3, TimeUnit.SECONDS);
+                mJobStorageLatch.await(10, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+        }
+        if (mJobStorage == null) {
+            throw new IllegalStateException("Job storage shouldn't be null");
         }
 
         return mJobStorage;
