@@ -23,7 +23,6 @@ import android.content.pm.ResolveInfo;
 import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.gcm.JobProxyGcm;
-import com.evernote.android.job.gcm.PlatformGcmService;
 import com.evernote.android.job.util.JobCat;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -81,7 +80,8 @@ import java.util.List;
         if (gcmServiceAvailable < 0) {
             synchronized (JobApi.class) {
                 if (gcmServiceAvailable < 0) {
-                    Intent intent = new Intent(context, PlatformGcmService.class);
+                    Intent intent = new Intent();
+                    intent.setComponent(new ComponentName(context, getPlatformGcmServiceClassName()));
                     List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(intent, 0);
                     if (!hasPermission(resolveInfos)) {
                         gcmServiceAvailable = ConnectionResult.SERVICE_MISSING;
@@ -121,8 +121,7 @@ import java.util.List;
             PackageManager packageManager = context.getPackageManager();
 
             // use a string, the class object probably cannot be instantiated
-            String className = JobProxyGcm.class.getPackage().getName() + ".PlatformGcmService";
-            ComponentName component = new ComponentName(context, className);
+            ComponentName component = new ComponentName(context, getPlatformGcmServiceClassName());
 
             int componentEnabled = packageManager.getComponentEnabledSetting(component);
             switch (componentEnabled) {
@@ -152,6 +151,10 @@ import java.util.List;
                 CAT.e(t.getMessage());
             }
         }
+    }
+
+    private static String getPlatformGcmServiceClassName() {
+        return JobProxyGcm.class.getPackage().getName() + ".PlatformGcmService";
     }
 
     private GcmAvailableHelper() {

@@ -121,7 +121,12 @@ public enum JobApi {
                         || (isServiceEnabled(context, PlatformAlarmService.class) && isServiceEnabled(context, PlatformAlarmServiceExact.class)
                         && isBroadcastEnabled(context, PlatformAlarmReceiver.class));
             case GCM:
-                return GcmAvailableHelper.isGcmApiSupported(context);
+                try {
+                    // see https://github.com/evernote/android-job/issues/487
+                    return GcmAvailableHelper.isGcmApiSupported(context);
+                } catch (Exception e) {
+                    return false;
+                }
             default:
                 throw new IllegalStateException("not implemented");
         }
