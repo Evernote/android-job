@@ -1,4 +1,4 @@
-## 1.3.0-alpha04
+## 1.3.0-alpha04 (2018-07-20)
 * Fix rare NPE when `WorkManager` is null for some reason, see #477
 * Fix rare NPE when `JobStorage` is null, see #492
 * Fix class loading error for the GCM API, see #487
