@@ -1,10 +1,6 @@
 package com.evernote.android.job.work;
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
@@ -16,15 +12,14 @@ import com.evernote.android.job.JobCreator;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.PlatformWorkManagerRule;
 
+import org.assertj.core.util.Preconditions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.work.State;
 import androidx.work.WorkManager;
@@ -165,34 +160,6 @@ public class PlatformWorkManagerTest {
     }
 
     private List<WorkStatus> getWorkStatus(String tag) {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final AtomicReference<List<WorkStatus>> reference = new AtomicReference<>();
-
-        final LiveData<List<WorkStatus>> liveData = WorkManager.getInstance().getStatusesByTag(tag);
-        liveData.observeForever(new Observer<List<WorkStatus>>() {
-            @Override
-            public void onChanged(@Nullable List<WorkStatus> workStatuses) {
-                if (reference.get() == null) {
-                    reference.set(workStatuses);
-                }
-
-                final Observer<List<WorkStatus>> observer = this;
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        liveData.removeObserver(observer);
-                    }
-                });
-
-                latch.countDown();
-            }
-        });
-
-        try {
-            assertThat(latch.await(3, TimeUnit.SECONDS)).isTrue();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        return reference.get();
+        return Preconditions.checkNotNull(WorkManager.getInstance()).synchronous().getStatusesByTagSync(tag);
     }
 }

@@ -1,3 +1,6 @@
+## 1.3.0-alpha05 (2018-07-23)
+* Use synchronous method to query the workmanager statuses, see #464
+
 ## 1.3.0-alpha04 (2018-07-20)
 * Fix rare NPE when `WorkManager` is null for some reason, see #477
 * Fix rare NPE when `JobStorage` is null, see #492

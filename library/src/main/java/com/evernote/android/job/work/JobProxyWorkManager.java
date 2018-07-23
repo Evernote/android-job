@@ -1,13 +1,8 @@
 package com.evernote.android.job.work;
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
 import android.content.Context;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.JobProxy;
@@ -17,9 +12,7 @@ import com.evernote.android.job.util.JobCat;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.work.Configuration;
 import androidx.work.Constraints;
@@ -42,11 +35,9 @@ public class JobProxyWorkManager implements JobProxy {
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private final Context mContext;
-    private final Handler mHandler;
 
     public JobProxyWorkManager(Context context) {
         mContext = context;
-        mHandler = new Handler(Looper.getMainLooper());
     }
 
     @Override
@@ -168,38 +159,11 @@ public class JobProxyWorkManager implements JobProxy {
     }
 
     private List<WorkStatus> getWorkStatusBlocking(String tag) {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final AtomicReference<List<WorkStatus>> reference = new AtomicReference<>();
-
         WorkManager workManager = getWorkManager();
         if (workManager == null) {
             return Collections.emptyList();
         }
 
-        final LiveData<List<WorkStatus>> liveData = workManager.getStatusesByTag(tag);
-        liveData.observeForever(new Observer<List<WorkStatus>>() {
-            @Override
-            public void onChanged(@Nullable List<WorkStatus> workStatuses) {
-                if (reference.get() == null) {
-                    reference.set(workStatuses);
-                }
-
-                final Observer<List<WorkStatus>> observer = this;
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        liveData.removeObserver(observer);
-                    }
-                });
-
-                latch.countDown();
-            }
-        });
-
-        try {
-            latch.await(3, TimeUnit.SECONDS);
-        } catch (InterruptedException ignored) {
-        }
-        return reference.get();
+        return workManager.synchronous().getStatusesByTagSync(tag);
     }
 }
