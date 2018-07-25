@@ -10,6 +10,7 @@ import com.evernote.android.job.JobProxyIllegalStateException;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -112,6 +113,15 @@ public class JobProxyWorkManager implements JobProxy {
 
     /*package*/ static int getJobIdFromTag(String tag) {
         return Integer.parseInt(tag.substring(PREFIX.length()));
+    }
+
+    /*package*/ static int getJobIdFromTags(Collection<String> tags) {
+        for (String tag : tags) {
+            if (tag.startsWith(PREFIX)) {
+                return Integer.parseInt(tag.substring(PREFIX.length()));
+            }
+        }
+        return -1;
     }
 
     private static Constraints buildConstraints(JobRequest request) {

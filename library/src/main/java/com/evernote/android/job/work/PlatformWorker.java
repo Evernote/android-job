@@ -24,6 +24,10 @@ public class PlatformWorker extends Worker {
     @Override
     public Result doWork() {
         final int jobId = getJobId();
+        if (jobId < 0) {
+            return Result.FAILURE;
+        }
+
         try {
             JobProxy.Common common = new JobProxy.Common(getApplicationContext(), CAT, jobId);
 
@@ -65,11 +69,7 @@ public class PlatformWorker extends Worker {
         }
     }
 
-    private String getTag() {
-        return getTags().iterator().next();
-    }
-
     private int getJobId() {
-        return JobProxyWorkManager.getJobIdFromTag(getTag());
+        return JobProxyWorkManager.getJobIdFromTags(getTags());
     }
 }
