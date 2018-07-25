@@ -12,7 +12,6 @@ import com.evernote.android.job.JobCreator;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.PlatformWorkManagerRule;
 
-import org.assertj.core.util.Preconditions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -160,6 +159,6 @@ public class PlatformWorkManagerTest {
     }
 
     private List<WorkStatus> getWorkStatus(String tag) {
-        return Preconditions.checkNotNull(WorkManager.getInstance()).synchronous().getStatusesByTagSync(tag);
+        return WorkManager.getInstance().synchronous().getStatusesByTagSync(tag);
     }
 }

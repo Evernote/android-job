@@ -1,5 +1,6 @@
 ## 1.3.0-alpha06
 * Find the right tag for the job with `WorkManager`, see #509
+* Integrate `WorkManager` version `1.0.0-alpha05`
 
 ## 1.3.0-alpha05 (2018-07-23)
 * Use synchronous method to query the workmanager statuses, see #464
