@@ -166,10 +166,8 @@ dependencies {
     implementation "android.arch.work:work-runtime:$work_version"
 }
 ```
-This library will detect the `WorkManager` at runtime and use it from now on. To opt-out of this change (what isn't recommended) either exclude `WorkManager` from your app or turn the API off with
-```java
-JobConfig.setApiEnabled(JobApi.WORK_MANAGER, false);
-```
+
+Please take a look at the [Wiki](https://github.com/evernote/android-job/wiki/Migrating-to-WorkManager) for a complete transition guide.
 
 The API and feature set of `android-job` and `WorkManager` are really similar. However, some features are unique and only supported by one or the other
 
