@@ -34,6 +34,8 @@ android {
 
     resourcePrefix 'job_'
 
+    useLibrary 'android.test.mock'
+
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
