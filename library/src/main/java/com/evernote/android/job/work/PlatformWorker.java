@@ -1,5 +1,6 @@
 package com.evernote.android.job.work;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
@@ -11,6 +12,7 @@ import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 
 import androidx.work.Worker;
+import androidx.work.WorkerParameters;
 
 /**
  * @author rwondratschek
@@ -19,6 +21,10 @@ import androidx.work.Worker;
 public class PlatformWorker extends Worker {
 
     private static final JobCat CAT = new JobCat("PlatformWorker");
+
+    public PlatformWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
+        super(context, workerParams);
+    }
 
     @NonNull
     @Override

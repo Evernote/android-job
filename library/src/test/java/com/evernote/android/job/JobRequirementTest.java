@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
  * @author rwondratschek
  */
 @FixMethodOrder(MethodSorters.JVM)
+@SuppressWarnings("deprecation")
 public class JobRequirementTest {
 
     @Test

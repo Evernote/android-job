@@ -62,11 +62,17 @@ public class JobProxy26 extends JobProxy24 {
                 .setRequiresStorageNotLow(request.requiresStorageNotLow());
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected int convertNetworkType(@NonNull JobRequest.NetworkType networkType) {
         switch (networkType) {
             case METERED:
-                return JobInfo.NETWORK_TYPE_METERED;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    return JobInfo.NETWORK_TYPE_CELLULAR;
+                } else {
+                    return JobInfo.NETWORK_TYPE_METERED;
+                }
+
             default:
                 return super.convertNetworkType(networkType);
         }

@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -89,6 +90,7 @@ public final class Device {
      * @return The current network type of the device.
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public static JobRequest.NetworkType getNetworkType(@NonNull Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo;
@@ -107,10 +109,24 @@ public final class Device {
             return JobRequest.NetworkType.UNMETERED;
         }
 
-        if (networkInfo.isRoaming()) {
+        if (isRoaming(connectivityManager, networkInfo)) {
             return JobRequest.NetworkType.CONNECTED;
         } else {
             return JobRequest.NetworkType.NOT_ROAMING;
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static boolean isRoaming(ConnectivityManager connectivityManager, NetworkInfo networkInfo) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return networkInfo.isRoaming();
+        }
+
+        try {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
+            return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING);
+        } catch (Exception e) {
+            return networkInfo.isRoaming();
         }
     }
 
