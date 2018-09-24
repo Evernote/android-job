@@ -11,7 +11,7 @@ dependencies {
     implementation 'com.evernote:android-job:1.2.6'
 
     // or
-    implementation 'com.evernote:android-job:1.3.0-alpha06'
+    implementation 'com.evernote:android-job:1.3.0-alpha07'
 }
 ```
 
