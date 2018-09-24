@@ -66,6 +66,10 @@ android {
             }
         }
     }
+
+    packagingOptions {
+        exclude 'META-INF/proguard/androidx-annotations.pro'
+    }
 }
 
 apply from: '../build-config/gradle-push.gradle'

@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.work.State;
-import androidx.work.WorkManager;
 import androidx.work.WorkStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,13 +64,13 @@ public class PlatformWorkManagerTest {
         assertThat(jobProxyWorkManager.isPlatformJobScheduled(request)).isTrue();
 
         String tag = JobProxyWorkManager.createTag(jobId);
-        List<WorkStatus> statuses = getWorkStatus(tag);
+        List<WorkStatus> statuses = mWorkManagerRule.getWorkStatus(tag);
 
         assertThat(statuses).isNotNull().hasSize(1);
         assertThat(statuses.get(0).getState()).isEqualTo(State.ENQUEUED);
 
         mWorkManagerRule.getManager().cancel(jobId);
-        assertThat(getWorkStatus(tag).get(0).getState()).isEqualTo(State.CANCELLED);
+        assertThat(mWorkManagerRule.getWorkStatus(tag).get(0).getState()).isEqualTo(State.CANCELLED);
         assertThat(jobProxyWorkManager.isPlatformJobScheduled(request)).isFalse();
     }
 
@@ -93,9 +92,9 @@ public class PlatformWorkManagerTest {
         mWorkManagerRule.getManager().cancel(jobId);
         assertThat(TransientBundleHolder.getBundle(jobId)).isNull();
 
-        mWorkManagerRule.setAllowExecution(true);
-
         jobId = builder.build().schedule();
+        mWorkManagerRule.runJob(JobProxyWorkManager.createTag(jobId));
+
         assertThat(TransientBundleHolder.getBundle(jobId)).isNull();
     }
 
@@ -123,15 +122,15 @@ public class PlatformWorkManagerTest {
             }
         });
 
-        mWorkManagerRule.setAllowExecution(true);
-
         int jobId = new JobRequest.Builder(TAG)
                 .setExecutionWindow(TimeUnit.HOURS.toMillis(4), TimeUnit.HOURS.toMillis(5))
                 .build()
                 .schedule();
 
         String tag = JobProxyWorkManager.createTag(jobId);
-        State state = getWorkStatus(tag).get(0).getState();
+        mWorkManagerRule.runJob(tag);
+
+        State state = mWorkManagerRule.getWorkStatus(tag).get(0).getState();
 
         assertThat(executed.get()).isTrue();
         assertThat(state).isEqualTo(State.SUCCEEDED);
@@ -149,16 +148,12 @@ public class PlatformWorkManagerTest {
                 .schedule();
 
         String tag = JobProxyWorkManager.createTag(jobId);
-        List<WorkStatus> statuses = getWorkStatus(tag);
+        List<WorkStatus> statuses = mWorkManagerRule.getWorkStatus(tag);
 
         assertThat(statuses).isNotNull().hasSize(1);
         assertThat(statuses.get(0).getState()).isEqualTo(State.ENQUEUED);
 
         mWorkManagerRule.getManager().cancelAllForTag(TAG);
-        assertThat(getWorkStatus(tag).get(0).getState()).isEqualTo(State.CANCELLED);
-    }
-
-    private List<WorkStatus> getWorkStatus(String tag) {
-        return WorkManager.getInstance().synchronous().getStatusesByTagSync(tag);
+        assertThat(mWorkManagerRule.getWorkStatus(tag).get(0).getState()).isEqualTo(State.CANCELLED);
     }
 }

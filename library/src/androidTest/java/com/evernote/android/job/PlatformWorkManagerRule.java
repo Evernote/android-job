@@ -6,11 +6,13 @@ import android.support.test.InstrumentationRegistry;
 
 import org.junit.rules.ExternalResource;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import androidx.work.Configuration;
 import androidx.work.WorkManager;
+import androidx.work.WorkStatus;
 import androidx.work.test.WorkManagerTestInitHelper;
 
 /**
@@ -19,24 +21,19 @@ import androidx.work.test.WorkManagerTestInitHelper;
 public class PlatformWorkManagerRule extends ExternalResource {
 
     private JobManager mManager;
-    private Executor mExecutor;
-    private boolean mAllowExecution;
 
     @Override
     protected void before() {
         Context context = InstrumentationRegistry.getTargetContext();
 
-        mAllowExecution = false;
-        mExecutor = new Executor() {
+        Executor executor = new Executor() {
             @Override
             public void execute(@NonNull Runnable command) {
-                if (mAllowExecution) {
-                    command.run();
-                }
+                command.run();
             }
         };
 
-        WorkManagerTestInitHelper.initializeTestWorkManager(context, new Configuration.Builder().setExecutor(mExecutor).build());
+        WorkManagerTestInitHelper.initializeTestWorkManager(context, new Configuration.Builder().setExecutor(executor).build());
 
         JobConfig.setJobReschedulePause(0, TimeUnit.MILLISECONDS);
         JobConfig.setSkipJobReschedule(true);
@@ -59,7 +56,11 @@ public class PlatformWorkManagerRule extends ExternalResource {
         return mManager;
     }
 
-    public void setAllowExecution(boolean allowExecution) {
-        mAllowExecution = allowExecution;
+    public void runJob(String tag) {
+        WorkManagerTestInitHelper.getTestDriver().setInitialDelayMet(getWorkStatus(tag).get(0).getId());
+    }
+
+    public List<WorkStatus> getWorkStatus(String tag) {
+        return WorkManager.getInstance().synchronous().getStatusesByTagSync(tag);
     }
 }
