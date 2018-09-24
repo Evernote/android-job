@@ -459,7 +459,7 @@ public final class JobManager {
     /*package*/ JobStorage getJobStorage() {
         if (mJobStorage == null) {
             try {
-                mJobStorageLatch.await(10, TimeUnit.SECONDS);
+                mJobStorageLatch.await(20, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

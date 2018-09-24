@@ -78,7 +78,7 @@ public final class JobRescheduleService extends SafeJobIntentService {
             JobManager manager;
             try {
                 manager = JobManager.create(this);
-            } catch (JobManagerCreateException e) {
+            } catch (Exception e) {
                 return;
             }
 
