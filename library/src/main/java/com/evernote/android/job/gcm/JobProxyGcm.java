@@ -101,7 +101,15 @@ public class JobProxyGcm implements JobProxy {
 
     @Override
     public void cancel(int jobId) {
-        mGcmNetworkManager.cancelTask(createTag(jobId), PlatformGcmService.class);
+        try {
+            mGcmNetworkManager.cancelTask(createTag(jobId), PlatformGcmService.class);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() != null && e.getMessage().startsWith("The GcmTaskService class you provided")) {
+                throw new JobProxyIllegalStateException(e);
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
