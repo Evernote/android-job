@@ -1,3 +1,6 @@
+## 1.3.0-alpha08 (2018-10-20)
+* Upgraded WorkManager with API incompatible changes, see #539
+
 ## 1.3.0-alpha07 (2018-09-23)
 * Handle crash when rescheduling jobs, see #510
 * Upgraded WorkManager

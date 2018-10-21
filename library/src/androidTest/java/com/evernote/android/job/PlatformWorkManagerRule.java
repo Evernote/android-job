@@ -61,6 +61,10 @@ public class PlatformWorkManagerRule extends ExternalResource {
     }
 
     public List<WorkStatus> getWorkStatus(String tag) {
-        return WorkManager.getInstance().synchronous().getStatusesByTagSync(tag);
+        try {
+            return WorkManager.getInstance().getStatusesByTag(tag).get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

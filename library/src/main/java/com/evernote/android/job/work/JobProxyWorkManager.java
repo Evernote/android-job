@@ -178,6 +178,10 @@ public class JobProxyWorkManager implements JobProxy {
             return Collections.emptyList();
         }
 
-        return workManager.synchronous().getStatusesByTagSync(tag);
+        try {
+            return workManager.getStatusesByTag(tag).get(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
     }
 }
