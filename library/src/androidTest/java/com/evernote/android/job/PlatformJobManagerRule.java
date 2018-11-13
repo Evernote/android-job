@@ -39,7 +39,10 @@ public class PlatformJobManagerRule extends ExternalResource {
         mManager.cancelAll();
         mManager.destroy();
 
-        getJobScheduler().cancelAll();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getJobScheduler().cancelAll();
+        }
+
         JobConfig.reset();
     }
 

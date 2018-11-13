@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.os.Build;
 import android.support.annotation.RestrictTo;
 
 import com.evernote.android.job.gcm.JobProxyGcm;
@@ -58,7 +59,7 @@ import java.util.List;
 
     public static boolean isGcmApiSupported(Context context) {
         try {
-            if (!checkedServiceEnabled) {
+            if (!checkedServiceEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 checkedServiceEnabled = true;
                 setServiceEnabled(context, GCM_IN_CLASSPATH);
             }

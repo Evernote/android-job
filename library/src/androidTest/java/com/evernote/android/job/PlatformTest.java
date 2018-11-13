@@ -159,6 +159,23 @@ public class PlatformTest {
         assertThat(mManager.getJobRequest(jobId)).isNull();
     }
 
+    @Test
+    public void testUpdateCurrent() {
+        String TAG = "tag";
+
+        JobRequest.Builder builder = new JobRequest.Builder(TAG)
+                .setUpdateCurrent(true)
+                .setExecutionWindow(TimeUnit.HOURS.toMillis(4), TimeUnit.HOURS.toMillis(5));
+
+        builder.build().schedule();
+
+        assertThat(JobManager.instance().getAllJobRequestsForTag(TAG)).hasSize(1);
+
+        builder.build().schedule();
+
+        assertThat(JobManager.instance().getAllJobRequestsForTag(TAG)).hasSize(1);
+    }
+
     private final class TestJob extends Job {
 
         private final CountDownLatch mLatch = new CountDownLatch(1);
