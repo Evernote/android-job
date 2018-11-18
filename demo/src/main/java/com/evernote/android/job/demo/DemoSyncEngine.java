@@ -19,7 +19,7 @@ import java.util.Locale;
  */
 public class DemoSyncEngine {
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault());
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     private final Context mContext;
 
