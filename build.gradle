@@ -1,7 +1,7 @@
 buildscript {
     repositories {
-        jcenter()
         google()
+        jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.1'
@@ -11,8 +11,8 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter()
         google()
+        jcenter()
     }
 
     tasks.withType(JavaCompile) {
@@ -30,12 +30,12 @@ ext {
 
     supportLibVersion = '28.0.0'
     playServicesVersion = '15.0.1'
-    workVersion = '1.0.0-alpha10'
+    workVersion = '1.0.0-alpha11'
     stethoVersion = '1.5.0'
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
     mockitoVersion = '2.7.22'
-    robolectricVersion = '3.6.1'
+    robolectricVersion = '3.8'
 }
 
 task wrapper(type: Wrapper) {

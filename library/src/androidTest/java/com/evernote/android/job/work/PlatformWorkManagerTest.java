@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import androidx.work.State;
-import androidx.work.WorkStatus;
+import androidx.work.WorkInfo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -64,13 +63,13 @@ public class PlatformWorkManagerTest {
         assertThat(jobProxyWorkManager.isPlatformJobScheduled(request)).isTrue();
 
         String tag = JobProxyWorkManager.createTag(jobId);
-        List<WorkStatus> statuses = mWorkManagerRule.getWorkStatus(tag);
+        List<WorkInfo> statuses = mWorkManagerRule.getWorkStatus(tag);
 
         assertThat(statuses).isNotNull().hasSize(1);
-        assertThat(statuses.get(0).getState()).isEqualTo(State.ENQUEUED);
+        assertThat(statuses.get(0).getState()).isEqualTo(WorkInfo.State.ENQUEUED);
 
         mWorkManagerRule.getManager().cancel(jobId);
-        assertThat(mWorkManagerRule.getWorkStatus(tag).get(0).getState()).isEqualTo(State.CANCELLED);
+        assertThat(mWorkManagerRule.getWorkStatus(tag).get(0).getState()).isEqualTo(WorkInfo.State.CANCELLED);
         assertThat(jobProxyWorkManager.isPlatformJobScheduled(request)).isFalse();
     }
 
@@ -130,10 +129,10 @@ public class PlatformWorkManagerTest {
         String tag = JobProxyWorkManager.createTag(jobId);
         mWorkManagerRule.runJob(tag);
 
-        State state = mWorkManagerRule.getWorkStatus(tag).get(0).getState();
+        WorkInfo.State state = mWorkManagerRule.getWorkStatus(tag).get(0).getState();
 
         assertThat(executed.get()).isTrue();
-        assertThat(state).isEqualTo(State.SUCCEEDED);
+        assertThat(state).isEqualTo(WorkInfo.State.SUCCEEDED);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -148,12 +147,12 @@ public class PlatformWorkManagerTest {
                 .schedule();
 
         String tag = JobProxyWorkManager.createTag(jobId);
-        List<WorkStatus> statuses = mWorkManagerRule.getWorkStatus(tag);
+        List<WorkInfo> statuses = mWorkManagerRule.getWorkStatus(tag);
 
         assertThat(statuses).isNotNull().hasSize(1);
-        assertThat(statuses.get(0).getState()).isEqualTo(State.ENQUEUED);
+        assertThat(statuses.get(0).getState()).isEqualTo(WorkInfo.State.ENQUEUED);
 
         mWorkManagerRule.getManager().cancelAllForTag(TAG);
-        assertThat(mWorkManagerRule.getWorkStatus(tag).get(0).getState()).isEqualTo(State.CANCELLED);
+        assertThat(mWorkManagerRule.getWorkStatus(tag).get(0).getState()).isEqualTo(WorkInfo.State.CANCELLED);
     }
 }

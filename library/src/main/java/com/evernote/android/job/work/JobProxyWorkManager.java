@@ -5,6 +5,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
+import androidx.work.WorkInfo;
 import com.evernote.android.job.JobProxy;
 import com.evernote.android.job.JobProxyIllegalStateException;
 import com.evernote.android.job.JobRequest;
@@ -20,9 +21,7 @@ import androidx.work.Constraints;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
-import androidx.work.State;
 import androidx.work.WorkManager;
-import androidx.work.WorkStatus;
 
 /**
  * @author rwondratschek
@@ -98,13 +97,13 @@ public class JobProxyWorkManager implements JobProxy {
 
     @Override
     public boolean isPlatformJobScheduled(JobRequest request) {
-        List<WorkStatus> statuses = getWorkStatusBlocking(createTag(request.getJobId()));
-        if (statuses == null || statuses.isEmpty()) {
+        List<WorkInfo> infos = getWorkStatusBlocking(createTag(request.getJobId()));
+        if (infos == null || infos.isEmpty()) {
             return false;
         }
 
-        State state = statuses.get(0).getState();
-        return state == State.ENQUEUED;
+        WorkInfo.State state = infos.get(0).getState();
+        return state == WorkInfo.State.ENQUEUED;
     }
 
     /*package*/ static String createTag(int jobId) {
@@ -157,14 +156,14 @@ public class JobProxyWorkManager implements JobProxy {
         WorkManager workManager;
         try {
             workManager = WorkManager.getInstance();
-        } catch (Exception e) {
+        } catch (Throwable t) {
             workManager = null;
         }
         if (workManager == null) {
-            WorkManager.initialize(mContext, new Configuration.Builder().build());
             try {
+                WorkManager.initialize(mContext, new Configuration.Builder().build());
                 workManager = WorkManager.getInstance();
-            } catch (Exception ignored) {
+            } catch (Throwable ignored) {
             }
             CAT.w("WorkManager getInstance() returned null, now: %s", workManager);
         }
@@ -172,14 +171,14 @@ public class JobProxyWorkManager implements JobProxy {
         return workManager;
     }
 
-    private List<WorkStatus> getWorkStatusBlocking(String tag) {
+    private List<WorkInfo> getWorkStatusBlocking(String tag) {
         WorkManager workManager = getWorkManager();
         if (workManager == null) {
             return Collections.emptyList();
         }
 
         try {
-            return workManager.getStatusesByTag(tag).get(5, TimeUnit.SECONDS);
+            return workManager.getWorkInfosByTag(tag).get(5, TimeUnit.SECONDS);
         } catch (Exception e) {
             return Collections.emptyList();
         }

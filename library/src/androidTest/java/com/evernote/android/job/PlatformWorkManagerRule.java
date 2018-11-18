@@ -11,9 +11,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import androidx.work.Configuration;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
-import androidx.work.WorkStatus;
-import androidx.work.test.WorkManagerTestInitHelper;
+import androidx.work.testing.WorkManagerTestInitHelper;
 
 /**
  * @author rwondratschek
@@ -60,9 +60,9 @@ public class PlatformWorkManagerRule extends ExternalResource {
         WorkManagerTestInitHelper.getTestDriver().setInitialDelayMet(getWorkStatus(tag).get(0).getId());
     }
 
-    public List<WorkStatus> getWorkStatus(String tag) {
+    public List<WorkInfo> getWorkStatus(String tag) {
         try {
-            return WorkManager.getInstance().getStatusesByTag(tag).get();
+            return WorkManager.getInstance().getWorkInfosByTag(tag).get();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

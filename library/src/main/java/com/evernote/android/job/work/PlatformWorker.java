@@ -63,7 +63,7 @@ public class PlatformWorker extends Worker {
     }
 
     @Override
-    public void onStopped(boolean cancelled) {
+    public void onStopped() {
         int jobId = getJobId();
         Job job = JobManager.create(getApplicationContext()).getJob(jobId);
 
