@@ -1,3 +1,6 @@
+## 1.3.0-alpha09 (2018-11-18)
+* Upgraded WorkManager to 1.0.0-alpha11
+
 ## 1.3.0-alpha08 (2018-10-20)
 * Upgraded WorkManager with API incompatible changes, see #539
 
