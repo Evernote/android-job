@@ -202,7 +202,7 @@ Crashes after removing the GCM dependency is a known limitation of the Google Pl
 
 ## License
 ```
-Copyright (c) 2007-2017 by Evernote Corporation, All rights reserved.
+Copyright (c) 2007-2019 by Evernote Corporation, All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
