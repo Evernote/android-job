@@ -2,6 +2,9 @@
 
 A utility library for Android to run jobs delayed in the background. Depending on the Android version either the `JobScheduler`, `GcmNetworkManager` or `AlarmManager` is getting used. You can find out in [this blog post](https://blog.evernote.com/tech/2015/10/26/unified-job-library-android/) or in [these slides](https://speakerdeck.com/vrallev/doo-z-z-z-z-z-e?slide=50) why you should prefer this library than each separate API. All features from Android Oreo are backward compatible back to Ice Cream Sandwich.
 
+**Attention:**
+If you start a new project, you should be using [WorkManager](https://github.com/evernote/android-job#workmanager) instead of this library. You should also start migrating your code from this library to WorkManager. At some point in the future this library will be deprecated.
+
 ## Download
 
 Download [the latest version](http://search.maven.org/#search|gav|1|g:"com.evernote"%20AND%20a:"android-job") or grab via Gradle:
