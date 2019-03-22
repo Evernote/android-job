@@ -1,5 +1,6 @@
 ## 1.3.0-alpha10
 * Offset the end time when rescheduling an inexact job, see #547
+* Upgraded WorkManager to 1.0.0, see #561
 
 ## 1.3.0-alpha09 (2018-11-18)
 * Upgraded WorkManager to 1.0.0-alpha11
