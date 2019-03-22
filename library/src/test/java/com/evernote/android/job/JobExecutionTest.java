@@ -14,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.robolectric.annotation.Config;
 
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -288,6 +289,32 @@ public class JobExecutionTest extends BaseJobManagerTest {
 
             previousJobId = request.getJobId();
         }
+    }
+
+    @Test
+    public void verifyReschedulingInexactJobUsesTimeWindow() {
+        int previousJobId = DummyJobs.createBuilder(DummyJobs.RescheduleJob.class)
+                .setExecutionWindow(200_000L, 400_000L)
+                .setBackoffCriteria(TimeUnit.MINUTES.toMillis(1), JobRequest.BackoffPolicy.LINEAR)
+                .build()
+                .schedule();
+
+        executeJob(previousJobId, Job.Result.RESCHEDULE);
+
+        Set<JobRequest> allJobRequestsForTag = manager().getAllJobRequestsForTag(DummyJobs.RescheduleJob.TAG);
+        assertThat(allJobRequestsForTag).hasSize(1);
+
+        JobRequest firstRetry = allJobRequestsForTag.iterator().next();
+        assertThat(JobProxy.Common.getStartMs(firstRetry)).isNotEqualTo(JobProxy.Common.getEndMs(firstRetry));
+
+        executeJob(firstRetry.getJobId(), Job.Result.RESCHEDULE);
+
+        allJobRequestsForTag = manager().getAllJobRequestsForTag(DummyJobs.RescheduleJob.TAG);
+        assertThat(allJobRequestsForTag).hasSize(1);
+
+        JobRequest secondRetry = allJobRequestsForTag.iterator().next();
+        assertThat(JobProxy.Common.getStartMs(secondRetry)).isNotEqualTo(JobProxy.Common.getEndMs(secondRetry));
+        assertThat(JobProxy.Common.getStartMs(secondRetry)).isNotEqualTo(JobProxy.Common.getEndMs(secondRetry));
     }
 
     @Test

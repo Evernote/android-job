@@ -287,7 +287,7 @@ public final class JobRequest {
         return mBuilder.mExact;
     }
 
-    /*package*/ long getBackoffOffset() {
+    /*package*/ long getBackoffOffset(boolean endTime) {
         if (isPeriodic()) {
             return 0L;
         }
@@ -308,6 +308,10 @@ public final class JobRequest {
 
             default:
                 throw new IllegalStateException("not implemented");
+        }
+
+        if (endTime) {
+            offset *= 1.2f;
         }
 
         return Math.min(offset, TimeUnit.HOURS.toMillis(5)); // use max of 5 hours like JobScheduler

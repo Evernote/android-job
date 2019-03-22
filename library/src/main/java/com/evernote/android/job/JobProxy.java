@@ -79,7 +79,7 @@ public interface JobProxy {
 
         public static long getStartMs(JobRequest request) {
             if (request.getFailureCount() > 0) {
-                return request.getBackoffOffset();
+                return request.getBackoffOffset(false);
             } else {
                 return request.getStartMs();
             }
@@ -92,7 +92,7 @@ public interface JobProxy {
         public static long getEndMs(JobRequest request, boolean shiftEnd) {
             long endMs;
             if (request.getFailureCount() > 0) {
-                endMs = request.getBackoffOffset();
+                endMs = request.getBackoffOffset(true);
             } else {
                 endMs = request.getEndMs();
             }
