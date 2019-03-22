@@ -310,7 +310,7 @@ public final class JobRequest {
                 throw new IllegalStateException("not implemented");
         }
 
-        if (endTime) {
+        if (endTime && !isExact()) {
             offset *= 1.2f;
         }
 
