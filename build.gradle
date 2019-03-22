@@ -4,7 +4,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'com.android.tools.build:gradle:3.3.2'
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
     }
 }
@@ -38,7 +38,7 @@ ext {
     robolectricVersion = '3.8'
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.2'
+task updateWrapper(type: Wrapper) {
+    gradleVersion = '4.10.3'
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }
