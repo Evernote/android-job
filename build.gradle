@@ -28,9 +28,9 @@ ext {
 
     buildToolsVersion = '28.0.3'
 
-    supportLibVersion = '28.0.0'
-    playServicesVersion = '15.0.1'
-    workVersion = '1.0.0'
+    androidXLibVersion = '1.0.1'
+    playServicesVersion = '16.1.0'
+    workVersion = '2.0.1'
     stethoVersion = '1.5.0'
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
@@ -38,7 +38,7 @@ ext {
     robolectricVersion = '3.8'
 }
 
-task updateWrapper(type: Wrapper) {
-    gradleVersion = '4.10.3'
-    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
+wrapper {
+    gradleVersion = '5.3.1'
+    distributionType = Wrapper.DistributionType.ALL
 }

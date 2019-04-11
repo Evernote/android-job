@@ -2,8 +2,8 @@ package com.evernote.android.job.work;
 
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 import androidx.work.WorkInfo;
 import com.evernote.android.job.JobProxy;

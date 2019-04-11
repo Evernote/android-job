@@ -6,21 +6,21 @@ archivesBaseName = 'android-job'
 
 dependencies {
     compileOnly "com.google.android.gms:play-services-gcm:$playServicesVersion"
-    compileOnly "android.arch.work:work-runtime:$workVersion"
+    compileOnly "androidx.work:work-runtime:$workVersion"
 
     //noinspection GradleCompatible,GradleDependency
-    api "com.android.support:support-compat:$supportLibVersion"
+    api "androidx.core:core:$androidXLibVersion"
 
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test:rules:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'androidx.test:runner:1.1.0'
+    androidTestImplementation 'androidx.test:rules:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
     androidTestImplementation 'com.squareup.assertj:assertj-android:1.1.1'
     androidTestImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
-    androidTestImplementation "android.arch.work:work-runtime:$workVersion"
-    androidTestImplementation "android.arch.work:work-testing:$workVersion"
+    androidTestImplementation "androidx.work:work-runtime:$workVersion"
+    androidTestImplementation "androidx.work:work-testing:$workVersion"
 
     androidTestImplementation "com.facebook.stetho:stetho:$stethoVersion"
-    androidTestImplementation "com.android.support:support-v4:$supportLibVersion"
+    implementation "androidx.appcompat:appcompat:$androidXLibVersion"
 
     testImplementation "junit:junit:$junitVersion"
     testImplementation "org.mockito:mockito-core:$mockitoVersion"
@@ -45,7 +45,7 @@ android {
 
         consumerProguardFiles 'proguard.cfg'
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {

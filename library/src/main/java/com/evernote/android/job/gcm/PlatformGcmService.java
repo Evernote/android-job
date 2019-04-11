@@ -15,7 +15,7 @@
  */
 package com.evernote.android.job.gcm;
 
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobManager;

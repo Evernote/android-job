@@ -20,7 +20,7 @@ import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobConfig;

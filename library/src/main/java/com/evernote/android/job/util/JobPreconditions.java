@@ -16,7 +16,7 @@
 
 package com.evernote.android.job.util;
 
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 import android.text.TextUtils;
 
 import java.util.Collection;

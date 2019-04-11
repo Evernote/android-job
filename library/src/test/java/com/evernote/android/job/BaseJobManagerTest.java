@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.test.mock.MockContext;
 
 import com.evernote.android.job.test.DummyJobs;

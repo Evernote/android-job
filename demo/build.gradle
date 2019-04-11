@@ -46,12 +46,11 @@ android {
 
 dependencies {
     implementation project(':library')
-    implementation "com.android.support:support-v4:$supportLibVersion"
-    implementation "com.android.support:appcompat-v7:$supportLibVersion"
+    implementation "androidx.appcompat:appcompat:$androidXLibVersion"
     implementation "com.facebook.stetho:stetho:$stethoVersion"
 
     gcmImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
-    gcmImplementation "android.arch.work:work-runtime:$workVersion"
+    gcmImplementation "androidx.work:work-runtime:$workVersion"
 }
 
 uploadArchives.enabled false

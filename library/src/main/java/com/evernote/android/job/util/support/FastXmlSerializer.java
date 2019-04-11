@@ -16,7 +16,7 @@
 
 package com.evernote.android.job.util.support;
 
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 import org.xmlpull.v1.XmlSerializer;
 

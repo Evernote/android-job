@@ -20,7 +20,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobUtil;
