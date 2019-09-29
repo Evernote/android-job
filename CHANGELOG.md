@@ -1,3 +1,11 @@
+## 1.3.0 (2019-09-29)
+* (No changes compared to 1.3.0-rc1)
+* Implement an API that uses the `WorkManager` for scheduling work items
+* Initialize the job storage on a background thread, see #471
+* Restrict usage of internal classes for internal usage only, see #465
+* Use a `JobIntentService` implementation that doesn't crash, see #255
+* Offset the end time when rescheduling an inexact job, see #547
+
 ## 1.3.0-rc1 (2019-03-22)
 * Offset the end time when rescheduling an inexact job, see #547
 * Upgraded WorkManager to 1.0.0, see #561
