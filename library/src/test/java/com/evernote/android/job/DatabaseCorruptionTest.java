@@ -2,16 +2,13 @@ package com.evernote.android.job;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-
+import androidx.test.core.app.ApplicationProvider;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
-
+import java.io.File;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.robolectric.RuntimeEnvironment;
-
-import java.io.File;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -24,7 +21,7 @@ public class DatabaseCorruptionTest {
 
     @Test
     public void verifyDeleteAfterCorruptionWhileOpen() {
-        Context context = RuntimeEnvironment.application;
+        Context context = ApplicationProvider.getApplicationContext();
 
         JobStorage jobStorage = new JobStorage(context);
         SQLiteDatabase database = jobStorage.getDatabase();
@@ -42,7 +39,7 @@ public class DatabaseCorruptionTest {
 
     @Test
     public void verifyDeleteAfterCorruptionWhileClosed() {
-        Context context = RuntimeEnvironment.application;
+        Context context = ApplicationProvider.getApplicationContext();
 
         JobStorage jobStorage = new JobStorage(context);
         SQLiteDatabase database = jobStorage.getDatabase();
@@ -62,7 +59,7 @@ public class DatabaseCorruptionTest {
 
     @Test
     public void verifyDeleteWithApi14() {
-        Context context = RuntimeEnvironment.application;
+        Context context = ApplicationProvider.getApplicationContext();
 
         JobStorage jobStorage = new JobStorage(context);
         SQLiteDatabase database = jobStorage.getDatabase();
@@ -80,7 +77,7 @@ public class DatabaseCorruptionTest {
 
     @Test
     public void verifyDeleteWhileOpening() {
-        Context context = RuntimeEnvironment.application;
+        Context context = ApplicationProvider.getApplicationContext();
 
         String filePath = getClass().getResource("/databases/corrupted.db").getPath();
         final long originalLength = new File(filePath).length();

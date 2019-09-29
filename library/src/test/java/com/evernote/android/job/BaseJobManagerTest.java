@@ -7,13 +7,9 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.support.annotation.NonNull;
 import android.test.mock.MockContext;
-
+import androidx.test.core.app.ApplicationProvider;
 import com.evernote.android.job.test.DummyJobs;
 import com.evernote.android.job.test.TestLogger;
-
-import org.junit.Rule;
-import org.robolectric.RuntimeEnvironment;
-
 import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -21,6 +17,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.junit.Rule;
+import org.robolectric.RuntimeEnvironment;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -129,7 +127,7 @@ public abstract class BaseJobManagerTest {
         resolveInfo.serviceInfo.permission = "android.permission.BIND_JOB_SERVICE";
         when(packageManager.queryIntentServices(any(Intent.class), anyInt())).thenReturn(Collections.singletonList(resolveInfo));
 
-        Context context = spy(RuntimeEnvironment.application);
+        Context context = spy(ApplicationProvider.getApplicationContext());
         when(context.getPackageManager()).thenReturn(packageManager);
         when(context.getApplicationContext()).thenReturn(context);
 

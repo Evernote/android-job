@@ -5,17 +5,14 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
-
+import androidx.test.core.app.ApplicationProvider;
 import com.evernote.android.job.test.JobRobolectricTestRunner;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
-
+import java.util.concurrent.TimeUnit;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.robolectric.RuntimeEnvironment;
-
-import java.util.concurrent.TimeUnit;
 
 import static com.evernote.android.job.JobStorage.COLUMN_BACKOFF_MS;
 import static com.evernote.android.job.JobStorage.COLUMN_BACKOFF_POLICY;
@@ -53,7 +50,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
 
     @Test
     public void testDatabaseUpgrade1to6() {
-        Context context = RuntimeEnvironment.application;
+        Context context = ApplicationProvider.getApplicationContext();
         context.deleteDatabase(DATABASE_NAME);
 
         JobOpenHelper1 openHelper = new JobOpenHelper1(context);
@@ -65,7 +62,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
 
     @Test
     public void testDatabaseUpgrade2to6() {
-        Context context = RuntimeEnvironment.application;
+        Context context = ApplicationProvider.getApplicationContext();
         context.deleteDatabase(DATABASE_NAME);
 
         JobOpenHelper2 openHelper = new JobOpenHelper2(context);
@@ -77,7 +74,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
 
     @Test
     public void testDatabaseUpgrade3to6() {
-        Context context = RuntimeEnvironment.application;
+        Context context = ApplicationProvider.getApplicationContext();
         context.deleteDatabase(DATABASE_NAME);
 
         JobOpenHelper3 openHelper = new JobOpenHelper3(context);
@@ -89,7 +86,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
 
     @Test
     public void testDatabaseUpgrade4to6() {
-        Context context = RuntimeEnvironment.application;
+        Context context = ApplicationProvider.getApplicationContext();
         context.deleteDatabase(DATABASE_NAME);
 
         JobOpenHelper4 openHelper = new JobOpenHelper4(context);
@@ -101,7 +98,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
 
     @Test
     public void testDatabaseUpgrade5to6() {
-        Context context = RuntimeEnvironment.application;
+        Context context = ApplicationProvider.getApplicationContext();
         context.deleteDatabase(DATABASE_NAME);
 
         JobOpenHelper5 openHelper = new JobOpenHelper5(context);
@@ -113,7 +110,7 @@ public class DatabaseManualUpgradeTest extends BaseJobManagerTest {
 
     @Test
     public void testDatabaseUpgrade1to2to3to4to5to6() {
-        Context context = RuntimeEnvironment.application;
+        Context context = ApplicationProvider.getApplicationContext();
         context.deleteDatabase(DATABASE_NAME);
 
         JobOpenHelper1 openHelper = new JobOpenHelper1(context);
