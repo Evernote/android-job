@@ -20,7 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 import com.evernote.android.job.gcm.JobProxyGcm;
 import com.evernote.android.job.util.JobCat;

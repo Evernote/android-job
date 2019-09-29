@@ -1,6 +1,6 @@
 package com.evernote.android.job;
 
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 /**
  * @author rwondratschek

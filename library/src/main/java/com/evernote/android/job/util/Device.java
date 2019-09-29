@@ -25,9 +25,9 @@ import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.PowerManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
-import android.support.v4.net.ConnectivityManagerCompat;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.core.net.ConnectivityManagerCompat;
 
 import com.evernote.android.job.JobRequest;
 

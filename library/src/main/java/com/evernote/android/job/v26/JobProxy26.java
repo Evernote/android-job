@@ -19,9 +19,9 @@ import android.annotation.TargetApi;
 import android.app.job.JobInfo;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.v24.JobProxy24;

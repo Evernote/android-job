@@ -4,8 +4,8 @@ import android.content.Context;
 import android.os.Looper;
 import android.os.NetworkOnMainThreadException;
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 import android.util.Log;
 
 import java.io.File;

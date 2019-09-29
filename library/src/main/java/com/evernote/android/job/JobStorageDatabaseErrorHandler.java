@@ -21,8 +21,8 @@ import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.Build;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 import android.util.Pair;
 
 import com.evernote.android.job.util.JobCat;

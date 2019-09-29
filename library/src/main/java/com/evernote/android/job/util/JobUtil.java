@@ -18,7 +18,7 @@ package com.evernote.android.job.util;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

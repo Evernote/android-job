@@ -19,7 +19,7 @@ package com.evernote.android.job.util.support;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 import android.util.Base64;
 import android.util.Xml;
 

@@ -1,7 +1,7 @@
-package android.support.v4.app;
+package androidx.core.app;
 
 import android.os.Build;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 /**
  * @author rwondratschek

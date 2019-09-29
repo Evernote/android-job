@@ -16,8 +16,8 @@
 package com.evernote.android.job;
 
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.evernote.android.job.util.Clock;
 import com.evernote.android.job.util.JobCat;
