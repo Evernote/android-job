@@ -1,3 +1,6 @@
+## 1.4.0 (2019-09-29)
+* Migrate to AndroidX, see #583
+
 ## 1.3.0 (2019-09-29)
 * (No changes compared to 1.3.0-rc1)
 * Implement an API that uses the `WorkManager` for scheduling work items
