@@ -4,8 +4,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.2'
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
+        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.25.0'
     }
 }
 
@@ -22,11 +22,11 @@ allprojects {
 }
 
 ext {
-    compileSdkVersion = 28
+    compileSdkVersion = 29
     targetSdkVersion = compileSdkVersion
     minSdkVersion = 14
 
-    buildToolsVersion = '28.0.3'
+    buildToolsVersion = '29.0.2'
 
     androidXLibVersion = '1.0.1'
     playServicesVersion = '16.1.0'
@@ -35,10 +35,10 @@ ext {
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
     mockitoVersion = '2.7.22'
-    robolectricVersion = '3.8'
+    robolectricVersion = '4.3'
 }
 
-wrapper {
-    gradleVersion = '5.3.1'
-    distributionType = Wrapper.DistributionType.ALL
+task updateWrapper(type: Wrapper) {
+    gradleVersion = '5.6.2'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }
