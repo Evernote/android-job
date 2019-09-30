@@ -3,24 +3,20 @@ package com.evernote.android.job.work;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.test.InstrumentationRegistry;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
-import androidx.test.runner.AndroidJUnit4;
-
+import androidx.work.WorkInfo;
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobCreator;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.PlatformWorkManagerRule;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import androidx.work.WorkInfo;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -59,7 +55,7 @@ public class PlatformWorkManagerTest {
                 .schedule();
 
         JobRequest request = mWorkManagerRule.getManager().getJobRequest(jobId);
-        JobProxyWorkManager jobProxyWorkManager = new JobProxyWorkManager(InstrumentationRegistry.getTargetContext());
+        JobProxyWorkManager jobProxyWorkManager = new JobProxyWorkManager(ApplicationProvider.getApplicationContext());
         assertThat(jobProxyWorkManager.isPlatformJobScheduled(request)).isTrue();
 
         String tag = JobProxyWorkManager.createTag(jobId);
@@ -135,7 +131,6 @@ public class PlatformWorkManagerTest {
         assertThat(state).isEqualTo(WorkInfo.State.SUCCEEDED);
     }
 
-    @SuppressWarnings("ConstantConditions")
     private void testConstraints(JobRequest.Builder builder) {
         int jobId = builder
                 .setRequiredNetworkType(JobRequest.NetworkType.METERED)

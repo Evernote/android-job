@@ -20,7 +20,8 @@ dependencies {
     androidTestImplementation "androidx.work:work-testing:$workVersion"
 
     androidTestImplementation "com.facebook.stetho:stetho:$stethoVersion"
-    implementation "androidx.appcompat:appcompat:$androidXLibVersion"
+    androidTestImplementation "androidx.appcompat:appcompat:$androidXLibVersion"
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
 
     testImplementation "junit:junit:$junitVersion"
     testImplementation "org.mockito:mockito-core:$mockitoVersion"

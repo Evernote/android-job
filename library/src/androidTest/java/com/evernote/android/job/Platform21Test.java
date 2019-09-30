@@ -2,7 +2,7 @@ package com.evernote.android.job;
 
 import android.os.Build;
 import androidx.test.filters.LargeTest;
-import androidx.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class Platform21Test {
     }
 
     @Test
-    public void testRescheduleService() throws Exception {
+    public void testRescheduleService() {
         assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
 
         int jobId = new JobRequest.Builder("tag")
@@ -56,7 +56,7 @@ public class Platform21Test {
     }
 
     @Test
-    public void verifyNotLandingInCrashLoop() throws Exception {
+    public void verifyNotLandingInCrashLoop() {
         assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1);
 
         try {
@@ -96,7 +96,7 @@ public class Platform21Test {
         assertThat(mJobManagerRule.getAllPendingJobsFromScheduler().size()).isGreaterThanOrEqualTo(jobCount);
     }
 
-    private void waitForJobRescheduleService() throws InterruptedException {
+    private void waitForJobRescheduleService() {
         new JobRescheduleService().rescheduleJobs(mJobManagerRule.getManager());
     }
 }

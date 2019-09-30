@@ -4,12 +4,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import androidx.test.InstrumentationRegistry;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
-import androidx.test.runner.AndroidJUnit4;
-
 import com.evernote.android.job.v21.PlatformJobService;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,7 +34,7 @@ public class DisabledServiceTest {
 
     @Before
     public void prepare() {
-        mContext = InstrumentationRegistry.getTargetContext();
+        mContext = ApplicationProvider.getApplicationContext();
         mPackageManager = mContext.getPackageManager();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mComponent = new ComponentName(mContext, PlatformJobService.class);

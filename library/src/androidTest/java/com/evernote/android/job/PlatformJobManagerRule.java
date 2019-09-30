@@ -4,14 +4,12 @@ import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.os.Build;
-import androidx.test.InstrumentationRegistry;
-
-import org.junit.rules.ExternalResource;
-
+import androidx.test.core.app.ApplicationProvider;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.junit.rules.ExternalResource;
 
 /**
  * @author rwondratschek
@@ -21,12 +19,12 @@ public class PlatformJobManagerRule extends ExternalResource {
     private JobManager mManager;
 
     @Override
-    protected void before() throws Throwable {
+    protected void before() {
         JobConfig.setJobReschedulePause(0, TimeUnit.MILLISECONDS);
         JobConfig.setSkipJobReschedule(true);
         JobConfig.setApiEnabled(JobApi.WORK_MANAGER, false);
 
-        mManager = JobManager.create(InstrumentationRegistry.getTargetContext());
+        mManager = JobManager.create(ApplicationProvider.getApplicationContext());
         mManager.cancelAll();
     }
 
@@ -48,7 +46,7 @@ public class PlatformJobManagerRule extends ExternalResource {
     }
 
     public JobScheduler getJobScheduler() {
-        return (JobScheduler) InstrumentationRegistry.getTargetContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        return (JobScheduler) ApplicationProvider.getApplicationContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
     }
 
     public List<JobInfo> getAllPendingJobsFromScheduler() {

@@ -5,22 +5,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.test.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
-
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.evernote.android.job.JobApi;
 import com.evernote.android.job.JobConfig;
 import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.PlatformJobManagerRule;
 import com.evernote.android.job.v14.PlatformAlarmServiceExact;
-
+import java.util.concurrent.TimeUnit;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assume.assumeTrue;
@@ -37,7 +34,7 @@ public class TransientBundleCompatTest {
     public PlatformJobManagerRule mJobManagerRule = new PlatformJobManagerRule();
 
     @Test
-    public void verifyAlarmIsCanceled() throws Exception {
+    public void verifyAlarmIsCanceled() {
         assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         JobConfig.forceApi(JobApi.V_21);
 
@@ -54,7 +51,7 @@ public class TransientBundleCompatTest {
     }
 
     @Test
-    public void verifyAlarmIsCanceledAfterStart() throws Exception {
+    public void verifyAlarmIsCanceledAfterStart() {
         assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         JobConfig.forceApi(JobApi.V_21);
 
@@ -72,7 +69,7 @@ public class TransientBundleCompatTest {
     }
 
     @Test
-    public void verifyAlarmNotCanceledForPeriodicAfterStart() throws Exception {
+    public void verifyAlarmNotCanceledForPeriodicAfterStart() {
         assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         JobConfig.forceApi(JobApi.V_21);
 
@@ -102,9 +99,9 @@ public class TransientBundleCompatTest {
     }
 
     @Test
-    public void verifyNativeImplementationIsUsedWithO() throws Exception {
+    public void verifyNativeImplementationIsUsedWithO() {
         // ignore test if not supported
-        assumeTrue(JobApi.V_26.isSupported(InstrumentationRegistry.getTargetContext()));
+        assumeTrue(JobApi.V_26.isSupported(ApplicationProvider.getApplicationContext()));
         JobConfig.forceApi(JobApi.V_26);
 
         int jobId = scheduleJob();
@@ -115,7 +112,7 @@ public class TransientBundleCompatTest {
     }
 
     private Context context() {
-        return InstrumentationRegistry.getContext();
+        return ApplicationProvider.getApplicationContext();
     }
 
     private int scheduleJob() {

@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.test.filters.LargeTest;
-import androidx.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,7 +33,7 @@ public class TransientJobCleanUpTest {
     }
 
     @Test
-    public void verifyJobDeletedFromDatabaseSpecific() throws Exception {
+    public void verifyJobDeletedFromDatabaseSpecific() {
         assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         JobConfig.forceApi(JobApi.V_21);
 
@@ -56,17 +56,14 @@ public class TransientJobCleanUpTest {
         // cached request gone
         assertThat(mManager.getJobRequest(jobId)).isNull();
 
-        SQLiteDatabase database = mManager.getJobStorage().getDatabase();
-        try {
+        try (SQLiteDatabase database = mManager.getJobStorage().getDatabase()) {
             long numEntries = DatabaseUtils.queryNumEntries(database, JobStorage.JOB_TABLE_NAME);
             assertThat(numEntries).isEqualTo(0);
-        } finally {
-            database.close();
         }
     }
 
     @Test
-    public void verifyJobDeletedFromDatabaseAll() throws Exception {
+    public void verifyJobDeletedFromDatabaseAll() {
         assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         JobConfig.forceApi(JobApi.V_21);
 
@@ -89,12 +86,9 @@ public class TransientJobCleanUpTest {
         // cached request gone
         assertThat(mManager.getAllJobRequests()).isEmpty();
 
-        SQLiteDatabase database = mManager.getJobStorage().getDatabase();
-        try {
+        try (SQLiteDatabase database = mManager.getJobStorage().getDatabase()) {
             long numEntries = DatabaseUtils.queryNumEntries(database, JobStorage.JOB_TABLE_NAME);
             assertThat(numEntries).isEqualTo(0);
-        } finally {
-            database.close();
         }
     }
 }

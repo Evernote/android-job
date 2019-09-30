@@ -2,18 +2,15 @@ package com.evernote.android.job;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.test.InstrumentationRegistry;
-
-import org.junit.rules.ExternalResource;
-
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-
+import androidx.test.core.app.ApplicationProvider;
 import androidx.work.Configuration;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 import androidx.work.testing.WorkManagerTestInitHelper;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import org.junit.rules.ExternalResource;
 
 /**
  * @author rwondratschek
@@ -24,7 +21,7 @@ public class PlatformWorkManagerRule extends ExternalResource {
 
     @Override
     protected void before() {
-        Context context = InstrumentationRegistry.getTargetContext();
+        Context context = ApplicationProvider.getApplicationContext();
 
         Executor executor = new Executor() {
             @Override
