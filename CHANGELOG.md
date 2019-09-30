@@ -1,3 +1,6 @@
+## 1.4.1 (2019-09-30)
+* Remove appcompat as dependency, which was accidentally added in 1.4.0.
+
 ## 1.4.0 (2019-09-29)
 * Migrate to AndroidX, see #583
 
