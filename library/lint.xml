@@ -14,4 +14,5 @@
     </issue>
     <issue id="GradleDependency" severity="ignore"/>
     <issue id="GradleCompatible" severity="ignore"/>
+    <issue id="IgnoreWithoutReason" severity="ignore"/>
 </lint>

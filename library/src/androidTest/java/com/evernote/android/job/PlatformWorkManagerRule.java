@@ -1,13 +1,15 @@
 package com.evernote.android.job;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.work.Configuration;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
+import androidx.work.testing.SynchronousExecutor;
+import androidx.work.testing.TestDriver;
 import androidx.work.testing.WorkManagerTestInitHelper;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import org.junit.rules.ExternalResource;
@@ -21,16 +23,13 @@ public class PlatformWorkManagerRule extends ExternalResource {
 
     @Override
     protected void before() {
-        Context context = ApplicationProvider.getApplicationContext();
+        Context context = getContext();
 
-        Executor executor = new Executor() {
-            @Override
-            public void execute(@NonNull Runnable command) {
-                command.run();
-            }
-        };
-
-        WorkManagerTestInitHelper.initializeTestWorkManager(context, new Configuration.Builder().setExecutor(executor).build());
+        Executor executor = new SynchronousExecutor();
+        WorkManagerTestInitHelper.initializeTestWorkManager(context, new Configuration.Builder()
+            .setTaskExecutor(executor)
+            .setExecutor(executor)
+            .build());
 
         JobConfig.setJobReschedulePause(0, TimeUnit.MILLISECONDS);
         JobConfig.setSkipJobReschedule(true);
@@ -46,22 +45,31 @@ public class PlatformWorkManagerRule extends ExternalResource {
         mManager.destroy();
 
         JobConfig.reset();
-        WorkManager.getInstance().cancelAllWork();
+        WorkManager.getInstance(getContext()).cancelAllWork();
     }
 
     public JobManager getManager() {
         return mManager;
     }
 
+    @SuppressWarnings("ConstantConditions")
     public void runJob(String tag) {
-        WorkManagerTestInitHelper.getTestDriver().setInitialDelayMet(getWorkStatus(tag).get(0).getId());
+        TestDriver testDriver = WorkManagerTestInitHelper.getTestDriver(getContext());
+
+        UUID id = getWorkStatus(tag).get(0).getId();
+        testDriver.setAllConstraintsMet(id);
+        testDriver.setInitialDelayMet(id);
     }
 
     public List<WorkInfo> getWorkStatus(String tag) {
         try {
-            return WorkManager.getInstance().getWorkInfosByTag(tag).get();
+            return WorkManager.getInstance(getContext()).getWorkInfosByTag(tag).get();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Context getContext() {
+        return ApplicationProvider.getApplicationContext();
     }
 }

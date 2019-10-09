@@ -155,14 +155,14 @@ public class JobProxyWorkManager implements JobProxy {
         // don't cache the instance, it could change under the hood, e.g. during tests
         WorkManager workManager;
         try {
-            workManager = WorkManager.getInstance();
+            workManager = WorkManager.getInstance(mContext);
         } catch (Throwable t) {
             workManager = null;
         }
         if (workManager == null) {
             try {
                 WorkManager.initialize(mContext, new Configuration.Builder().build());
-                workManager = WorkManager.getInstance();
+                workManager = WorkManager.getInstance(mContext);
             } catch (Throwable ignored) {
             }
             CAT.w("WorkManager getInstance() returned null, now: %s", workManager);

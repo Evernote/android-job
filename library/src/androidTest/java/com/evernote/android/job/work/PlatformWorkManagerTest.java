@@ -48,6 +48,7 @@ public class PlatformWorkManagerTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void testCancel() {
         int jobId = new JobRequest.Builder(TAG)
                 .setExecutionWindow(TimeUnit.HOURS.toMillis(4), TimeUnit.HOURS.toMillis(5))

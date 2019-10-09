@@ -1,3 +1,6 @@
+## 1.4.2 (2019-10-09)
+* Bump libraries to the latest version, this fixes a binary incompatibility with `WorkManager`, see #591
+
 ## 1.4.1 (2019-09-30)
 * Remove appcompat as dependency, which was accidentally added in 1.4.0.
 

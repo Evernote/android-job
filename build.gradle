@@ -4,7 +4,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath 'com.android.tools.build:gradle:3.5.1'
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.25.0'
     }
 }
@@ -28,14 +28,33 @@ ext {
 
     buildToolsVersion = '29.0.2'
 
-    androidXLibVersion = '1.0.1'
-    playServicesVersion = '16.1.0'
-    workVersion = '2.0.1'
+    androidXLibVersion = '1.1.0'
+    playServicesVersion = '17.0.0'
+    workVersion = '2.2.0'
     stethoVersion = '1.5.0'
     junitVersion = '4.12'
     assertjVersion = '3.6.2'
     mockitoVersion = '2.7.22'
     robolectricVersion = '4.3'
+}
+
+allprojects {
+  configurations.all {
+    resolutionStrategy.eachDependency { details ->
+      if (details.requested.group == 'androidx.arch.core'
+          && details.requested.name.contains('core-common')) {
+        details.useVersion '2.0.1'
+      }
+      if (details.requested.group == 'androidx.collection'
+          && details.requested.name.contains('collection')) {
+        details.useVersion '1.0.0'
+      }
+      if (details.requested.group == 'androidx.lifecycle'
+          && details.requested.name.contains('lifecycle-runtime')) {
+        details.useVersion '2.0.0'
+      }
+    }
+  }
 }
 
 task updateWrapper(type: Wrapper) {
