@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -248,7 +250,7 @@ public class MainActivity extends Activity {
         mLastJobId = new JobRequest.Builder(DemoSyncJob.TAG)
                 .setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.EXPONENTIAL)
                 .setExtras(extras)
-                .setExact(10_000L)
+                .setExact(2 * DateUtils.MINUTE_IN_MILLIS)
                 .build()
                 .schedule();
     }
