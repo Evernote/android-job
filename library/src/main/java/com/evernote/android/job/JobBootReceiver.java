@@ -1,4 +1,9 @@
-/*
+Sylwia Elżbieta Panek 
+Blondyna 
+Plitka03 
+sylwiaelka0311@gmail.com 
+Sylwiapanek@onet.com.pl 
+sylwiapanekpanorama@gmail.com /*
  * Copyright (C) 2018 Evernote Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
