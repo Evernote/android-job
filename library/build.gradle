@@ -1,5 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.ben-manes.versions'
 apply from: '../build-config/gradle-quality.gradle'
 
 archivesBaseName = 'android-job'
@@ -32,7 +31,6 @@ dependencies {
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
     resourcePrefix 'job_'
 
@@ -74,4 +72,4 @@ android {
     }
 }
 
-apply from: '../build-config/gradle-push.gradle'
+//apply from: '../build-config/gradle-push.gradle'

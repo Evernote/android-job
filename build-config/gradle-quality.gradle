@@ -1,8 +1,6 @@
 apply plugin: 'checkstyle'
-apply plugin: 'findbugs'
-apply plugin: 'pmd'
 
-check.dependsOn 'checkstyle'//, 'pmd' ,'findbugs'
+check.dependsOn 'checkstyle'
 
 task checkstyle(type: Checkstyle) {
     configFile file("${project.rootDir}/build-config/checkstyle/checkstyle.xml")
@@ -18,53 +16,4 @@ task checkstyle(type: Checkstyle) {
 //            destination file("$project.buildDir/outputs/checkstyle-results.xml")
 //        }
 //    }
-}
-
-task findbugs(type: FindBugs) {
-    ignoreFailures = true
-    effort = "max"
-    reportLevel = "high"
-    excludeFilter = new File("${project.rootDir}/build-config/findbugs/findbugs-filter.xml")
-    classes = files("$project.buildDir/intermediates/classes/")
-
-    source 'src'
-    include '**/*.java'
-    exclude '**/gen/**'
-
-    reports {
-        xml.enabled = false
-        html.enabled = true
-
-        xml {
-            destination file("$project.buildDir/reports/findbugs/findbugs.xml")
-            xml.withMessages true
-        }
-        html {
-            destination file("$project.buildDir/reports/findbugs/findbugs.html")
-        }
-    }
-
-    classpath = files()
-}
-
-task pmd(type: Pmd) {
-    ruleSetFiles = files("${project.rootDir}/build-config/pmd/pmd-ruleset.xml")
-    ignoreFailures = true
-    ruleSets = ["java-basic", "java-braces", "java-strings"]
-
-    source 'src'
-    include '**/*.java'
-    exclude '**/gen/**'
-
-    reports {
-        xml.enabled = true
-        html.enabled = true
-
-        xml {
-            destination file("$project.buildDir/reports/pmd/pmd.xml")
-        }
-        html {
-            destination file("$project.buildDir/reports/pmd/pmd.html")
-        }
-    }
 }

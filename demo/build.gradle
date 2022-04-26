@@ -3,7 +3,6 @@ apply from: '../build-config/gradle-quality.gradle'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         applicationId "com.evernote.android.job.demo"
@@ -53,4 +52,4 @@ dependencies {
     gcmImplementation "androidx.work:work-runtime:$workVersion"
 }
 
-uploadArchives.enabled false
+//uploadArchives.enabled false
