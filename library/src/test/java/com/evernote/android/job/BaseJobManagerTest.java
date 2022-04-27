@@ -108,7 +108,7 @@ public abstract class BaseJobManagerTest {
     protected void resetJob(int jobId) {
         Job job = manager().getJob(jobId);
         if (job != null) {
-            doReturn(-1L).when(job).getFinishedTimeStamp();
+            job.mFinishedTimeStamp = -1L;
         }
     }
 

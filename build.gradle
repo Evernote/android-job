@@ -27,14 +27,13 @@ ext {
     targetSdkVersion = compileSdkVersion
     minSdkVersion = 14
 
-    androidXLibVersion = '1.1.0'
     playServicesVersion = '17.0.0'
-    workVersion = '2.2.0'
+    workVersion = '2.7.0'
     stethoVersion = '1.5.0'
-    junitVersion = '4.12'
+    junitVersion = '4.13.2'
     assertjVersion = '3.6.2'
-    mockitoVersion = '2.7.22'
-    robolectricVersion = '4.3'
+    mockitoVersion = '3.12.4'
+    robolectricVersion = '4.7.3'
 }
 
 allprojects {

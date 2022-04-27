@@ -16,6 +16,7 @@
 
         <activity
             android:name="com.evernote.android.job.demo.MainActivity"
+            android:exported="true"
             android:label="@string/demo">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -25,6 +26,7 @@
 
         <activity
             android:name=".SyncHistoryActivity"
+            android:exported="false"
             android:label="@string/demo"/>
 
         <receiver

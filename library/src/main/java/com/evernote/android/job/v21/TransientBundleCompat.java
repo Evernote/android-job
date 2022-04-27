@@ -15,6 +15,7 @@
  */
 package com.evernote.android.job.v21;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -30,6 +31,8 @@ import com.evernote.android.job.util.JobCat;
 import com.evernote.android.job.v14.PlatformAlarmServiceExact;
 
 import java.util.concurrent.TimeUnit;
+
+import static com.evernote.android.job.PendingIntentUtil.flagImmutable;
 
 /**
  * Dirty workaround. We schedule an alarm with the AlarmManager really far in the future.
@@ -51,9 +54,10 @@ import java.util.concurrent.TimeUnit;
         throw new UnsupportedOperationException();
     }
 
+    @SuppressLint("MissingPermission")
     public static void persistBundle(@NonNull Context context, @NonNull JobRequest request) {
         Intent intent = PlatformAlarmServiceExact.createIntent(context, request.getJobId(), request.getTransientExtras());
-        PendingIntent pendingIntent = PendingIntent.getService(context, request.getJobId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getService(context, request.getJobId(), intent, PendingIntent.FLAG_UPDATE_CURRENT | flagImmutable());
 
         long when = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1000);
 
@@ -64,7 +68,7 @@ import java.util.concurrent.TimeUnit;
     public static boolean startWithTransientBundle(@NonNull Context context, @NonNull JobRequest request) {
         // transientExtras are not necessary in this case
         Intent intent = PlatformAlarmServiceExact.createIntent(context, request.getJobId(), null);
-        PendingIntent pendingIntent = PendingIntent.getService(context, request.getJobId(), intent, PendingIntent.FLAG_NO_CREATE);
+        PendingIntent pendingIntent = PendingIntent.getService(context, request.getJobId(), intent, PendingIntent.FLAG_NO_CREATE | flagImmutable());
 
         if (pendingIntent == null) {
             return false;
@@ -87,14 +91,14 @@ import java.util.concurrent.TimeUnit;
 
     public static boolean isScheduled(Context context, int jobId) {
         Intent intent = PlatformAlarmServiceExact.createIntent(context, jobId, null);
-        return PendingIntent.getService(context, jobId, intent, PendingIntent.FLAG_NO_CREATE) != null;
+        return PendingIntent.getService(context, jobId, intent, PendingIntent.FLAG_NO_CREATE | flagImmutable()) != null;
     }
 
     public static void cancel(@NonNull Context context, int jobId, @Nullable PendingIntent pendingIntent) {
         try {
             if (pendingIntent == null) {
                 Intent intent = PlatformAlarmServiceExact.createIntent(context, jobId, null);
-                pendingIntent = PendingIntent.getService(context, jobId, intent, PendingIntent.FLAG_NO_CREATE);
+                pendingIntent = PendingIntent.getService(context, jobId, intent, PendingIntent.FLAG_NO_CREATE | flagImmutable());
 
                 if (pendingIntent == null) {
                     return;

@@ -15,6 +15,7 @@
  */
 package com.evernote.android.job.v14;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -84,6 +85,7 @@ public class JobProxy14 implements JobProxy {
         logScheduled(request);
     }
 
+    @SuppressLint("MissingPermission")
     protected void plantOneOffExact(JobRequest request, AlarmManager alarmManager, PendingIntent pendingIntent) {
         long triggerAtMillis = getTriggerAtMillis(request);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

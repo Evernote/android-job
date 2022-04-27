@@ -74,7 +74,7 @@ public abstract class Job {
 
     private volatile boolean mCanceled;
     private volatile boolean mDeleted;
-    private volatile long mFinishedTimeStamp = -1;
+    volatile long mFinishedTimeStamp = -1;
 
     private Result mResult = Result.FAILURE;
 

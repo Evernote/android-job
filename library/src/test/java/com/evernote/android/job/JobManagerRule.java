@@ -28,6 +28,7 @@ public final class JobManagerRule extends ExternalResource {
 
         JobConfig.addLogger(TestLogger.INSTANCE);
         JobConfig.setSkipJobReschedule(true);
+        JobConfig.setCloseDatabase(true);
 
         mManager = JobManager.create(mContext);
         mManager.addJobCreator(mJobCreator);

@@ -168,6 +168,7 @@ public class JobConfigTest extends BaseJobManagerTest {
 
     @Test
     public void verifyCloseDatabase() {
+        JobConfig.setCloseDatabase(false);
         assertThat(JobConfig.isCloseDatabase()).isFalse(); // default
 
         SQLiteDatabase database = mock(SQLiteDatabase.class);
