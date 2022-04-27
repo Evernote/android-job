@@ -1,3 +1,6 @@
+## 1.4.3 (2022-04-27)
+* Make `PendingIntent`s immutable, what is required for Target SDK 31, see #600
+
 ## 1.4.2 (2019-10-09)
 * Bump libraries to the latest version, this fixes a binary incompatibility with `WorkManager`, see #591
 

@@ -16,7 +16,7 @@ Download [the latest version](http://search.maven.org/#search|gav|1|g:"com.evern
 
 ```groovy
 dependencies {
-    implementation 'com.evernote:android-job:1.4.2'
+    implementation 'com.evernote:android-job:1.4.3'
 }
 ```
 
