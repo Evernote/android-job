@@ -1,8 +1,6 @@
 apply plugin: 'com.android.library'
 apply from: '../build-config/gradle-quality.gradle'
 
-archivesBaseName = 'android-job'
-
 dependencies {
     compileOnly "com.google.android.gms:play-services-gcm:$playServicesVersion"
     compileOnly "androidx.work:work-runtime:$workVersion"
@@ -72,4 +70,4 @@ android {
     }
 }
 
-//apply from: '../build-config/gradle-push.gradle'
+apply from: '../build-config/gradle-push.gradle'

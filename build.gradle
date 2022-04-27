@@ -2,9 +2,11 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        gradlePluginPortal()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.1.3'
+        classpath 'com.vanniktech:gradle-maven-publish-plugin:0.18.0'
     }
 }
 
