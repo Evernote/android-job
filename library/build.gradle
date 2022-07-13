@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
-apply from: '../build-config/gradle-quality.gradle'
+apply plugin: 'maven-publish'
+//apply from: '../build-config/gradle-quality.gradle'
 
 dependencies {
     compileOnly "com.google.android.gms:play-services-gcm:$playServicesVersion"
@@ -70,4 +71,16 @@ android {
     }
 }
 
-apply from: '../build-config/gradle-push.gradle'
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.devv911'
+                artifactId = 'evernote-job'
+            }
+        }
+    }
+}
+
+//apply from: '../build-config/gradle-push.gradle'
